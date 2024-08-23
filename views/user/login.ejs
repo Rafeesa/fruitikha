@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .fruit-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-left: 20px;
+        }
+        .login-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-google {
+            background-color: #4285F4;
+            color: white;
+            border: none;
+        }
+        .btn-google:hover {
+            background-color: #357ae8;
+        }
+        .google-icon {
+            margin-right: 8px;
+        }
+        .error-message {
+            color: red;
+            font-size: 0.75rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row login-row">
+            <div class="col-md-6 login-container">
+                <h2 class="text-center mb-4">Login</h2>
+                <form action="/login" method="post" id="loginform" novalidate>
+                    <div class="mb-3">
+                        <label for="emailAddress" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" name="email" id="email" placeholder="Enter your email address" required>
+                        <div id="error1" class="error-message"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" id="password" placeholder="Enter your password" required>
+                        <div id="error2" class="error-message"></div>
+                    </div>
+                    <%if(locals.message && message.length>0){%>
+                        <div class="alert alert-danger text-center">
+                          <%=message%>  
+                        </div>
+
+                  <%}%>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary mb-2">Login</button>
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-google">
+                            <i class="fab fa-google google-icon"></i> Login with Google
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <img src="/assets/img/latest-news/news-bg-2.jpg" alt="Group of Fruits" class="fruit-image">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom Validation Script -->
+    <script>
+        const emailid = document.getElementById("email");
+        const passid = document.getElementById("password");
+        const error1 = document.getElementById("error1");
+        const error2 = document.getElementById("error2");
+        const loginform = document.getElementById("loginform");
+
+        function emailValidateChecking() {
+            const emailval = emailid.value;
+            const emailpattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailpattern.test(emailval)) {
+                error1.style.display = "block";
+                error1.innerHTML = "Invalid email format";
+            } else {
+                error1.style.display = "none";
+                error1.innerHTML = "";
+            }
+        }
+
+        function passValidateChecking() {
+            const passval = passid.value;
+            if (passval.length < 8) {
+                error2.style.display = "block";
+                error2.innerHTML = "Password should contain at least 8 characters";
+            } else {
+                error2.style.display = "none";
+                error2.innerHTML = "";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loginform.addEventListener("submit", function (e) {
+                emailValidateChecking();
+                passValidateChecking();
+                if (!emailid || !passid || !error1 || !error2 || !loginform) {
+                    console.error("One or more elements not found");
+                }
+                if (error1.innerHTML || error2.innerHTML) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
