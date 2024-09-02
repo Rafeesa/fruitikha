@@ -1,0 +1,144 @@
+const Category = require('../../models/categorySchema');
+
+// Display all categories
+const getAllCategories = async (req, res) => {
+    try {
+        let search="";
+        if(req.query.search)
+            {
+            search=req.query.search;
+            }
+        let page=1;
+            if(req.query.page)
+                {
+                    page=parseInt(req.query.page) 
+               }
+         
+        const limit=4
+        const skip=(page-1)*limit
+        const categories = await Category.find({
+            $or: [
+                { name: { $regex: ".*" + search + ".*", $options: 'i' } },
+                { code: { $regex: ".*" + search + ".*", $options: 'i' } }
+            ]
+        })
+        .sort({createdAt:-1})
+        .skip(skip)
+        .limit(limit)
+        .exec()
+
+        const totalCategory=await Category.find({
+            $or: [
+                { name: { $regex: ".*" + search + ".*", $options: 'i' } },
+                { code: { $regex: ".*" + search + ".*", $options: 'i' } }
+            ]
+        }).countDocuments()
+        const totalPages=Math.ceil(totalCategory/limit)
+
+        res.render('categories',
+            {cat:categories,
+            currentPage:page,
+            totalPages:totalPages,
+            totalCategory:totalCategory
+         
+
+         });
+    } catch (err) {
+        console.error(err);
+        res.redirect('/admin');
+    }
+};
+
+// Show form to create a new category
+const showNewCategoryForm = (req, res) => {
+    res.render('addCategory');
+};
+
+// Create a new category
+const createCategory = async (req, res) => {
+    try {
+        const { name, description, code } = req.body;
+        const existingCategory = await Category.findOne({ name });
+
+        if (existingCategory) {
+            return res.status(400).json({ error: "Category already exists" });  
+        }
+
+        const newCategory = new Category({ name, description, code });
+        await newCategory.save();
+
+        return res.status(201).json({ message: "Category added successfully" });  
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+
+// Show edit form for a category
+const showEditCategoryForm = async (req, res) => {
+    try {
+        const id=req.query.id
+        const category = await Category.findOne({_id:id});
+        res.render('editCategory', { category:category });
+    } catch (err) {
+        console.error(err);
+        res.redirect('/admin/categories');
+    }
+};
+
+// Update a category
+const updateCategory = async (req, res) => {
+    try {
+        const id=req.params.id
+        console.log('Updating category with ID:', req.params.id);
+        console.log('Request body:', req.body);
+        const { categoryName, description, code } = req.body;
+        const existingCategory=await Category.findOne({name:categoryName})
+        if(existingCategory){
+            return res.status(400).json({error:"Category exists,please choose another name"})
+        }
+        const updateCategory=await Category.findByIdAndUpdate(id,{
+            name:categoryName,
+            description:description,
+            code:code
+        },{new:true})
+
+        if(updateCategory){
+         res.redirect("/admin/category")   
+        }
+        else
+        {
+            res.status(404).json({error:"Category not found"})
+        }
+
+        
+    } catch (err) {
+        console.error(err);
+        res.redirect('/admin/category');
+    }
+};
+
+// Delete a category
+const deleteCategory = async (req, res) => {
+    try {
+        const category = await Category.findByIdAndDelete(req.params.id);
+        if (!category) {
+            return res.status(404).send('Category not found');
+        }
+        res.redirect('/admin/categories');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+};
+
+
+module.exports={
+    getAllCategories,
+    showNewCategoryForm,
+    createCategory,
+    showEditCategoryForm,
+    updateCategory,
+    deleteCategory 
+}

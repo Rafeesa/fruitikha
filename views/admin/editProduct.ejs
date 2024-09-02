@@ -1,0 +1,13 @@
+<%- include("../../views/partials/admin/header") %>
+
+<h2>Edit Product</h2>
+
+<form action="/products/<%= product._id %>" method="post" enctype="multipart/form-data">
+    <input type="text" name="name" value="<%= product.name %>" required>
+    <textarea name="description" required><%= product.description %></textarea>
+    <input type="number" name="price" value="<%= product.price %>" required>
+    <input type="file" name="images" multiple>
+    <button type="submit">Update Product</button>
+</form>
+
+<%- include("../../views/partials/admin/footer") %>
