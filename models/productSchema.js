@@ -13,9 +13,18 @@ const productSchema = new mongoose.Schema({
         type: Number, 
         required: true
          },
-    images: [{ type: String }],
-    isDeleted: { type: Boolean, default: false },
-});
+         category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'category',  // Reference to the Category model
+            required: true
+        },
+   productImage: {
+    type:[String],
+    required:true
+   },
+ 
+    
+},{timestamps:true});
 
 const Product = mongoose.model('Product', productSchema);
 

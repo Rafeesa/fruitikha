@@ -55,6 +55,22 @@
         <div class="row login-row">
             <div class="col-md-6 login-container">
                 <h2 class="text-center mb-4">Login</h2>
+
+               <!-- Display success flash message -->
+<% if (messages.success && messages.success.length > 0) { %>
+    <div class="alert alert-success text-center">
+        <%= messages.success %>
+    </div>
+<% } %>
+
+<!-- Display error flash message -->
+<% if (messages.error && messages.error.length > 0) { %>
+    <div class="alert alert-danger text-center">
+        <%= messages.error %>
+    </div>
+<% } %>
+
+
                 <form action="/login" method="post" id="loginform" novalidate>
                     <div class="mb-3">
                         <label for="emailAddress" class="form-label">Email Address</label>
@@ -66,15 +82,17 @@
                         <input type="password" class="form-control" name="password" id="password" placeholder="Enter your password" required>
                         <div id="error2" class="error-message"></div>
                     </div>
-                    <%if(locals.message && message.length>0){%>
-                        <div class="alert alert-danger text-center">
-                          <%=message%>  
-                        </div>
 
-                  <%}%>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary mb-2">Login</button>
                     </div>
+                    <div class="d-grid">
+                        <a href="/auth/google" class="btn btn-google">
+                            <i class="fab fa-google google-icon"></i> Sign Up with Google
+                        </a>
+                    </div>
+                    <br>
+                    <div class="form-group text-center"><p>Don't have an account? <a href="signup"> Sign Up</a></p></div>
                     
                 </form>
             </div>
@@ -122,7 +140,7 @@
             loginform.addEventListener("submit", function (e) {
                 emailValidateChecking();
                 passValidateChecking();
-                if (!emailid || !passid || !error1 || !error2 || !loginform) {
+                if (!emailid || !passid) {
                     console.error("One or more elements not found");
                 }
                 if (error1.innerHTML || error2.innerHTML) {

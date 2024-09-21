@@ -4,8 +4,9 @@ const adminController=require("../controllers/admin/adminController")
 const customerController=require("../controllers/admin/customerController")
 const categoryController=require("../controllers/admin/categoryController")
 const productController =require("../controllers/admin/productController");
-const { upload } = require('../middlewares/upload');
 
+
+const upload = require('../middlewares/multerConfig'); 
 const {userAuth,adminAuth}=require("../middlewares/auth")
 
 
@@ -45,8 +46,14 @@ router.delete('/categories/:id', adminAuth, categoryController.deleteCategory);
 
 
 
-
-
+//Product Management
+router.get('/Product',adminAuth,productController.getAllProduct);
+router.get('/products/new', adminAuth, productController.showNewProductForm);
+router.post('/addProducts',adminAuth,upload.array("images",3),productController.addProducts)
+router.get("/editProduct",adminAuth,productController.getEditProduct)
+router.post("/editProduct/:id",adminAuth,upload.array("images",3),productController.editProduct)
+router.post("/deleteImage",adminAuth,productController.deleteSingleImage)
+router.delete("/product/:id", adminAuth, productController.deleteProduct);
 
 
 

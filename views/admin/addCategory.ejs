@@ -1,6 +1,15 @@
 <%- include("../../views/partials/admin/header") %>
 <body>
 <h1 class="text-center mb-4">Add New Category</h1>
+
+<!-- Flash Messages Section -->
+<% if (success_msg) { %>
+    <div class="alert alert-success" style="display: block;"><%= success_msg %></div>
+<% } %>
+<% if (error_msg) { %>
+    <div class="alert alert-danger" style="display: block;"><%= error_msg %></div>
+<% } %>
+
 <div class="container">
     <form action="/admin/categories" method="POST" class="form-group" onsubmit="return handleFormSubmit(event)" novalidate>
         <div class="mb-3">
@@ -22,10 +31,11 @@
         <button type="submit" class="btn btn-success">Add Category</button>
     </form>
 </div>
+
 <script>
-    function handleFormSubmit(event){
+    function handleFormSubmit(event) {
         event.preventDefault(); 
-        if(!validateForm()){
+        if (!validateForm()) {
             return;
         }
         const name = document.getElementsByName("name")[0].value;
@@ -33,44 +43,44 @@
         const code = document.getElementById("code").value;
 
         fetch('/admin/categories', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, description, code })
-})
-.then(response => {
-    if (!response.ok) {
-        return response.json().then(err => {
-            throw new Error(err.error);  
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, description, code })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.error);  
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Category added successfully!'
+            }).then(() => {
+                location.reload();
+            });
+        })
+        .catch(error => {
+            if (error.message === "Category already exists") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'Category already exists'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: 'An error occurred while adding the category'
+                });
+            }
         });
     }
-    return response.json();
-})
-.then(data => {
-    Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: 'Category added successfully!'
-    }).then(() => {
-        location.reload();
-    });
-})
-.catch(error => {
-    if (error.message === "Category already exists") {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops',
-            text: 'Category already exists'
-        });
-    } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops',
-            text: 'An error occurred while adding the category'
-        });
-    }
-});
 
-    }
     function validateForm() {
         clearErrorMessages();
         const name = document.getElementsByName("name")[0].value.trim();

@@ -1,224 +1,298 @@
-const User=require("../../models/userSchema")
-const env=require("dotenv").config()
-const nodemailer=require("nodemailer")
-const bcrypt=require("bcrypt")
+const User = require("../../models/userSchema");
+const Product = require("../../models/productSchema");
+const env = require("dotenv").config();
+const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
+const passport = require("passport");
 
-
-const loadHomepage=async(req,res)=>{
+// Load Homepage
+const loadHomepage = async (req, res) => {
     try {
-        const user=req.session.user
-        if(user)
-        {
-            const userData=await User.findOne({_id:user._id})
-            console.log(userData)
-            res.render("home",{user:userData})
-        }
-        else{
-            return res.render('home')
-        }
-        
+        const user = req.user;
+
+        const itemsPerPage = 6;
+        const currentPage = parseInt(req.query.page) || 1;
+
+        const totalProducts = await Product.countDocuments();
+        const totalPages = Math.ceil(totalProducts / itemsPerPage);
+
+        const products = await Product.find()
+            .skip((currentPage - 1) * itemsPerPage)
+            .limit(itemsPerPage);
+
+        res.render('home', {
+            user,
+            products,
+            currentPage,
+            totalPages
+        });
     } catch (error) {
-        console.log("Home Page Not Found")
-        res.status(500).send("server error")
+        console.error("Error loading home page:", error);
+        res.status(500).send("Server Error");
     }
+};
 
-}
-const loadSignup=async(req,res)=>{
+// Controller function to fetch product details
+const getProductDetails = async (req, res) => {
     try {
-        return res.render('signup')
+        const productId = req.params.id;
+        const product = await Product.findById(productId).exec();
+
+        const relatedProducts = await Product.find({
+            _id: { $ne: productId },
+            category: product.category
+        }).limit(3).exec();
+
+        res.render('product-details', {
+            product,
+            relatedProducts
+        });
     } catch (error) {
-        console.log('Signup page not loading',error)
-        res.status(500).send('server error')
-        
+        console.error(error);
+        res.status(500).send('Internal Server Error');
     }
-}
+};
 
-function generateOtp()
-{
-    const genotp= Math.floor((100000+Math.random()*900000)).toString()
-    console.log(genotp)
-    return genotp
-}
-
-async function sendVerificationEmail(email,otp){
+// Load Signup Page
+const loadSignup = async (req, res) => {
     try {
-        const transporter =nodemailer.createTransport({
-            service:'gmail',
-            port:587,
-            secure:false,
-            requireTLS:true,
-            auth:{
-                user:process.env.NODEMAILER_EMAIL,
-                pass:process.env.NODEMAILER_PASSWORD
+        return res.render('signup');
+    } catch (error) {
+        console.log('Signup page not loading', error);
+        res.status(500).send('Server Error');
+    }
+};
+
+// Generate OTP
+function generateOtp() {
+    const genotp = Math.floor((100000 + Math.random() * 900000)).toString();
+    return genotp;
+}
+
+// Send Verification Email
+async function sendVerificationEmail(email, otp) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            port: 587,
+            secure: false,
+            requireTLS: true,
+            auth: {
+                user: process.env.NODEMAILER_EMAIL,
+                pass: process.env.NODEMAILER_PASSWORD
             }
-        })
+        });
 
-        const info=await transporter.sendMail({
-            from:process.env.NODEMAILER_EMAIL,
-            to:email,
-            subject:"verify your account",
-            text:`Your OTP is ${otp}`,
-            html:`<b> Your OTP:${otp}</b>`
-        })
-      
-        console.log("Email Sent Status:", info.accepted.length > 0);
-        return info.accepted.length > 0; 
+        const info = await transporter.sendMail({
+            from: process.env.NODEMAILER_EMAIL,
+            to: email,
+            subject: "Verify Your Account",
+            text: `Your OTP is ${otp}`,
+            html: `<b>Your OTP: ${otp}</b>`
+        });
+
+        return info.accepted.length > 0;
     } catch (error) {
-        console.error("Error sending email",error)
-        return false
+        console.error("Error sending email", error);
+        return false;
     }
 }
 
-const signup=async(req,res)=>{
-    
-
-try {
-    console.log('Request Body:', req.body); 
-    const {name,email,phone,password,cPassword}=req.body
-    console.log('Checking passwords...');
-
-   if(password!==cPassword){
-        return res.render("signup",{message:"password do not match"})
-    }
-    console.log('Checking if user exists...');
-   const findUser=await User.findOne({email})
-   console.log("User found:", findUser); 
-   
-    if(findUser)
-    {
-        return res.render("signup",{message:"user with this email already exist"})
-    }
-console.log("hello")
-    const otp=generateOtp();
-    console.log(otp)
-    const emailSent=await sendVerificationEmail(email,otp)
-    console.log("OTP:", otp, "Email Sent:", emailSent);  // log OTP and email status
-    if(!emailSent){
-        return res.json("email sending error")
-    }
-    req.session.userOtp=otp
-    req.session.userData={name,phone,email,password}
-   res.render("verify-otp")
-    console.log("OTP Sent",otp)
-} catch (error) {
-    console.error("signup error",error)
-      
-}
-}
-
-const securePassword=async(password)=>{
-try {
-    const passwordHarsh=await bcrypt.hash(password,10)
-    return passwordHarsh   
-} catch (error) {
-    console.error("Error hashing the password:", error);
-}
-}
-
-
-
-const verifyOtp=async(req,res)=>{
+// Signup Controller
+const signup = async (req, res) => {
     try {
-        const {otp}=req.body
-        console.log(otp)
-        if(otp===req.session.userOtp){
-            const user=req.session.userData
-            const passwordHarsh=await securePassword(user.password)
-            const saveUserData=new User({
-                name:user.name,
-                email:user.email,
-                phone:user.phone,
-                password:passwordHarsh,
-            })
-            await saveUserData.save()
-            req.session.user=saveUserData._id;
-            res.redirect('/')
-          /*  res.json({success:true,redirectUrl:"/"})*/
-        }else{
-        res.status(400).json({success:false,message:"Invalid OTP,please Try again"})
+        const { name, email, phone, password, cPassword } = req.body;
+
+        if (password !== cPassword) {
+            return res.render("signup", { message: "Passwords do not match" });
         }
+
+        const findUser = await User.findOne({ email });
+
+        if (findUser) {
+            return res.render("signup", { message: "User with this email already exists" });
+        }
+
+        const otp = generateOtp();
+        console.log(" OTP:", otp); // To check if OTP is being generated
+
+        const emailSent = await sendVerificationEmail(email, otp);
+
+        if (!emailSent) {
+            return res.json("Email sending error");
+        }
+
+        req.session.userOtp = otp;
+        req.session.userData = { name, phone, email, password };
+        res.render("verify-otp");
+
     } catch (error) {
-       console.error("Error verifying OTP",error) 
-       res.status(500).json({success:false,message:"An error occured"})
+        console.error("Signup error", error);
     }
-}
+};
 
-
-const resendOtp=async(req,res)=>{
+// Hash Password
+const securePassword = async (password) => {
     try {
-        const {email}=req.session.userData
-        if(!email){
-         return res.status(400).json({success:false,message:"Email not found in session"})
-        }
-         const otp=generateOtp()
-         req.session.userOtp=otp
-         const emailSent=await sendVerificationEmail(email,otp)
-         if(emailSent)
-         {
-            console.log("Resend OTP",otp)
-            res.status(200).json({success:true,message:"OTP Resend Successfully"})
-
-         }
-         else{
-            res.status(500).json({success:false,message:"Failed to resend OTP.Please try again"})
-         }
+        return await bcrypt.hash(password, 10);
     } catch (error) {
-        console.error("Error resending otp",error)
-        res.status(500).json({success:false,message:"Internal server erros.Please try again"})
+        console.error("Error hashing the password:", error);
     }
-}
+};
 
-
-
-
-const loadLogin=async(req,res)=>
-{
+// Verify OTP
+const verifyOtp = async (req, res) => {
     try {
-        if(!req.session.user){
-            return res.render("login")
+        const { otp } = req.body;
+
+        if (otp === req.session.userOtp) {
+            const user = req.session.userData;
+            const passwordHash = await securePassword(user.password);
+
+            const newUser = new User({
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                password: passwordHash,
+            });
+
+            await newUser.save();
+            req.login(newUser, (err) => {
+                if (err) return res.status(500).json({ success: false, message: "Login failed" });
+                res.json({ success: true, redirectUrl: "/" });
+            });
+
+        } else {
+            res.status(400).json({ success: false, message: "Invalid OTP, please try again" });
         }
-        else
-        {
-            res.redirect("/")
-        }
-           
+
     } catch (error) {
- 
+        console.error("Error verifying OTP", error);
+        res.status(500).json({ success: false, message: "An error occurred" });
     }
-}
+};
 
-
-const login=async(req,res)=>
-{
+// Resend OTP
+const resendOtp = async (req, res) => {
     try {
-         const {email,password}=req.body
-        const findUser=await User.findOne({isAdmin:0,email:email})
-        if(!findUser){
-            return res.render("login",{message:"user not found"})
-        }
-        if(findUser.isBlocked){
-            return res.render("login",{message:"User is blocked by admin"})
+        const { email } = req.session.userData;
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email not found in session" });
         }
 
-        const passwordMatch=await bcrypt.compare(password,findUser.password)
-        if(!passwordMatch){
-            return res.render("login",{message:"Incorrect password"})
+        const otp = generateOtp();
+        req.session.userOtp = otp;
+        const emailSent = await sendVerificationEmail(email, otp);
+
+        if (emailSent) {
+            res.status(200).json({ success: true, message: "OTP resent successfully" });
+        } else {
+            res.status(500).json({ success: false, message: "Failed to resend OTP. Please try again" });
         }
-       req.session.user=findUser._id 
-       res.redirect("/")   
+
     } catch (error) {
-        console.error("login error",error)
-        res.render("login",{message:"login failed.Please try again later"})
+        console.error("Error resending OTP", error);
+        res.status(500).json({ success: false, message: "Internal server error. Please try again" });
     }
-}
+};
 
-module.exports={
+// Load Login Page
+const loadLogin = async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.render("login", { messages: req.flash() });
+        } else {
+            res.redirect("/");
+        }
+    } catch (error) {
+        console.error("Load login page error:", error);
+        res.status(500).send('Server Error');
+    }
+};
+
+/*const loadLogin = async (req, res) => {
+    try {
+        if (!req.user) {
+            // Pass success and error flash messages
+            const messages = {
+                success: req.flash('success'),
+                error: req.flash('error')
+            };
+            return res.render("login", { messages });
+        } else {
+            res.redirect("/");
+        }
+    } catch (error) {
+        console.error("Load login page error:", error);
+        res.status(500).send('Server Error');
+    }
+};*/
+
+
+
+
+// Login Controller
+const login = passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true // Optional: to show error messages
+});
+/*const login = (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+            console.error("Login error:", err);
+            return res.render("login", { message: "Login failed. Please try again later." });
+        }
+
+        if (!user) {
+            // If authentication fails, Passport will not pass the user, but will pass the 'info' object which contains error messages
+            return res.render("login", { message: info.message }); // Display message like 'User not found' or 'Incorrect password'
+        }
+
+        req.logIn(user, (err) => {
+            if (err) {
+                console.error("Login error:", err);
+                return res.render("login", { message: "Login failed. Please try again later." });
+            }
+            // Successful login, redirect user
+            req.session.user = user._id;
+            res.redirect("/");
+        });
+    })(req, res, next);
+};
+*/
+
+// Logout Controller
+const logout = async (req, res) => {
+    try {
+        req.logout((err) => {
+            if (err) {
+                console.log("Logout error:", err.message);
+                return res.redirect("/login");
+            }
+
+           req.session.destroy((err) => {
+            if (err) {
+             console.log("Session destruction error:", err.message);
+                }
+
+//req.flash("success_msg", "You are logged out");
+                res.redirect("/login");
+            });
+        });
+    } catch (error) {
+        console.log("Logout error:", error);
+    }
+};
+
+module.exports = {
     loadHomepage,
     loadSignup,
     signup,
     verifyOtp,
     resendOtp,
     loadLogin,
-    login
- 
-}
+    login,
+    logout,
+    getProductDetails
+};

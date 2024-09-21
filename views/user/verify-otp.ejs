@@ -162,6 +162,7 @@
         }, 1000);
     }
     startTimer();
+
     function validateOTPForm()
     {
         const otpInput=document.getElementById("otp").value
@@ -169,22 +170,22 @@
             type:"POST",
             url:"verify-otp",
             data:{otp:otpInput},
-            success:function (response)
+            success:function(response)
             {
                if(response.success)
             {
                 Swal.fire({
                     icon:"success",
-                    title:"OTP verified successfully"
-                    
+                    title:"OTP verified successfully",
+                    showConfirmButton:false,
                     timer:1500,
                 }).then(()=>{
                     window.location.href=response.redirectUrl
                 })
             } else{
                 Swal.fire({
-                    icon:"error"
-                    title:"Error"
+                    icon:"error",
+                    title:"Error",
                     text:response.message,
                 })
             }
@@ -205,7 +206,7 @@
         clearInterval(timerInterval)
         time=60
         document.getElementById("otp").disabled=false
-        document.getElementById("timervalue").classList.remove("expired")
+        document.getElementById("timerValue").classList.remove("expired")
         startTimer()
         $.ajax({
             type:"POST",
@@ -219,11 +220,13 @@
                         timer:1500
                     })
                 }else
+                {
                 Swal.fire({
                     icon:"error",
                     title:"Error",
                     text:"An error occured while resending OTP,please try again"
                 })
+            }
             }
         })
         return false

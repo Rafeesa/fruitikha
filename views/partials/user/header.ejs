@@ -4,8 +4,7 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="Responsive Bootstrap4 Shop Template, Created by Imran Hossain from https://imransdesign.com/">
-
+	<meta name="description" content="Responsive Bootstrap4 Shop Template, Created by Imran Hossain from https://imransdesign.com/">  
 	<!-- title -->
 	<title>Fruitkha</title>
 
@@ -30,43 +29,93 @@
 	<link rel="stylesheet" href="assets/css/main.css">
 	<!-- responsive -->
 	<link rel="stylesheet" href="assets/css/responsive.css">
-<style>
-	.dropdown
-	{
-		position:relative;
-		display:inline-block;
-	}
-	.dropdown-content
-	{
-		display:none;
-		position:absolute;
-		background-color:white;
-		min-width:160px;
-		box-shadow:0px 8px 16px 0px;
-		z-index:1000;
-		right:0; 
-	}
-	.dropdown-content a{
-		color:black;
-		padding:12px 16px;
-		text-decoration:none;
-		display:block;
-		width:100%
-	}
-	.dropdown-content a:hover{
-		background: color #f1f1f1; 
-
-	}
-	.dropdown:hover .dropdown-content{
-		display: block;
-	}
-.header
-{
-position:relative;
-z-index:500;
-
+	<style>
+		/* Existing styles */
+/* Ensure dropdown container is positioned correctly */
+.dropdown {
+    position: relative;
+    display: inline-block;
 }
-</style>
+
+/* Dropdown content, hidden by default */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1); /* Add slight shadow */
+    z-index: 1000;
+    right: 0; /* Align to the right */
+    border-radius: 5px; /* Smooth corners */
+    padding: 5px 0; /* Padding inside dropdown */
+}
+
+/* Ensure links inside the dropdown are styled properly */
+.dropdown-content a {
+    color: black !important; /* Force text color to black */
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth hover transition */
+}
+
+/* Highlight link when hovered */
+.dropdown-content a:hover {
+    background-color: #f1f1f1; /* Light hover background */
+    color: #ff6600 !important; /* Optional hover color for the text */
+}
+
+/* Display dropdown content when hovering over the dropdown parent */
+.dropdown:hover .dropdown-content {
+    display: block;
+    opacity: 1; /* Make sure it’s fully visible */
+}
+
+/* Dropdown will remain visible while hovering */
+.dropdown-content:hover {
+    display: block;
+    opacity: 1;
+}
+
+/* Ensure the header has proper z-index to keep dropdown above other elements */
+.header {
+    position: relative;
+    z-index: 500;
+}
+
+/* Properly position dropdown relative to the user icon */
+.main-menu ul li {
+    position: relative;
+}
+
+/* Adjust dropdown to appear below the username */
+.main-menu ul li .dropdown-content {
+    top: 100%; /* Aligns dropdown below the trigger element */
+}
+
+/* Styling for the sign-in link and icon */
+.sign-in-link {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #ff6600!important; /* Username color */
+    text-decoration: none;
+    padding: 10px 15px;
+}
+
+.sign-in-link:hover {
+    color: #ff6600 !important; /* Optional hover color */
+}
+
+/* Adjust icon size */
+.sign-in-link i {
+    font-size: 14px;
+}
+
+
+	</style>
+	
 </head>
 <body>
 	
@@ -95,12 +144,8 @@ z-index:500;
 						<!-- menu start -->
 						<nav class="main-menu">
 							<ul>
-								<li class="current-list-item"><a href="/">Home</a>
-									
-								</li>
+								<li class="current-list-item"><a href="/">Home</a></li>
 								<li><a href="/">About Us</a></li>
-								
-								
 								<li><a href="/">Contact</a></li>
 								<li><a href="/shop">Shop</a>
 									<ul class="sub-menu">
@@ -110,23 +155,20 @@ z-index:500;
 										<li><a href="/shop">Cart</a></li>
 									</ul>
 								</li>
-								<li> 
-
-
+								<li>
 									<div class="header-icons">
-										<%if(locals.user){%>
+										<% if(locals.user) { %>
 											<div class="dropdown">
-												<a href="#" class="sign-in-link"><%= locals.user.name %></a> 
+												<a href="#" class="sign-in-link"><i class="fas fa-user"></i> <%= locals.user.name %> <i class="fas fa-caret-down"></i></a>
 												<div class="dropdown-content">
 													<a href="/userProfile">Profile</a>
 													<a href="/logout">Logout</a>
 												</div>
 											</div>
-
-											<%}else {%>
-                                        <a href="/signup">Sign Up</a>
-                                        <a href="/login">Login</a>
-										<%}%>
+										<% } else { %>
+											<a href="/signup">Sign Up</a>
+											<a href="/login">Login</a>
+										<% } %>
 										<a class="shopping-cart" href="cart.html"><i class="fas fa-shopping-cart"></i></a>
 										<a class="mobile-hide search-bar-icon" href="#"><i class="fas fa-search"></i></a>
 									</div>
@@ -142,3 +184,5 @@ z-index:500;
 		</div>
 	</div>
 	<!-- end header -->
+</body>
+</html>

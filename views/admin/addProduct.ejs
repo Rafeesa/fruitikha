@@ -1,0 +1,334 @@
+<%- include("../../views/partials/admin/header") %>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css">
+ </head>
+ <style>
+    .error-message{
+        color: red;
+    }
+ 
+ 
+        .thumbnails-container {
+            display: flex;
+            overflow-x: auto;
+        }
+ 
+ 
+        .thumbnail {
+            margin-right: 10px;
+ 
+ 
+        }
+ </style>
+ 
+ 
+<h2 class="mt-5">Add Product</h2>
+ <form action="/admin/addProducts" method="post" enctype="multipart/form-data" class="form-horizontal" onsubmit="return validateForm()">
+     <div class="form-group row">
+         <label for="name" class="col-sm-2 col-form-label">Product Name:</label>
+         <div class="col-sm-10">
+             <input type="text" class="form-control" id="name" name="name" placeholder="Product Name" required autocomplete="name">
+         </div>
+         <div id="productName-error" class="error-message"></div>
+
+     </div>
+     <div class="form-group row">
+         <label for="description" class="col-sm-2 col-form-label">Description:</label>
+         <div class="col-sm-10">
+             <textarea class="form-control" id="description" name="description" placeholder="Product Description" required autocomplete="description"></textarea>
+         </div>
+         <div id="description-error" class="error-message"></div>
+
+     </div>
+     <div class="form-group row">
+         <label for="price" class="col-sm-2 col-form-label">Price:</label>
+         <div class="col-sm-10">
+             <input type="number" class="form-control" id="price" name="price" placeholder="Price" required autocomplete="off">
+         </div>
+         <div id="price-error" class="error-message"></div>
+
+     </div>
+
+
+     <div class="form-group row">
+        <label for="category" class="col-sm-2 col-form-label">Category:</label>
+       
+       &nbsp &nbsp &nbsp  <select class="form-select border" style="width: 150px;" id="category" name="category">
+                    
+            <%for(let i=0;i<cat.length;i++){%>
+                       
+            <option value="<%=cat[i].name%>">
+                <%=cat[i].name%>
+            </option>
+           <%}%>
+          
+            
+    </select>
+    <div id="category-error" class="error-message"></div>
+    </div>
+
+
+
+
+
+
+
+
+  <!--  <div class="card mb-4">
+        <div class="card-body">
+            <div class="row gx-2">
+                <div class="col-sm-6 mb-3">
+                    <label class="form-label">Category</label>
+                    <select class="form-select border" style="width: 150px;" name="category">
+                    
+
+                       
+                            <option value="">
+                                
+                            </option>
+                           
+                          
+                            
+                    </select>
+                    <div id="category-error" class="error-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>-->
+<br><br>
+   <!---  <div class="form-group row">
+         <label for="images" class="col-sm-2 col-form-label">Images:</label>
+         <div class="col-sm-10">
+             <input type="file" class="form-control-file" id="images" name="images" multiple required>
+         </div>
+     </div> -->
+     <div class="mb-2">
+        <h4>Choose images (Maximum 3 images)</h4>
+        
+        <div class="border row">
+            <div id="addedImagesContainer" class="thumbnails-container"></div>
+        </div>
+        
+        <div id="imageInputsContainer">
+            <div class="row">
+                <div class="align-items-center" style="margin-bottom: 20px;">
+                    <img src="" alt="" id="imgView1">
+                    <input class="form-control image-input" type="file" name="images" id="input1"
+                           accept="image/png, image/jpeg, image/jpg"
+                           onchange="viewImage(event, 1)">
+                    <div id="images-error-1" class="error-message"></div>
+                </div>
+                <div class="image-cropper d-flex align-items-center"
+                     style="display:none; width: 300px; height: 200px; margin-bottom: 20px;">
+                    <img src="" id="croppedImg1" alt="">
+                    <button type="button" id="saveButton1" class="btn-sm btn-primary">Save</button>
+                </div>
+            </div>
+    
+            <div class="row">
+                <div class="align-items-center" style="margin-bottom: 20px;">
+                    <img src="" alt="" id="imgView2">
+                    <input class="form-control image-input" type="file" name="images" id="input2"
+                           accept="image/png, image/jpeg, image/jpg"
+                           onchange="viewImage(event, 2)">
+                    <div id="images-error-2" class="error-message"></div>
+                </div>
+                <div class="image-cropper d-flex align-items-center"
+                     style="display:none; width: 300px; height: 200px; margin-bottom: 20px;">
+                    <img src="" id="croppedImg2" alt="">
+                    <button type="button" id="saveButton2" class="btn-sm btn-primary">Save</button>
+                </div>
+            </div>
+    
+            <div class="row">
+                <div class="align-items-center" style="margin-bottom: 20px;">
+                    <img src="" alt="" id="imgView3">
+                    <input class="form-control image-input" type="file" name="images" id="input3"
+                           accept="image/png, image/jpeg, image/jpg"
+                           onchange="viewImage(event, 3)">
+                    <div id="images-error-3" class="error-message"></div>
+                </div>
+                <div class="image-cropper d-flex align-items-center"
+                     style="display:none; width: 300px; height: 200px; margin-bottom: 20px;">
+                    <img src="" id="croppedImg3" alt="">
+                    <button type="button" id="saveButton3" class="btn-sm btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+     <div class="form-group row">
+         <div class="col-sm-10 offset-sm-2">
+             <button type="submit" class="btn btn-primary">Add Product</button>
+         </div>
+     </div>
+ </form>
+</div>
+
+<script>
+
+function validateAndSubmit(){
+if(validateForm()){
+    document.forms[0].submit();
+}
+}
+//image view handling
+function viewImage1(event){
+    document.getElementById("imgView1").src=URL.createObjectURL(event.target.files[0])
+}
+function viewImage2(event){
+    document.getElementById("imgView2").src=URL.createObjectURL(event.target.files[0])
+}
+function viewImage3(event){
+    document.getElementById("imgView3").src=URL.createObjectURL(event.target.files[0])
+}
+
+//image processing after processing
+function viewImage(event, index) {
+    let input = event.target;
+    let reader = new FileReader();
+
+    reader.onload = function () {
+        let dataURL = reader.result;
+        let image = document.getElementById("imgView" + index);
+        image.src = dataURL;
+
+        // Initialize Cropper
+        let cropper = new Cropper(image, {
+            aspectRatio: 1,
+            viewMode: 1,
+            guides: true,
+            background: false,
+            autoCropArea: 1,
+            zoomable: true
+        });
+
+        let cropperContainer = document.querySelector("#croppedImg" + index).parentNode;
+        cropperContainer.style.display = "block";
+
+        let saveButton = document.querySelector('#saveButton' + index);
+        saveButton.addEventListener('click', async function () {
+            let croppedCanvas = cropper.getCroppedCanvas();
+            let croppedImage = document.getElementById("croppedImg" + index);
+            croppedImage.src = croppedCanvas.toDataURL('image/jpeg', 1.0);
+
+            // Save the cropped image to the file input
+            let timestamp = new Date().getTime();
+            let fileName = `cropped-img-${timestamp}-${index}.png`;
+
+            await croppedCanvas.toBlob(blob => {
+                let input = document.getElementById('input' + index);
+                let imgFile = new File([blob], fileName, { type: blob.type });
+                const fileList = new DataTransfer();
+                fileList.items.add(imgFile);
+                input.files = fileList.files;
+
+                const imagePath = '/uploads/product-images/' + fileName;
+                croppedImage.src = imagePath;
+            });
+
+            
+            cropperContainer.style.display = 'none';
+            cropper.destroy();
+
+            
+            image.style.display = "none";
+
+            
+            croppedImage.style.display = "block";
+        });
+    };
+
+    reader.readAsDataURL(input.files[0]);
+}
+
+
+function handleFileSelect(event) {
+    const addedImagesContainer = document.getElementById("addedImagesContainer");
+    addedImagesContainer.innerHTML = "";
+    const files = event.target.files;
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        selectedImages.push(file);
+
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.style.width = "50px";
+        img.style.height = "auto";
+
+        const removeIcon = document.createElement("span");
+        removeIcon.classList.add("remove-icon");
+        removeIcon.innerHTML = "&times;";
+        removeIcon.addEventListener("click", function () {
+            const index = selectedImages.indexOf(file);
+            if (index !== -1) {
+                selectedImages.splice(index, 1);
+            }
+            thumbnail.remove();
+        });
+
+        const thumbnail = document.createElement("div");
+        thumbnail.appendChild(img);
+        thumbnail.appendChild(removeIcon);
+        addedImagesContainer.appendChild(thumbnail);
+    }
+}
+
+
+
+function validateForm() {
+    clearErrorMessages();
+    let isValid = true;
+
+    const name = document.getElementById('name').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const price = document.getElementById('price').value.trim();
+    const images1 = document.getElementById('input1').files.length;
+    const images2 = document.getElementById('input2').files.length;
+    const images3 = document.getElementById('input3').files.length;
+
+    if (name === "") {
+        displayErrorMessage('productName-error', 'Please enter a product name.');
+        isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+        displayErrorMessage('productName-error', 'Product name should contain only alphabetic characters.');
+        isValid = false;
+    }
+
+    if (description === "") {
+        displayErrorMessage('description-error', 'Please enter a product description.');
+        isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(description)) {
+        displayErrorMessage('description-error', 'Product description should contain only alphabetic characters.');
+        isValid = false;
+    }
+
+    if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
+        displayErrorMessage('price-error', 'Please enter a valid non-negative price.');
+        isValid = false;
+    }
+
+    if (images1 === 0 && images2 === 0 && images3 === 0) {
+        displayErrorMessage('images-error-1', 'Please select at least one image.');
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+function displayErrorMessage(elementId, message) {
+    var errorElement = document.getElementById(elementId);
+    errorElement.innerText = message;
+    errorElement.style.display = "block";
+}
+
+function clearErrorMessages() {
+    const errorElements = document.getElementsByClassName('error-message');
+    Array.from(errorElements).forEach(element => {
+        element.style.display = "none";
+        element.innerText = '';
+    });
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
+<%- include("../../views/partials/admin/footer") %>
