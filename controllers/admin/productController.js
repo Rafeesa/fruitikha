@@ -66,7 +66,7 @@ if(categories){
 const addProducts=async(req,res)=>{
   try {
     const products=req.body
-    const { name, description, category, price } = req.body;
+    const { name, description, category, price,stock } = req.body;
     const productExist = await Product.findOne({
       productName: { $regex: new RegExp(`^${name.trim()}$`, "i") },
     });
@@ -96,6 +96,7 @@ const addProducts=async(req,res)=>{
         description:description,
         category:categoryId._id,
         price:price,
+        stock:stock,
         createdOn: new Date(), 
        productImage: images 
         
@@ -250,6 +251,7 @@ const editProduct = async (req, res) => {
           description: data.description,
           category: categoryId._id,
           price: data.price,
+          stock:data.stock,
           productImage: images.length > 0 ? images : product.productImage, // Keep existing images if no new ones
       };
 

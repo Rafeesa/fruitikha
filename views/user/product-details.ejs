@@ -13,6 +13,44 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
         }
+        /* Custom Navbar Background and Centering Styles */
+/* Navbar background */
+.custom-navbar {
+    background-color: #051922;
+    padding: 10px 15px;
+}
+
+/* Account menu styling */
+.account-menu {
+    color:white;
+    position: relative;
+}
+
+/* Dropdown menu */
+.account-menu .dropdown-menu {
+    position: absolute;
+    top: 100%;  /* Right below the Account button */
+    left: 0;  /* Align to the left of the parent div */
+    background-color: #051922;
+    border: none;
+    min-width: 150px;
+}
+
+/* Dropdown items */
+.account-menu .dropdown-item {
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.account-menu .dropdown-item:hover {
+    background-color: #ff6600;
+}
+
+/* Navbar elements alignment */
+.navbar .navbar-nav .nav-link {
+    color: white;
+}
+
 
         .breadcrumbs {
             font-size: 0.9rem;
@@ -167,7 +205,6 @@
 }
 
 
-
 /* Product Name Styling */
 .product-name {
     font-size: 1.3rem;
@@ -209,14 +246,74 @@
     </style>
 </head>
 <body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light custom-navbar shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <img src="/assets/img/logo.png" alt="Fruitikha" width="120">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav" aria-controls="navbarNav" 
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <!-- Breadcrumbs -->
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav text-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/shop">Shop</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/profile">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/cart">Cart</a>
+                </li>
+              <!---  <li class="nav-item dropdown ">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" 
+                       data-bs-toggle="dropdown">
+                        <i class="fas fa-user"></i> Account
+                    </a>
+                    <ul class="dropdown-menu ">
+                        <% if (user) { %>
+                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                        <% } else { %>
+                            <li><a class="dropdown-item" href="/login">Login</a></li>
+                            <li><a class="dropdown-item" href="/signup">Sign Up</a></li>
+                        <% } %>
+                    </ul>
+                </li>-->
+            </ul>
+        </div>
+         <!-- Left Side: Account Menu -->
+         <div class="account-menu">
+            <a class="nav-link dropdown-toggle" href="#" role="button" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user"></i> Account
+            </a>
+            <ul class="dropdown-menu">
+                <% if (user) { %>
+                    <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                <% } else { %>
+                    <li><a class="dropdown-item" href="/login">Login</a></li>
+                    <li><a class="dropdown-item" href="/signup">Sign Up</a></li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+    <!-- Breadcrumbs 
     <nav class="breadcrumbs mt-3 mb-3 container">
         <a href="/">Home</a> &gt;
         <a href="/shop">Products</a> &gt;
         <span><%= product.name %></span>
-    </nav>
-
+    </nav>-->
+<br><br>
     <!-- Product Page Layout -->
     <div class="container product-page">
         <div class="row">
@@ -256,8 +353,15 @@
                 </div>
 
                 <!-- Add to Cart Button -->
-                <button class="add-to-cart-btn">Add to Cart</button>
-
+                <form id="addToCartForm" action="/cart/add" method="POST">
+                    <input type="hidden" name="productId" value="<%= product._id %>">
+                    <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>">
+                    <button type="submit">Add to Cart</button>
+                  </form>
+                  
+                  <!-- Display the error message here -->
+                  <div id="error-message" style="color: red;"></div>
+            
                 <!-- Description -->
                 <div class="description mt-4">
                     <h4>Description:</h4>
@@ -275,7 +379,7 @@
             </div>
         </div>
     </div>
-    <br><br>
+    <br><br><br>
 <!-- Related Products Section -->
 <div class="more-products mb-150">
     <div class="container">
@@ -287,6 +391,7 @@
                 </div>
             </div>
         </div>
+        <br><br>
         <div class="row">
             <% relatedProducts.forEach(function(product) { %>
                 <div class="col-lg-3 col-md-4 text-center">
@@ -298,7 +403,7 @@
                         </div>
                         <h3 class="product-name"><%= product.name %></h3>
                         <p class="product-price"><span>Per Kg</span> $<%= product.price %></p>
-                        <a href="/cart" class="cart-btn btn btn-orange"><i class="fas fa-shopping-cart"></i> Add to Cart</a>
+                        <a href="/user/product-details/<%= product._id%>" class="cart-btn"><i class="fas fa-shopping-cart"></i> Shop</a>
                     </div>
                 </div>
             <% }) %>
@@ -339,12 +444,73 @@
                         </ul>
                     </div>
                 </div>
+                <div class="col-lg-3 text-right mt-5 col-md-6">
+                    <div class="social-icons">
+                        <ul>
+                            <li><a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a></li>
+                            <li><a href="#" target="_blank"><i class="fab fa-twitter"></i></a></li>
+                            <li><a href="#" target="_blank"><i class="fab fa-instagram"></i></a></li>
+                            <li><a href="#" target="_blank"><i class="fab fa-linkedin"></i></a></li>
+                            <li><a href="#" target="_blank"><i class="fab fa-dribbble"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Bootstrap JS (Optional but recommended for responsive layout) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
+   <!---<script>
+        document.getElementById('addToCartForm').addEventListener('submit', async function(event) {
+         // event.preventDefault(); // Prevent the form's default submission
+      
+          const formData = new FormData(this); // Get form data
+          const productId = formData.get('productId');
+          const quantity = formData.get('quantity');
+      
+          // Check if productId and quantity are valid
+          if (!productId || !quantity) {
+            document.getElementById('message').innerText = 'Invalid product or quantity';
+            document.getElementById('message').style.color = 'red';
+            return;
+          }
+      
+          // AJAX request to add the product to the cart
+          try {
+            const response = await fetch('/cart/add', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                productId: productId,
+                quantity: quantity
+              }),
+            });
+      
+            const result = await response.text(); // Get the server response as text
+      
+            if (response.ok) {
+              // If the product was successfully added to the cart
+              document.getElementById('message').innerText = 'Product added to cart successfully!';
+              document.getElementById('message').style.color = 'green';
+            } else {
+              // If there was an error (e.g., not enough stock)
+              document.getElementById('message').innerText = result;
+              document.getElementById('message').style.color = 'red';
+            }
+          } catch (error) {
+            // Handle any network or server errors
+            document.getElementById('message').innerText = 'Server error. Please try again later.';
+            document.getElementById('message').style.color = 'red';
+            console.error('Error:', error);
+          }
+        });
+      </script>-->
+      
+      
 </body>
 </html>
+
+

@@ -48,6 +48,14 @@
          <div id="price-error" class="error-message"></div>
 
      </div>
+     <div class="col-lg-4">
+        <div class="mb-4">
+            <label class="form-label">Stock</label>
+            <input placeholder="" name="stock" type="text" class="form-control border">
+            <div id="stock-error" class="error-message"></div>
+        </div>
+    </div>
+</div>
 
 
      <div class="form-group row">
@@ -283,6 +291,7 @@ function validateForm() {
     const name = document.getElementById('name').value.trim();
     const description = document.getElementById('description').value.trim();
     const price = document.getElementById('price').value.trim();
+    const stock = document.getElementById('stock').value.trim();
     const images1 = document.getElementById('input1').files.length;
     const images2 = document.getElementById('input2').files.length;
     const images3 = document.getElementById('input3').files.length;
@@ -302,7 +311,13 @@ function validateForm() {
         displayErrorMessage('description-error', 'Product description should contain only alphabetic characters.');
         isValid = false;
     }
+    
 
+    
+    if (!/^\d+$/.test(stock) || parseInt(stock) <= 0) {
+        displayErrorMessage('stock-error', 'Please enter a valid stock (positive integer).');
+        isValid = false;
+    }
     if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
         displayErrorMessage('price-error', 'Please enter a valid non-negative price.');
         isValid = false;

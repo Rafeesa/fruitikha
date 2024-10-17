@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Fruitikha</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+
+        .navbar-brand img {
+            width: 120px;
+            height: auto;
+        }
+        /* Navbar background */
+        .custom-navbar {
+            background-color: #051922;
+            padding: 10px 15px;
+        }
+        /* Account menu styling */
+        .account-menu {
+            color: white;
+            position: relative;
+        }
+        /* Dropdown menu */
+        .account-menu .dropdown-menu {
+            position: absolute;
+            top: 100%; /* Right below the Account button */
+            left: 0; /* Align to the left of the parent div */
+            background-color: #051922;
+            border: none;
+            min-width: 150px;
+        }
+        /* Dropdown items */
+        .account-menu .dropdown-item {
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .account-menu .dropdown-item:hover {
+            background-color: #ff6600;
+        }
+        /* Navbar elements alignment */
+        .navbar .navbar-nav .nav-link {
+            color: white;
+        }
+        .page-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .content-wrap {
+            flex: 1;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left:0;
+            width: 100%;
+        }
+
+
+        .order-summary-table td, .order-summary-table th {
+            padding: 10px;
+        }
+        .address-card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .address-card:hover {
+            background-color: #f0f0f0;
+        }
+        .selected-address {
+            border-color: #007bff;
+            background-color: #e7f1ff;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light custom-navbar shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="/assets/img/logo.png" alt="Fruitikha" width="120">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" 
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+    
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav text-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/shop">Shop</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cart">Cart</a>
+                    </li>
+                </ul>
+            </div>
+             <!-- Left Side: Account Menu -->
+             <div class="account-menu">
+                <a class="nav-link dropdown-toggle" href="#" role="button" 
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user"></i> Account
+                </a>
+                <ul class="dropdown-menu">
+                    <% if (user) { %>
+                        <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                    <% } else { %>
+                        <li><a class="dropdown-item" href="/login">Login</a></li>
+                        <li><a class="dropdown-item" href="/signup">Sign Up</a></li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+
+    <!-- Main Checkout Content -->
+    <div class="container mt-5 mb-5 content-wrap">
+        <div class="row">
+            <!-- Left Side - Address -->
+            <div class="col-lg-6">
+                <h3 class="mb-4">Shipping Address</h3>
+                <div class="border p-3 mb-3">
+                    <% if (addresses.length > 0) { %>
+                        <form action="/checkout" method="POST" id="addressForm">
+                            <div id="addressSelection">
+                                <% addresses.forEach(addr => { %>
+                                    <div class="address-card" onclick="selectAddress('<%= addr._id %>')">
+                                        <p><strong>Name:</strong> <%= addr.name %></p>
+                                        <p><strong>House Name:</strong> <%= addr.houseName %></p>
+                                        <p><strong>City:</strong> <%= addr.city %></p>
+                                        <p><strong>State:</strong> <%= addr.state %></p>
+                                        <p><strong>Pincode:</strong> <%= addr.pincode %></p>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </form>
+                    <% } else { %>
+                        <p>No addresses found. Please add a new address.</p>
+                    <% } %>
+                </div>
+                <a href="/add-new-address" class="btn btn-outline-primary w-100">Add New Address</a>
+            </div>
+
+            <!-- Right Side - Order Summary -->
+            <div class="col-lg-6">
+                <h3 class="mb-4">Order Summary</h3>
+                <% if (cartItems && cartItems.length > 0) { %>
+                    <table class="table table-bordered order-summary-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% let subtotal = 0; %>
+                            <% cartItems.forEach(item => { %>
+                                <% if (item.productId) { %>
+                                    <tr>
+                                        <td><%= item.productId.name %> (x<%= item.quantity %>)</td>
+                                        <td>$<%= item.productId.price * item.quantity %></td>
+                                    </tr>
+                                    <% subtotal += item.productId.price * item.quantity; %>
+                                <% } %>
+                            <% }) %>
+                            <tr>
+                                <td><strong>Subtotal</strong></td>
+                                <td>$<%= subtotal.toFixed(2) %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Shipping</strong></td>
+                                <td>$<%= shippingCost.toFixed(2) %></td>
+                            </tr>
+                            <tr>
+                                <th>Total</th>
+                                <th>$<%= (subtotal + shippingCost).toFixed(2) %></th>
+                            </tr>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <p>Your cart is empty. <a href="/">Go back to the shop</a>.</p>
+                <% } %>
+
+                <div class="mt-3">
+                    <h5>Payment Method</h5>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="cashOnDelivery" checked>
+                        <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="razorpay">
+                        <label class="form-check-label" for="razorpay">Razorpay</label>
+                    </div>
+                </div>
+                
+                <!-- Hidden button for Razorpay (will trigger when Razorpay is selected) -->
+                <button id="razorpayBtn" class="btn btn-primary w-100 mt-4" style="display:none;">Pay with Razorpay</button>
+                
+                <!-- Place Order Button -->
+                <button type="button" id="placeOrderBtn" class="btn btn-primary w-100 mt-4">Place Order</button>
+            </div>
+        </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 footer">
+        <p class="m-0">© 2024 Fruitikha. All Rights Reserved.</p>
+    </footer>
+
+    <!-- JavaScript to handle address selection -->
+    <script>
+
+        function selectAddress(addressId) {
+            // Highlight the selected address
+            const addressCards = document.querySelectorAll('.address-card');
+            addressCards.forEach(card => {
+                card.classList.remove('selected-address');
+            });
+
+            const selectedCard = document.querySelector(`.address-card[onclick="selectAddress('${addressId}')"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected-address');
+            }
+
+            // Set the selected address ID in the hidden input
+            document.getElementById('selectedAddressId').value = addressId;
+        }
+    </script>
+<script>
+    document.querySelectorAll('.quantity-input').forEach(input => {
+      input.addEventListener('change', function () {
+        const productId = this.dataset.productId;
+        const newQuantity = this.value;
+  
+        if (newQuantity < 1) {
+          alert('Quantity must be at least 1.');
+          this.value = 1; // Reset to 1 if invalid
+          return;
+        }
+  
+        // Send AJAX request to update the quantity
+        fetch('/cart/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },                                                                
+          body: JSON.stringify({ productId, quantity: newQuantity }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message); // Optionally show a success message
+  
+            // Optionally refresh the subtotal dynamically
+            const row = this.closest('tr');
+            const price = parseFloat(row.querySelector('td:nth-child(3)').innerText.slice(1));
+            row.querySelector('.subtotal').innerText = `$${(price * newQuantity).toFixed(2)}`;
+            refreshTotalAmount();
+          } else {
+            alert(data.message);
+          }
+        })
+        .catch(err => console.error('Error:', err));
+      });
+    });
+  
+    function refreshTotalAmount() {
+      let total = 0;
+      document.querySelectorAll('.subtotal').forEach(cell => {
+        total += parseFloat(cell.innerText.slice(1));
+      });
+      document.getElementById('totalAmount').innerText = `Total: $${total.toFixed(2)}`;
+    }
+  </script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(input => {
+    input.addEventListener('change', function () {
+        if (this.value === 'razorpay') {
+            document.getElementById('placeOrderBtn').style.display = 'none';
+            document.getElementById('razorpayBtn').style.display = 'block';
+        } else {
+            document.getElementById('placeOrderBtn').style.display = 'block';
+            document.getElementById('razorpayBtn').style.display = 'none';
+        }
+    });
+});
+
+// Razorpay Payment Logic
+document.getElementById('placeOrderBtn').addEventListener('click', function () {
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const orderAmount = 50000; // Example amount in currency subunits (₹500)
+
+    if (paymentMethod === 'cashOnDelivery') {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/place-order';
+        const orderAmountField = document.createElement('input');
+        orderAmountField.type = 'hidden';
+        orderAmountField.name = 'orderAmount';
+        orderAmountField.value = orderAmount;
+        form.appendChild(orderAmountField);
+
+        document.body.appendChild(form);
+        form.submit();
+    } else if (paymentMethod === 'razorpay') {
+        createOrder(orderAmount);
+    }
+});
+
+// Create order by calling backend
+async function createOrder(amount) {
+    try {
+        const response = await fetch('http://localhost:3002/create-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ amount, paymentMethod: 'razorpay' }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            console.log('Order created:', data.order);
+            initializeRazorpay(data.order, data.key_id);
+        } else {
+            console.error('Order creation failed:', data.message);
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+    }
+}
+
+// Initialize Razorpay
+function initializeRazorpay(order, key_id) {
+    const options = {
+        key: key_id,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Fruitikha",
+        description: "Test Transaction",
+        order_id: order.id,
+        handler: async function (response) {
+            console.log('Payment successful:', response);
+            await verifyPayment(response);
+        },
+        theme: {
+            color: "#3399cc",
+        },
+    };
+
+    const rzp = new Razorpay(options);
+
+    // Handle Razorpay modal closing without payment
+    rzp.on('payment.failed', function (response) {
+        alert(`Payment failed: ${response.error.description}`);
+    });
+
+    rzp.open();
+}
+
+// Verify Payment by calling backend
+async function verifyPayment(paymentData) {
+    try {
+        const response = await fetch('http://localhost:3002/verify-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(paymentData),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert('Payment verified successfully!');
+        } else {
+            alert('Payment verification failed.');
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+    }
+}
+</script>
+  <!-- Bootstrap JS and Popper.js -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+</body>
+</html>
+

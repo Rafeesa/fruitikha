@@ -30,7 +30,206 @@
 	<link rel="stylesheet" href="assets/css/main.css">
 	<!-- responsive -->
 	<link rel="stylesheet" href="assets/css/responsive.css">
+	<style>
+        /* Custom CSS */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
 
+        .breadcrumbs {
+            font-size: 0.9rem;
+        }
+
+        .product-page {
+            margin-top: 30px;
+        }
+
+        .product-images {
+            display: flex;
+            gap: 10px;
+        }
+
+        .thumbnail-images {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .thumbnail-images img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid #ddd;
+        }
+
+        .thumbnail-images img:hover {
+            border-color: #007bff;
+        }
+
+        .product-image img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+        }
+
+        .product-info h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .product-price {
+            font-size: 1.8rem;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        .ratings .star-rating {
+            color: #ffcc00;
+        }
+
+        .add-to-cart-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .add-to-cart-btn:hover {
+            background-color: #218838;
+        }
+
+        .description {
+            margin-top: 20px;
+        }
+
+        .footer-area {
+            background-color: #333;
+            padding: 30px 0;
+            color: white;
+        }
+
+        .footer-area .widget-title {
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .footer-area ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-area ul li a {
+            color: #ddd;
+            text-decoration: none;
+        }
+
+        .footer-area ul li a:hover {
+            color: #007bff;
+        }
+        
+/* Section Title */
+.section-title h3 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.section-title p {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 40px;
+}
+
+/* Main Product Image Styling */
+.product-image img {
+    max-width: 100%;
+    height: 400px; /* Larger image size */
+    object-fit: cover;
+    border-radius: 10px;
+    transition: transform 0.3s ease; /* Smooth zoom transition */
+}
+
+/* Main Product Image Zoom Effect on Hover */
+.product-image img:hover {
+    transform: scale(1.1); /* Zooms in the image to 110% */
+}
+
+/* Related Product Item Card */
+.single-product-item {
+    background: #f9f9f9;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    margin-bottom: 30px;
+    max-width: 350px;
+}
+
+.single-product-item:hover {
+    transform: translateY(-10px);
+}
+
+/* Related Product Image Styling */
+.single-product-item .product-image img {
+    max-width: 100%;
+    height: 200px !important; /* Forcefully reduce the height */
+    object-fit: cover; /* Ensure image fits nicely within the container */
+    border-radius: 10px; /* Optional: Rounded corners */
+}
+
+/* Related Product Image Zoom Effect on Hover */
+.single-product-item .product-image img:hover {
+    transform: scale(1.05); /* Zoom effect on hover */
+    transition: transform 0.3s ease; /* Smooth transition */
+}
+
+
+
+/* Product Name Styling */
+.product-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+/* Product Price Styling */
+.product-price {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #FF5733;
+    margin-bottom: 10px;
+}
+
+/* Light Orange Add to Cart Button */
+.cart-btn {
+    background-color: #FFA07A; /* Light orange button */
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 1rem;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease;
+}
+
+.cart-btn:hover {
+    background-color: #ff7f50; /* Darker light orange on hover */
+}
+
+/* Custom Light Orange Button Class */
+.btn-light-orange {
+    background-color: #FFA07A;
+    color: white;
+}
+
+    </style>
 </head>
 <body>
 	
@@ -145,87 +344,103 @@
 	<!-- end breadcrumb section -->
 
 	<!-- single product -->
-	<div class="single-product mt-150 mb-150">
-		<div class="container">
-			<div class="row">
-				<div class="col-md-5">
-					<div class="single-product-img">
-						<img src="assets/img/products/product-img-5.jpg" alt="">
-					</div>
-				</div>
-				<div class="col-md-7">
-					<div class="single-product-content">
-						<h3>Green apples have polyphenols</h3>
-						<p class="single-product-pricing"><span>Per Kg</span> $50</p>
-						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dicta sint dignissimos, rem commodi cum voluptatem quae reprehenderit repudiandae ea tempora incidunt ipsa, quisquam animi perferendis eos eum modi! Tempora, earum.</p>
-						<div class="single-product-form">
-							<form action="index.html">
-								<input type="number" placeholder="0">
-							</form>
-							<a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Add to Cart</a>
-							<p><strong>Categories: </strong>Fruits, Organic</p>
-						</div>
-						<h4>Share:</h4>
-						<ul class="product-share">
-							<li><a href=""><i class="fab fa-facebook-f"></i></a></li>
-							<li><a href=""><i class="fab fa-twitter"></i></a></li>
-							<li><a href=""><i class="fab fa-google-plus-g"></i></a></li>
-							<li><a href=""><i class="fab fa-linkedin"></i></a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- end single product -->
+	 <!-- Product Page Layout -->
+    <div class="container product-page">
+        <div class="row">
+            <!-- Product Images -->
+            <div class="col-lg-6">
+                <div class="product-images">
+                    <!-- Thumbnails -->
+                    <div class="thumbnail-images">
+                        <% product.productImage.forEach(function(image) { %>
+                            <img class="thumbnail" src="/uploads/product-images/<%= image %>" alt="<%= product.name %>"
+                                onclick="document.getElementById('mainProductImage').src='/uploads/product-images/<%= image %>'">
+                        <% }) %>
+                    </div>
 
-	<!-- more products -->
-	<div class="more-products mb-150">
-		<div class="container">
-			<div class="row">
-				<div class="col-lg-8 offset-lg-2 text-center">
-					<div class="section-title">	
-						<h3><span class="orange-text">Related</span> Products</h3>
-						<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid, fuga quas itaque eveniet beatae optio.</p>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-lg-4 col-md-6 text-center">
-					<div class="single-product-item">
-						<div class="product-image">
-							<a href="single-product.html"><img src="assets/img/products/product-img-1.jpg" alt=""></a>
-						</div>
-						<h3>Strawberry</h3>
-						<p class="product-price"><span>Per Kg</span> 85$ </p>
-						<a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Add to Cart</a>
-					</div>
-				</div>
-				<div class="col-lg-4 col-md-6 text-center">
-					<div class="single-product-item">
-						<div class="product-image">
-							<a href="single-product.html"><img src="assets/img/products/product-img-2.jpg" alt=""></a>
-						</div>
-						<h3>Berry</h3>
-						<p class="product-price"><span>Per Kg</span> 70$ </p>
-						<a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Add to Cart</a>
-					</div>
-				</div>
-				<div class="col-lg-4 col-md-6 offset-lg-0 offset-md-3 text-center">
-					<div class="single-product-item">
-						<div class="product-image">
-							<a href="single-product.html"><img src="assets/img/products/product-img-3.jpg" alt=""></a>
-						</div>
-						<h3>Lemon</h3>
-						<p class="product-price"><span>Per Kg</span> 35$ </p>
-						<a href="cart.html" class="cart-btn"><i class="fas fa-shopping-cart"></i> Add to Cart</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- end more products -->
+                    <!-- Main Product Image -->
+                    <div class="product-image">
+                        <img id="mainProductImage" class="img-fluid" src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.name %>">
+                    </div>
+                </div>
+            </div>
 
+            <!-- Product Info -->
+            <div class="col-lg-6 product-info">
+                <h1><%= product.name %></h1>
+
+                <!-- Ratings -->
+                <div class="ratings mb-3">
+                    <div class="star-rating">
+                        &#9733;&#9733;&#9733;&#9733;&#9734; <!-- Example: 4 out of 5 stars -->
+                    </div>
+                    <span class="text-muted">4.5 stars (30 reviews)</span>
+                </div>
+
+                <!-- Product Price -->
+                <div class="product-price">
+                    $<%= product.price %>
+                </div>
+
+                <!-- Add to Cart Button -->
+                <form id="addToCartForm" action="/cart/add" method="POST">
+                    <input type="hidden" name="productId" value="<%= product._id %>">
+                    <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>">
+                    <button type="submit">Add to Cart</button>
+                  </form>
+                  
+                  <!-- Display the error message here -->
+                  <div id="error-message" style="color: red;"></div>
+            
+                <!-- Description -->
+                <div class="description mt-4">
+                    <h4>Description:</h4>
+                    <p><%= product.description %></p>
+                </div>
+
+                <!-- Customer Reviews -->
+                <div class="reviews mt-4">
+                    <h4>Customer Reviews</h4>
+                    <ul>
+                        <li><strong>John Doe:</strong> Great product! Loved the quality.</li>
+                        <li><strong>Jane Smith:</strong> Really fresh and delivered on time.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br><br>
+<!-- Related Products Section -->
+<div class="more-products mb-150">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2 text-center">
+                <div class="section-title">    
+                    <h3><span class="orange-text">Related</span> Products</h3>
+                 
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <% relatedProducts.forEach(function(product) { %>
+                <div class="col-lg-3 col-md-4 text-center">
+                    <div class="single-product-item">
+                        <div class="product-image">
+                            <a href="/product/<%= product._id %>">
+                                <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.name %>" class="img-fluid related-product-img">
+                            </a>
+                        </div>
+                        <h3 class="product-name"><%= product.name %></h3>
+                        <p class="product-price"><span>Per Kg</span> $<%= product.price %></p>
+                        <a href="/user/product-details/<%= product._id%>" class="cart-btn"><i class="fas fa-shopping-cart"></i> Shop</a>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</div>
+
+<!-- end more products -->
 	<!-- logo carousel -->
 	<div class="logo-carousel-section">
 		<div class="container">

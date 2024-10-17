@@ -38,7 +38,7 @@
 
 
                    <div class="card-body">
-                    <form method="post" action="/admin/editProduct/<%=product._id%>" enctype="multipart/form-data"
+                    <form method="post" action="/admin/editProduct/<%=product._id%>?_method=PUT" enctype="multipart/form-data"
                         onsubmit="return validateForm()">
                       <div class="mb-4">
                           <label for="product_name" class="form-label">Product Name</label>
@@ -61,6 +61,15 @@
                               </div>
                           </div>
                       </div>
+                      <div class="row">
+                        <div class="col-lg-4">
+                            <div class="mb-4">
+                                <label for="stock" class="form-label">Stock</label>
+                                <input name="stock" value="<%=product.stock%>" class="form-control border" id="stock">
+                                <div id="stock-error" class="error-message"></div>
+                            </div>
+                        </div>
+                    </div>
                   
                       <div class="card mb-4">
                           <div class="card-body">
@@ -182,6 +191,7 @@
     const nameElement = document.getElementsByName('name')[0];
     const descriptionElement = document.getElementsByName('description')[0];
     const priceElement = document.getElementsByName('price')[0];
+    const stockElement = document.getElementsByName('stock')[0];
     const categoryElement = document.getElementsByName('category')[0];
     
     
@@ -189,6 +199,7 @@
     const name = nameElement ? nameElement.value : '';
     const description = descriptionElement ? descriptionElement.value : '';
     const price = priceElement ? priceElement.value : '';
+    const stock = stockElement ? stockElement.value : '';
     const category = categoryElement ? categoryElement.value : '';
     
     imageDatas = document.getElementById("imageDatas")?.value;
@@ -209,6 +220,10 @@
         displayErrorMessage('regularPrice-error', 'Please enter a valid non-negative price.');
         isValid = false;
     }
+   /* if (!/^\d+(\.\d{1,2})?$/.test(stock) || parseFloat(stock) < 0) {
+        displayErrorMessage('stock-error', 'Please enter a valid non-negative stock.');
+        isValid = false;
+    }*/
 
     if (category.trim() === "") {
         displayErrorMessage('category-error', 'Please select a category.');
@@ -225,11 +240,11 @@
    
     
     
-/*if ( parseInt(quantity) < 0) {
-                   displayErrorMessage('quantity-error', 'Please enter a valid non-negative quantity.');
+if ( parseInt(stock) < 0) {
+                   displayErrorMessage('stock-error', 'Please enter a valid non-negative stock.');
                    isValid = false;
                }
-    */
+    
     
     
     
@@ -374,7 +389,7 @@
             $.ajax({
                 url:"/admin/deleteImage",
                 method:"POST",
-                data:{immageNameToServer:imageId,productIdToServer:productId},
+                data:{imageNameToServer:imageId,productIdToServer:productId},
                 success:((response)=>{
                     if(response.status===true){
                         window.location.reload()

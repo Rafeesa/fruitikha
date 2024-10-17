@@ -1,0 +1,93 @@
+<%- include("../../views/partials/admin/header") %>
+<br><br><br>
+<h1 class="text-center mb-4">Order Management</h1>
+
+<!--<header class="card-header text-center mb-4">
+    <form action="/admin/orders" method="get" class="d-inline">
+        <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: auto; margin-right: auto;">
+            <input type="text" class="form-control border-0 rounded-pill" placeholder="Search orders..." name="search">
+            <button class="btn btn-primary border-0 rounded-pill" type="submit">Search</button>
+        </div>
+    </form>
+</header>-->
+
+<!-- Flash Messages Section 
+<% if (success_msg) { %>
+    <div class="alert alert-success"><%= success_msg %></div>
+<% } %>
+<% if (error_msg) { %>
+    <div class="alert alert-danger"><%= error_msg %></div>
+<% } %>-->
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-striped text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Order ID</th>
+                <th>User</th>
+                <th>Items</th>
+                <th>Total Amount</th>
+                <th>Status</th> 
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% orders.forEach(order => { %>
+                <tr>
+                    <td><%= order._id %></td>
+                    <td><%= order.userId.name %></td> 
+                    <td>
+                        <ul>
+                            <% if (order.items && order.items.length > 0) { %>
+                                <% order.items.forEach(item => { %>
+                                    <li><%= item.productId.name %> (x<%= item.quantity %>)</li> 
+                                <% }) %>
+                            <% } else { %>
+                                <li>No items</li>
+                            <% } %>
+                        </ul>
+                    </td>
+                    <td>$<%= order.totalCost.toFixed(2) %></td>
+
+                    
+                    <td>
+                        <form action="/admin/orders/<%= order._id %>/status?_method=PUT" method="POST">
+                            <select name="status" class="form-select" onchange="this.form.submit()">
+                                <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                                <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                            </select>
+                        </form>
+                        
+                    </td>
+
+                    <!-- Action (Cancel) -->
+                    <td>
+                        <form action="/admin/orders/<%= order._id %>/delete?_method=DELETE" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                    
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- Pagination -->
+<div class="container mt-3">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mb-20" style="margin-right:200px;">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                </li>
+            <% } %>
+        </ul>
+    </nav>
+</div>
+
+<%- include("../../views/partials/admin/footer") %>

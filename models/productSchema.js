@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema({
         type: String,
          required: true 
         },
+    
     price: { 
         type: Number, 
         required: true
@@ -18,6 +19,11 @@ const productSchema = new mongoose.Schema({
             ref: 'category',  // Reference to the Category model
             required: true
         },
+        stock: {
+            type: Number,
+            required: true
+           // default: 0, 
+          },
    productImage: {
     type:[String],
     required:true

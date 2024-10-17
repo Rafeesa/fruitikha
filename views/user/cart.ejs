@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:400,700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+               body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Content wrapper for flexible layout */
+        .content-wrap {
+            flex: 1;
+        }
+
+        /* Footer styles */
+        footer {
+            background-color: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%; /* Ensure footer spans full screen width */
+        }
+
+
+        .custom-navbar {
+            background-color: #051922;
+            padding: 10px 15px;
+        }
+
+        .account-menu {
+            color: white;
+            position: relative;
+        }
+
+        .account-menu .dropdown-menu {
+            background-color: #051922;
+            border: none;
+            min-width: 150px;
+        }
+
+        .account-menu .dropdown-item {
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .account-menu .dropdown-item:hover {
+            background-color: #ff6600;
+        }
+
+        .navbar .navbar-nav .nav-link {
+            color: white;
+        }
+
+        h1 { 
+            font-family: 'Times New Roman', serif; 
+            font-size: 36px;
+            color: #ff6600; 
+            margin-bottom: 20px; 
+            font-weight: 500;
+        }
+
+        .table th {
+            background-color: #f8f9fa; 
+            color: black; 
+            border: none; 
+        }
+
+        .table td {
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+            color: black;
+        }
+
+        .table .stock { 
+            color: green; 
+        }
+
+        .pricing-table { 
+            background-color: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+        }
+
+        .pricing-table .table th, .pricing-table .table td { 
+            border: none;
+        }
+
+        .pricing-table h3 { 
+            text-align: right; 
+            font-size: 20px;
+        }
+
+        .btn-checkout {
+            width: 100%;
+        }
+
+       
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg custom-navbar shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <img src="/assets/img/logo.png" alt="Fruitikha" width="120">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav" aria-controls="navbarNav" 
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav text-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/shop">Shop</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/profile">Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/cart">Cart</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Account Menu -->
+        <div class="account-menu dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user"></i> Account
+            </a>
+            <ul class="dropdown-menu">
+                <% if (user) { %>
+                    <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                <% } else { %>
+                    <li><a class="dropdown-item" href="/login">Login</a></li>
+                    <li><a class="dropdown-item" href="/signup">Sign Up</a></li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Shopping Cart Heading -->
+<br><br>
+<header class="bg-light text-center py-3">
+    <h1 class="m-0">Shopping Cart</h1>
+</header>
+
+<!-- Cart Section -->
+<br>
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <!-- Product Table -->
+            <div class="col-lg-8">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">Product Image</th>
+                                <th scope="col">Product Name</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Quantity</th>
+                                <th scope="col">Stock</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (cartItems.length > 0) { %>
+                              <% cartItems.forEach(item => { %>
+                                <tr>
+                                  <td>
+                                    <img 
+                                      src="/uploads/product-images/<%= item.productId.productImage[0] %>" 
+                                      alt="<%= item.productId.name %>" 
+                                      style="width: 80px; height: auto;">
+                                  </td>
+                                  <td><%= item.productId.name %></td>
+                                  <td>$<%= item.productId.price.toFixed(2) %></td>
+                                  <td>
+                                    <input 
+                                      type="number" 
+                                      class="quantity-input form-control" 
+                                      style="width: 70px;" 
+                                      value="<%= item.quantity %>" 
+                                      min="1" 
+                                      max="<%= Math.min(item.productId.stock, 5) %>" 
+                                      data-product-id="<%= item.productId._id %>"
+                                    >
+                                  </td>
+                                  <td class="stock"><%= item.productId.stock %> in stock</td>
+                                  <td class="subtotal" data-price="<%= item.productId.price %>">
+                                      $<%= (item.productId.price * item.quantity).toFixed(2) %>
+                                  </td>
+                                  <td>
+                                    <form action="/cart/remove" method="POST" style="display:inline;">
+                                      <input type="hidden" name="productId" value="<%= item.productId._id %>">
+                                      <button type="submit" class="btn btn-danger">Remove</button>
+                                    </form>
+                                  </td>
+                                </tr>
+                              <% }); %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="7" class="text-center">Your cart is empty.</td>
+                              </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pricing Table -->
+            <div class="col-lg-4">
+                <div class="pricing-table">
+                    <h3>Order Summary</h3>
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td>Subtotal</td>
+                                <td id="subtotal">$<%= subtotal.toFixed(2) %></td>
+                            </tr>
+                            <tr>
+                                <td>Shipping</td>
+                                <td>$<%= shippingCost.toFixed(2) %></td>
+                            </tr>
+                            <tr>
+                                <td>Total</td>
+                                <td id="total">$<%= total.toFixed(2) %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <a href="/checkout" class="btn btn-primary btn-checkout">Proceed to Checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-dark text-white text-center py-3">
+    <p class="m-0">© 2024 Fruitikha. All Rights Reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
+
+<script>
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const price = parseFloat(this.closest('tr').querySelector('.subtotal').dataset.price);
+            const quantity = parseInt(this.value);
+            const subtotalCell = this.closest('tr').querySelector('.subtotal');
+            const newTotal = (price * quantity).toFixed(2);
+            subtotalCell.textContent = `$${newTotal}`;
+            
+            // Update the order summary total
+            updateOrderSummary();
+        });
+    });
+
+    function updateOrderSummary() {
+        let subtotal = 0;
+        document.querySelectorAll('.subtotal').forEach(cell => {
+            subtotal += parseFloat(cell.textContent.replace('$', ''));
+        });
+        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        
+        // Assuming shipping cost is a fixed value for now
+        const shippingCost = 45.00; 
+        document.getElementById('total').textContent = `$${(subtotal + shippingCost).toFixed(2)}`;
+    }
+</script>
+
+</body>
+</html>

@@ -5,9 +5,9 @@ const flash = require('connect-flash');
 const passport = require("./config/passport");
 const methodOverride = require('method-override');
 const env = require("dotenv").config();
+const MongoStore = require('connect-mongo');
 const db = require("./config/db");
 const checkBlocked = require('./middlewares/checkBlocked');
-
 
 const app = express();
 
@@ -21,52 +21,53 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
+    store: MongoStore.create({ 
+        mongoUrl: process.env.MONGODB_URI,  
+        collectionName: 'sessions'  
+    }),
     cookie: {
-        secure: false, // Set to true if using HTTPS
+        secure: false, 
         httpOnly: true,
-        maxAge: 72 * 60 * 60 * 1000 // 72 hours
+        maxAge: 72 * 60 * 60 * 1000 
     }
 }));
 
+/* Debugging session middleware
 app.use((req, res, next) => {
     console.log('Current session:', req.session);
     next();
 });
+*/
 
-
-// Passport middleware (initialized after session)
+// Passport middleware (must come after session)
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Flash middleware
+// Flash middleware to store messages across redirects
 app.use(flash());
-
-// Disable caching (to prevent caching of user-specific pages)
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store');
-    next();
-});
 
 // Make flash messages available in templates
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
-    res.locals.error = req.flash('error'); // Add this to capture Passport error flash messages
+    res.locals.error = req.flash('error'); 
     next();
 });
 
 // Middleware to make user data available in all views
 app.use((req, res, next) => {
-    res.locals.user = req.user || null; // Set user data from Passport, or null if not logged in
+    res.locals.user = req.user || null; 
     next();
 });
 
-// Debugging: Check if req.user is set
-// app.use((req, res, next) => {
-//     console.log("Logged in user:", req.user); // For development/debugging purposes
-//     next();
-// });
-app.use(checkBlocked);
+// Disable caching to prevent caching of user-specific pages
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+});
+
+app.use(checkBlocked); // Middleware to check blocked users
+
 // Set view engine and views directory
 app.set("view engine", "ejs");
 app.set("views", [path.join(__dirname, "views/user"), path.join(__dirname, "views/admin")]);
@@ -77,22 +78,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
+//const razorpayRoutes = require("./routes/razorpayRoutes"); // Import Razorpay routes
+
 app.use("/", userRouter);
 app.use('/admin', adminRouter);
+//app.use("/razorpay", razorpayRoutes); // Register Razorpay routes
 
 // Database connection
 db();
 
-// Start server
-const PORT = process.env.PORT || 3002;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
-// Error handling middleware (optional)
+// Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Something broke!');
+});
+
+// Start the server
+const PORT = process.env.PORT || 3002;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = app;

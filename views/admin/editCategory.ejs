@@ -1,8 +1,8 @@
 <%- include("../../views/partials/admin/header") %>
 <h1 class="text-center mb-4">Edit Category</h1>
 <div class="container">
-    <form action="/admin/editCategory/<%= category._id%>" method="POST" class="form-group">
-        <input type="hidden" name="_method" value="PUT">
+    <form action="/admin/editCategory/<%= category._id%>?_method=PUT" method="post" class="form-group">
+       <!--<input type="hidden" name="_method" value="PUT">-->
         <div class="mb-3">
             <label for="name" class="form-label">Category Name:</label>
             <input type="text" class="form-control" id="name" name="name" value="<%= category.name %>" required>
