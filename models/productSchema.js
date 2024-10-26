@@ -14,6 +14,10 @@ const productSchema = new mongoose.Schema({
         type: Number, 
         required: true
          },
+         salePrice:{
+            type:Number,
+            required:false
+         },
          category: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'category',  // Reference to the Category model
@@ -23,6 +27,10 @@ const productSchema = new mongoose.Schema({
             type: Number,
             required: true
            // default: 0, 
+          },
+          productOffer:{
+            type:Number,
+            deafault:0
           },
    productImage: {
     type:[String],

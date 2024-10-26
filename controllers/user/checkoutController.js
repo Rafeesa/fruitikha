@@ -46,62 +46,11 @@ const getCheckoutPage = async (req, res) => {
         res.status(500).send('Server Error');
     }
 };
-
-
-
-       
-
-/*const placeOrder = async (req, res) => {
-    try {
-        const userId = req.user._id;
-
-        const cart = await Cart.findOne({ userId }).populate('items.productId');
-        if (!cart || cart.items.length === 0) {
-            return res.status(400).send('Your cart is empty');
-        }
-
-        const address = await Address.findOne({ userId });
-        if (!address || address.address.length === 0) {
-            return res.status(400).send('No address found');
-        }
-        let subtotal = 0;
-        cart.items.forEach(item => {
-            subtotal += item.productId.price * item.quantity;
-        });
-
-        const shippingCost = 45;
-        const totalCost = subtotal + shippingCost;
-
-        const newOrder = new Order({
-            userId: userId,
-            items: cart.items,
-            address: address.address[0],
-            subtotal: subtotal,
-            shippingCost: shippingCost,
-            totalCost: totalCost
-            
-        });
-
-        const saveOrder = await newOrder.save();
-
-        await Cart.deleteOne({ userId });
-
-        res.render('orderSuccess', {
-            title: 'Order Success', 
-            orderId: saveOrder._id, 
-            totalCost: totalCost 
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error placing order');
-    }
-};*/
 const placeOrder = async (req, res) => {
     try {
         const userId = req.user._id;
-
         const cart = await Cart.findOne({ userId }).populate('items.productId');
+        
         if (!cart || cart.items.length === 0) {
             return res.status(400).send('Your cart is empty');
         }
@@ -110,12 +59,12 @@ const placeOrder = async (req, res) => {
         if (!address || address.address.length === 0) {
             return res.status(400).send('No address found');
         }
-        
+
         let subtotal = 0;
         cart.items.forEach(item => {
             subtotal += item.productId.price * item.quantity;
         });
-
+        
         const shippingCost = 45;
         const totalCost = subtotal + shippingCost;
 
@@ -125,33 +74,63 @@ const placeOrder = async (req, res) => {
             address: address.address[0],
             subtotal: subtotal,
             shippingCost: shippingCost,
-            totalCost: totalCost
-        });
-
-        const saveOrder = await newOrder.save();
-
-        await Cart.deleteOne({ userId });
-
-        // Pass the order details to the view
-        res.render('orderSuccess', {
-            title: 'Order Success',
-            orderId: saveOrder._id,
             totalCost: totalCost,
-            orderItems: cart.items, // Pass the order items
-            subtotal: subtotal,      // Pass the subtotal
-            shippingCost: shippingCost // Pass the shipping cost
+            paymentMethod: req.body.paymentMethod // Get payment method from request body
         });
-        
 
+        const savedOrder = await newOrder.save();
+
+        // Update product stock
+        for (let item of cart.items) {
+            const product = await Product.findById(item.productId._id);
+            if (product) {
+                product.stock -= item.quantity;
+                if (product.stock < 0) {
+                    product.stock = 0;
+                }
+                await product.save();
+            }
+        }
+
+        // Clear the cart
+        await Cart.deleteOne({ userId });
+        req.session.orderDetails = {
+            orderId: savedOrder._id,
+            totalCost: totalCost,
+            orderItems: cart.items, // Save the cart items to pass to the view
+            subtotal: subtotal,
+            shippingCost: shippingCost
+        };
+        // Redirect to the success page
+        res.redirect('/orderSuccess');
     } catch (err) {
         console.error(err);
         res.status(500).send('Error placing order');
     }
 };
 
+const getOrderSuccessPage = (req, res) => {
+    // Check if orderDetails exists in the session
+    if (!req.session.orderDetails) {
+        return res.redirect('/'); // Redirect to home or another page if no order details are found
+    }
+
+    const { orderId, totalCost, orderItems, subtotal, shippingCost } = req.session.orderDetails;
+
+    res.render('orderSuccess', {
+        title: 'Order Success',
+        orderId: orderId,
+        totalCost: totalCost,
+        orderItems: orderItems,
+        subtotal: subtotal,
+        shippingCost: shippingCost
+    });
+};
 
 
 module.exports = {
     getCheckoutPage,
-    placeOrder
+    placeOrder,
+    getOrderSuccessPage
+    
 }

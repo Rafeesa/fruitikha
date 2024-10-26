@@ -38,12 +38,12 @@ const createOrder = async (req, res) => {
         };
 
         const order = await razorpay.orders.create(options);
-        console.log('Order Created:', order); // Debug order object
+        console.log('Order Created:', order); 
 
         res.json({
             success: true,
             order,
-            key_id: process.env.RAZORPAY_KEY_ID // Don't send secret to client
+            key_id: process.env.RAZORPAY_KEY_ID 
         });
     } catch (error) {
         console.error("Error creating Razorpay order:", error);
@@ -59,7 +59,7 @@ const createOrder = async (req, res) => {
 const verifyPayment = (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    console.log("Payment Verification Body:", req.body); // Debugging request data
+    console.log("Payment Verification Body:", req.body); 
 
     try {
         const generatedSignature = crypto
@@ -79,7 +79,7 @@ const verifyPayment = (req, res) => {
         res.status(500).json({
             success: false,
             message: "Payment verification error",
-            error: error.message // Send error details for easier debugging
+            error: error.message 
         });
     }
 };

@@ -219,8 +219,75 @@ const getEditProduct = async (req, res) => {
   }
 };
 
-// Edit an existing product
 const editProduct = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+
+    // Check if the product name already exists (excluding current product)
+    const existingProduct = await Product.findOne({ name: data.name, _id: { $ne: id } });
+    if (existingProduct) {
+      return res.status(400).json({ error: "Product with this name already exists, please try another name" });
+    }
+
+    // Find category by name
+    const categoryId = await Category.findOne({ name: data.category });
+    if (!categoryId) {
+      return res.status(400).json({ error: "Invalid category" });
+    }
+    console.log("Uploaded files:", req.files);
+
+    const newImages = [];
+    if (req.files && req.files.length > 0) {
+      for (let i = 0; i < req.files.length; i++) {
+        const originalImagePath = req.files[i].path;
+        const resizedImagePath = path.join('public', 'uploads', 'product-images', req.files[i].filename);
+
+        // Resize the image using sharp
+        await sharp(originalImagePath)
+          .resize({ width: 440, height: 440 })
+          .toFile(resizedImagePath);
+
+        // Add resized image filename to newImages array
+        newImages.push(req.files[i].filename);
+      }
+    }
+
+    // Prepare fields to be updated
+    const updateFields = {
+      name: data.name,
+      description: data.description,
+      category: categoryId._id,
+      price: data.price,
+      stock: data.stock,
+    };
+    console.log("Update Fields:", updateFields);
+    console.log("New Images to be added:", newImages);
+
+    // If new images are uploaded, add them to the existing productImage array
+    if (newImages.length > 0) {
+      const updatedProduct = await Product.findByIdAndUpdate(id, {
+        $push: { productImage: { $each: newImages } },
+        $set: updateFields,
+      }, { new: true });
+
+      console.log("Updated Product:", updatedProduct); // Log the updated product to check if images are added
+    } else {
+      // Update without adding new images
+      await Product.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
+    }
+
+    res.redirect("/admin/Product");
+  } catch (error) {
+    console.error("Error editing product", error);
+    res.status(500).json({ error: "Internal Server Error" }); // Send error response to client
+  }
+};
+
+
+
+// Edit an existing product
+/*const editProduct = async (req, res) => {
   try {
       const id = req.params.id;
       const data = req.body;
@@ -252,15 +319,17 @@ const editProduct = async (req, res) => {
           category: categoryId._id,
           price: data.price,
           stock:data.stock,
-          productImage: images.length > 0 ? images : product.productImage, // Keep existing images if no new ones
+         // productImage: images.length > 0 ? images : product.productImage, // Keep existing images if no new ones
       };
-
+if(req.files.length>0){
+  updateFields.$push={productImage:{$each:images}}
+}
       await Product.findByIdAndUpdate(id, updateFields, { new: true });
       res.redirect("/admin/Product");
   } catch (error) {
       console.error("Error editing product", error);
   }
-};
+};*/
 
 // Delete a single image from a product
 const deleteSingleImage = async (req, res) => {
@@ -286,7 +355,7 @@ const deleteSingleImage = async (req, res) => {
 
       // Check if the image exists
       if (fs.existsSync(imagePath)) {
-          // Delete the image asynchronously
+          
           await fs.unlinkSync(imagePath);
           console.log(`Image ${imageNameToServer} deleted successfully`);
           res.send({ status: true, message: "Image deleted successfully" });
@@ -303,14 +372,90 @@ const deleteProduct = async (req, res) => {
   try {
     const productId = req.params.id; // Retrieve the product ID from the request parameters
 
-    // Use `findByIdAndDelete` to remove the product from the database
+    
     await Product.findByIdAndDelete(productId);
 
-    // Redirect to the product listing page after successful deletion
+    
     res.redirect('/admin/product');
   } catch (error) {
     console.error('Error deleting product:', error);
     res.status(500).send('Internal Server Error');
+  }
+};
+
+
+const addProductOffer = async (req, res) => {
+  try {
+    const { productId, percentage } = req.body;
+
+    // Fetch product and category details
+    const findProduct = await Product.findOne({ _id: productId });
+    if (!findProduct) {
+      return res.status(404).json({ status: false, message: "Product not found" });
+    }
+
+    const findCategory = await Category.findOne({ _id: findProduct.category });
+    if (!findCategory) {
+      return res.status(404).json({ status: false, message: "Category not found" });
+    }
+
+    
+    if (findCategory.categoryOffer > percentage) {
+      return res.json({ 
+        status: false, 
+        message: "This product's category already has a better category offer" 
+      });
+    }
+
+    
+    findProduct.salePrice = findProduct.price - Math.floor(findProduct.price * (percentage / 100));
+    findProduct.productOffer = parseInt(percentage);
+    await findProduct.save();
+
+    
+    findCategory.categoryOffer = 0;
+    await findCategory.save();
+
+    res.json({ status: true, message: "Product offer added successfully" });
+  } catch (error) {
+    console.error("Error adding product offer:", error);
+    res.status(500).json({ status: false, message: "Internal server error" });
+  }
+};
+
+
+
+/*const removeProductOffer=async(req,res)=>
+{
+  const{productId}=req.body
+  const findProduct=await Product.findOne({_id:productId})
+  const percentage =findProduct.price+Math.floor(findProduct.price*(percentage/100))
+  findProduct.productOffer=0
+  await findProduct.save()
+  res.json({status:true})
+}*/
+const removeProductOffer = async (req, res) => {
+  try {
+    const { productId } = req.body;
+
+    // Find the product by ID
+    const findProduct = await Product.findOne({ _id: productId });
+
+    if (!findProduct) {
+      return res.status(404).json({ status: false, message: 'Product not found' });
+    }
+
+    // Reset the product price to the original (if salePrice was modified)
+    findProduct.salePrice = findProduct.price; 
+    findProduct.productOffer = 0; // Remove the offer
+
+    // Save the updated product
+    await findProduct.save();
+
+    res.json({ status: true, message: 'Offer removed successfully' });
+  } catch (error) {
+    console.error('Error in removeProductOffer:', error);
+    res.status(500).json({ status: false, message: 'Internal server error' });
   }
 };
 
@@ -322,5 +467,8 @@ module.exports={
     getEditProduct,
     editProduct,
     deleteSingleImage,
-    deleteProduct
+    deleteProduct,
+    addProductOffer,
+    removeProductOffer
+    
 }

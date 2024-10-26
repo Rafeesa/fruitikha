@@ -358,20 +358,50 @@ const deleteAddress = async (req, res) => {
   
   const cancelOrder = async (req, res) => {
     try {
-        const orderId = req.params.id; 
+        const orderId = req.params.id;
         const userId = req.session.passport?.user;
-        const order = await Order.findOne({ _id: orderId, userId: userId });
+
+        // Find the order by ID and ensure it belongs to the user
+        const order = await Order.findOne({ _id: orderId, userId });
 
         if (!order) {
             return res.status(404).send('Order not found or does not belong to you.');
         }
+
         if (order.status !== 'Pending') {
-            return res.status(400).send('Only orders that are pending can be canceled.');
+            return res.status(400).send('Only pending orders can be canceled.');
         }
 
+        const refundAmount =  order.totalCost; // Fetch correct refund amount
+        console.log(refundAmount)
+
+        // Update order status to 'Cancelled'
         order.status = 'Cancelled';
         await order.save();
-        req.flash('success_msg', 'Order canceled successfully.'); 
+
+        // Find the user and update their wallet balance
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).send('User not found.');
+        }
+
+        user.walletBalance += refundAmount; // Add refund to wallet balance
+
+        // Log the transaction in walletTransactions
+        user.walletTransactions.push({
+            amount: refundAmount,
+            date: new Date(),
+            description: `Refund for canceled order #${orderId}`,
+        });
+
+        await user.save(); // Save updated user details
+
+        // Flash a success message and redirect to the profile page
+        req.flash(
+            'success_msg',
+            `Order canceled successfully. ₹${refundAmount} has been credited to your wallet.`
+        );
         res.redirect('/profile');
     } catch (error) {
         console.error('Error canceling order:', error);
@@ -379,46 +409,66 @@ const deleteAddress = async (req, res) => {
     }
 };
 
+
 const changePassword = async (req, res) => {
     try {
-        const userId = req.session.passport?.user;
-        const { newPass1, newPass2 } = req.body;
-
-        if (!userId) {
-            return res.redirect('/login');
-        }
-
-        
-        if (newPass1 !== newPass2) {
-            return res.render('profile', {
-                user: req.user,
-                orders: await Order.find({ userId }).exec(),
-                message: 'Passwords do not match.'
-            });
-        }
-
-    
-        const hashedPassword = await bcrypt.hash(newPass1, 10); 
-
-        
-        await User.updateOne({ _id: userId }, { password: hashedPassword });
-
-        
-        req.session.message = 'Password changed successfully!';
-        res.redirect('/profile'); 
-    } catch (error) {
-        console.error('Error changing password:', error);
-
-        
-        res.status(500).render('profile', {
-            user: req.user,
-            orders: await Order.find({ userId }).exec(),
-            message: 'Internal Server Error. Please try again later.'
+      const userId = req.session.passport?.user;
+      const { currentPass, newPass1, newPass2 } = req.body;
+  
+      if (!userId) {
+        return res.redirect('/login');
+      }
+  
+      // Fetch user details from the database
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(400).render('profile', {
+          user: req.user,
+          orders: await Order.find({ userId }).exec(),
+          message: 'User not found.'
         });
+      }
+  
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(currentPass, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.render('profile', {
+          user: req.user,
+          orders: await Order.find({ userId }).exec(),
+          message: 'Current password is incorrect.'
+        });
+      }
+  
+      // Check if new passwords match
+      if (newPass1 !== newPass2) {
+        return res.render('profile', {
+          user: req.user,
+          orders: await Order.find({ userId }).exec(),
+          message: 'Passwords do not match.'
+        });
+      }
+  
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPass1, 10);
+  
+      // Update password in the database
+      await User.updateOne({ _id: userId }, { password: hashedPassword });
+  
+      // Set success message and redirect
+      req.session.message = 'Password changed successfully!';
+      res.redirect('/profile');
+    } catch (error) {
+      console.error('Error changing password:', error);
+  
+      // Handle server error
+      res.status(500).render('profile', {
+        user: req.user,
+        orders: await Order.find({ userId }).exec(),
+        message: 'Internal Server Error. Please try again later.'
+      });
     }
-};
-
-
+  };
+  
 
 const updateProfile = async (req, res) => {
   try {

@@ -37,7 +37,18 @@ const userSchema=new Schema({
     isAdmin:{
         type:Boolean,
         default:false
-    }
+    },
+    walletBalance: { 
+        type: Number, 
+        default: 0 
+    }, 
+    walletTransactions: [{ 
+      amount: Number, 
+      date: Date, 
+      description: String 
+    }],
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]  
+    
    
 })
 

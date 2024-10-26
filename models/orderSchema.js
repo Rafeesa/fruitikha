@@ -86,6 +86,7 @@ const orderSchema = new mongoose.Schema({
         type: Object,  // Store the address as an object
         required: true
     },
+    
     subtotal: {
         type: Number,
         required: true

@@ -7,6 +7,10 @@ const profileController=require("../controllers/user/profileController")
 const cartController=require("../controllers/user/cartController")
 const checkoutController=require("../controllers/user/checkoutController")
 const razorpayController=require("../controllers/user/razorpayController")
+const walletController=require("../controllers/user/walletController")
+const wishlistController=require("../controllers/user/wishlistController")
+const orderController=require("../controllers/user/orderController")
+
 
 
 
@@ -55,6 +59,19 @@ router.post('/create-order', razorpayController.createOrder);
 router.post('/verify-payment', razorpayController.verifyPayment);
 
 
+//wallet
+router.get('/wallet',walletController.getWallet)
+
+//wishlist
+router.get('/wishlist',wishlistController.getWishlist)
+router.post('/addToWishlist',wishlistController.addToWishlist)
+//router.delete('/removeWishlist/:id',wishlistController.removeWishlist)
+router.delete('/removeWishlist/:productId', wishlistController.removeWishlist);
+
+//myOrder
+router.get('/myOrder',orderController.getOrders)
+
+
 
 //address management
 router.get('/add-new-address', profileController.getAddNewAddress);
@@ -76,6 +93,8 @@ router.post('/cart/update', cartController.updateCartQuantity);
 //checkout management
 router.get('/checkout',checkoutController.getCheckoutPage)
 router.post('/place-order',checkoutController.placeOrder);
+router.get('/orderSuccess', checkoutController.getOrderSuccessPage);
+
 
 
 

@@ -29,9 +29,12 @@ router.get("/unblockCustomer",adminAuth,customerController.customerunBlocked)
  router.get('/Category',adminAuth,categoryController.getAllCategories);
  router.get('/categories/new', adminAuth, categoryController.showNewCategoryForm);
  router.post('/categories', adminAuth, categoryController.createCategory);
+ router.post("/addCategoryOffer",adminAuth,categoryController.addCategoryOffer)
+ router.post("/removeCategoryOffer",adminAuth,categoryController.removeCategoryOffer)
  router.get('/editCategory', adminAuth, categoryController.showEditCategoryForm);
  router.put("/editCategory/:id", adminAuth, categoryController.updateCategory);
  router.delete('/categories/:id', adminAuth, categoryController.deleteCategory);
+ 
 
 
 
@@ -43,11 +46,14 @@ router.get("/editProduct",adminAuth,productController.getEditProduct)
 router.put("/editProduct/:id",adminAuth,upload.array("images",3),productController.editProduct)
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage)
 router.delete("/product/:id", adminAuth, productController.deleteProduct);
+router.post("/addProductOffer",adminAuth,productController.addProductOffer)
+router.post("/removeProductOffer",adminAuth,productController.removeProductOffer)
 
 //order Management
 router.get('/orders',adminAuth,orderController.getAllOrders)
 router.put('/orders/:id/status',orderController.updateOrderStatus)
 router.delete('/orders/:id/delete', orderController.deleteOrder);
+
 
 
 

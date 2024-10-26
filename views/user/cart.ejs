@@ -194,7 +194,7 @@
                                       style="width: 80px; height: auto;">
                                   </td>
                                   <td><%= item.productId.name %></td>
-                                  <td>$<%= item.productId.price.toFixed(2) %></td>
+                                  <td> ₹<%= item.productId.price.toFixed(2) %></td>
                                   <td>
                                     <input 
                                       type="number" 
@@ -204,11 +204,11 @@
                                       min="1" 
                                       max="<%= Math.min(item.productId.stock, 5) %>" 
                                       data-product-id="<%= item.productId._id %>"
-                                    >
+                                    readonly/>
                                   </td>
                                   <td class="stock"><%= item.productId.stock %> in stock</td>
                                   <td class="subtotal" data-price="<%= item.productId.price %>">
-                                      $<%= (item.productId.price * item.quantity).toFixed(2) %>
+                                    ₹<%= (item.productId.price * item.quantity).toFixed(2) %>
                                   </td>
                                   <td>
                                     <form action="/cart/remove" method="POST" style="display:inline;">
@@ -236,15 +236,15 @@
                         <tbody>
                             <tr>
                                 <td>Subtotal</td>
-                                <td id="subtotal">$<%= subtotal.toFixed(2) %></td>
+                                <td id="subtotal"> ₹<%= subtotal.toFixed(2) %></td>
                             </tr>
                             <tr>
                                 <td>Shipping</td>
-                                <td>$<%= shippingCost.toFixed(2) %></td>
+                                <td> ₹<%= shippingCost.toFixed(2) %></td>
                             </tr>
                             <tr>
                                 <td>Total</td>
-                                <td id="total">$<%= total.toFixed(2) %></td>
+                                <td id="total"> ₹<%= total.toFixed(2) %></td>
                             </tr>
                         </tbody>
                     </table>
@@ -266,6 +266,13 @@
 <script>
     document.querySelectorAll('.quantity-input').forEach(input => {
         input.addEventListener('input', function() {
+            const maxStock = parseInt(this.max);
+        if (this.value > maxStock) {
+            alert(`You can't add more than ${maxStock} of this item.`);
+            this.value = maxStock;
+        } else if (this.value < 1) {
+            this.value = 1;
+        }
             const price = parseFloat(this.closest('tr').querySelector('.subtotal').dataset.price);
             const quantity = parseInt(this.value);
             const subtotalCell = this.closest('tr').querySelector('.subtotal');
@@ -280,13 +287,13 @@
     function updateOrderSummary() {
         let subtotal = 0;
         document.querySelectorAll('.subtotal').forEach(cell => {
-            subtotal += parseFloat(cell.textContent.replace('$', ''));
+            subtotal += parseFloat(cell.textContent.replace(' ₹', ''));
         });
-        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('subtotal').textContent = ` ₹${subtotal.toFixed(2)}`;
         
         // Assuming shipping cost is a fixed value for now
         const shippingCost = 45.00; 
-        document.getElementById('total').textContent = `$${(subtotal + shippingCost).toFixed(2)}`;
+        document.getElementById('total').textContent = ` ₹${(subtotal + shippingCost).toFixed(2)}`;
     }
 </script>
 

@@ -64,7 +64,8 @@ const addToCart = async (req, res) => {
 
     
     if (quantityToAdd > product.stock) {
-      return res.status(400).send(`Only ${product.stock} items are available in stock.`);
+      //return res.status(400).send(`Only ${product.stock} items are available in stock.`);
+      return res.redirect(`/product-details/${productId}?error=Only ${product.stock} items are available in stock.`);
     }
 
     let cart = await Cart.findOne({ userId });
@@ -72,24 +73,39 @@ const addToCart = async (req, res) => {
       cart = new Cart({ userId, items: [] });
     }
 
-    const existingItemIndex = cart.items.findIndex(item => item.productId.equals(productId));
+   /* const existingItemIndex = cart.items.findIndex(item => item.productId.equals(productId));
     if (existingItemIndex > -1) {
-      const totalQuantity = cart.items[existingItemIndex].quantity + quantityToAdd;
+      const totalQuantity = cart.items[existingItemIndex].quantity + quantityToAdd;*/
+      const existingItemIndex = cart.items.findIndex(item => item.productId.equals(productId));
+console.log(`Existing item index: ${existingItemIndex}`);
+
+if (existingItemIndex > -1) {
+    const totalQuantity = cart.items[existingItemIndex].quantity + quantityToAdd;
+    console.log(`Current quantity in cart: ${cart.items[existingItemIndex].quantity}`);
+    console.log(`Quantity to add: ${quantityToAdd}`);
+    console.log(`Total quantity after addition: ${totalQuantity}`);
+    
+    // Further checks...
+
+
 
       
       if (totalQuantity > product.stock) {
-        return res.status(400).send(`You can only add up to ${product.stock} items in total for this product.`);
+        return res.redirect(`/product-details/${productId}?error=You can only add up to ${product.stock} items in total for this product.`);
       }
 
       if (totalQuantity > maxQtyPerPerson) {
-        return res.status(400).send(`You can only add up to ${maxQtyPerPerson} items of this product.`);
+        return res.redirect(`/product-details/${productId}?error=You can only add up to ${product.stock} items in total for this product.`);
+        //return res.status(400).send(`You can only add up to ${maxQtyPerPerson} items of this product.`);
       }
 
       cart.items[existingItemIndex].quantity += quantityToAdd;
     } else {
       // New item - check if quantity exceeds max limit
       if (quantityToAdd > maxQtyPerPerson) {
-        return res.status(400).send(`You can only add up to ${maxQtyPerPerson} items of this product.`);
+        return res.redirect(`/product/${productId}?error=You can only add up to ${product.stock} items in total for this product.`);
+
+        //return res.status(400).send(`You can only add up to ${maxQtyPerPerson} items of this product.`);
       }
       cart.items.push({ productId, quantity: quantityToAdd });
     }

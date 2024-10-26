@@ -132,19 +132,29 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
-                    <th>Product Name</th>
+                    <th>Product</th>
+                    <th>Name</th>
                     <th>Quantity</th>
                     <th>Price</th>
+            
+                    <th>Shipping Cost</th>
                     <th>Subtotal</th>
                 </tr>
             </thead>
             <tbody>
                 <% orderItems.forEach(item => { %>
                     <tr>
+                        <td>
+                            <img 
+                              src="/uploads/product-images/<%= item.productId.productImage[0] %>" 
+                              alt="<%= item.productId.name %>" 
+                              style="width: 80px; height: auto;">
+                          </td>
                         <td><%= item.productId.name %></td>
                         <td><%= item.quantity %></td>
-                        <td>$<%= (item.productId.price * item.quantity).toFixed(2) %></td>
-                        <td>$<%= (subtotal + shippingCost).toFixed(2) %></td> <!-- Now this will work -->
+                        <td>₹<%= (item.productId.price * item.quantity).toFixed(2) %></td>
+                        <td>₹<%= shippingCost %></td>
+                        <td>₹<%= (subtotal + shippingCost).toFixed(2) %></td> <!-- Now this will work -->
                     </tr>
                 <% }) %>
             </tbody>

@@ -1,26 +1,5 @@
 <%- include("../../views/partials/user/header") %>
 
-<!-- Search Area -->
-<div class="search-area">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                <span class="close-btn"><i class="fas fa-window-close"></i></span>
-                <div class="search-bar">
-                    <div class="search-bar-tablecell">
-                        <h3>Search For:</h3>
-                        <form method="GET" action="/shop">
-                            <input type="text" name="search" placeholder="Keywords" value="<%= searchQuery %>">
-                            <button type="submit">Search <i class="fas fa-search"></i></button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End Search Area -->
-
 <!-- Breadcrumb Section -->
 <div class="breadcrumb-section breadcrumb-bg">
     <div class="container">
@@ -36,62 +15,77 @@
 </div>
 <!-- End Breadcrumb Section -->
 
+<!-- Shop Section -->
 <div class="product-section mt-150 mb-150">
     <div class="container">
         <div class="row">
-            <!-- Left Sidebar for Advanced Search and Sorting -->
-            <div class="sort-options">
-                <h5>Sort By:</h5>
-                <form method="GET" action="/shop">
-                    <% if (searchQuery) { %>
-                        <input type="hidden" name="search" value="<%= searchQuery %>">
-                    <% } %>
-                
-                    <select class="form-control mb-4" name="category" id="category">
-                        <option value="">All Categories</option>
-                        <% categories.forEach(function(category) { %>
-                            <option value="<%= category._id %>" 
-                                    <%= (selectedCategory === category._id.toString()) ? 'selected' : '' %>>
-                                <%= category.name %>
-                            </option>
-                        <% }) %>
-                    </select>
-                
-                    <select class="form-control mb-4" name="sort" id="sort">
-                        <option value="popularity" <%= (sortOption === 'popularity') ? 'selected' : '' %>>Popularity</option>
-                        <option value="price-low-high" <%= (sortOption === 'price-low-high') ? 'selected' : '' %>>Price: Low to High</option>
-                        <option value="price-high-low" <%= (sortOption === 'price-high-low') ? 'selected' : '' %>>Price: High to Low</option>
-                        <option value="average-rating" <%= (sortOption === 'average-rating') ? 'selected' : '' %>>Average Ratings</option>
-                        <option value="featured" <%= (sortOption === 'featured') ? 'selected' : '' %>>Featured</option>
-                        <option value="new-arrivals" <%= (sortOption === 'new-arrivals') ? 'selected' : '' %>>New Arrivals</option>
-                        <option value="a-z" <%= (sortOption === 'a-z') ? 'selected' : '' %>>A - Z</option>
-                        <option value="z-a" <%= (sortOption === 'z-a') ? 'selected' : '' %>>Z - A</option>
-                    </select>
-                
-                    <button type="submit" class="btn btn-primary btn-block">Apply</button>
-                </form>
-                
+            <!-- Left Sidebar: Search, Filter, and Sort Options -->
+            <div class="col-lg-3 col-md-4">
+                <div class="sort-options">
+                    <h5>Search, Sort & Filter:</h5>
+                    <form method="GET" action="/shop">
+                        <!-- Search Input -->
+                        <div class="mb-3">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                name="search" 
+                                placeholder="Search products..." 
+                                value="<%= searchQuery %>" 
+                            />
+                        </div>
+
+                        <!-- Category Filter -->
+                        <div class="mb-3">
+                            <select class="form-control" name="category">
+                                <option value="">All Categories</option>
+                                <% categories.forEach(function (category) { %>
+                                    <option value="<%= category._id %>" 
+                                        <%= (selectedCategory === category._id.toString()) ? 'selected' : '' %>>
+                                        <%= category.name %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <!-- Sort Options -->
+                        <div class="mb-3">
+                            <select class="form-control" name="sort">
+                                <option value="popularity" <%= (sortOption === 'popularity') ? 'selected' : '' %>>Popularity</option>
+                                <option value="price-low-high" <%= (sortOption === 'price-low-high') ? 'selected' : '' %>>Price: Low to High</option>
+                                <option value="price-high-low" <%= (sortOption === 'price-high-low') ? 'selected' : '' %>>Price: High to Low</option>
+                                <option value="average-rating" <%= (sortOption === 'average-rating') ? 'selected' : '' %>>Average Ratings</option>
+                                <option value="featured" <%= (sortOption === 'featured') ? 'selected' : '' %>>Featured</option>
+                                <option value="new-arrivals" <%= (sortOption === 'new-arrivals') ? 'selected' : '' %>>New Arrivals</option>
+                                <option value="a-z" <%= (sortOption === 'a-z') ? 'selected' : '' %>>A - Z</option>
+                                <option value="z-a" <%= (sortOption === 'z-a') ? 'selected' : '' %>>Z - A</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Apply</button>
+                    </form>
+                </div>
             </div>
 
-            <!-- Products Section -->
+            <!-- Product Grid -->
             <div class="col-lg-9 col-md-8">
                 <div class="row">
                     <% if (products.length > 0) { %>
                         <% products.forEach(function(product) { %>
-                        <div class="col-lg-4 col-md-6 text-center">
-                            <div class="single-product-item">
-                                <div class="product-image">
-                                    <a href="/user/product-details/<%= product._id %>">
-                                        <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.name %>">
+                            <div class="col-lg-4 col-md-6 text-center">
+                                <div class="single-product-item">
+                                    <div class="product-image">
+                                        <a href="/user/product-details/<%= product._id %>">
+                                            <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.name %>">
+                                        </a>
+                                    </div>
+                                    <h3><%= product.name %></h3>
+                                    <p class="product-price"><span>Per Kg</span>  ₹<%= product.price %></p>
+                                    <a href="/user/product-details/<%= product._id %>" class="cart-btn">
+                                        <i class="fas fa-shopping-cart"></i> Shop
                                     </a>
                                 </div>
-                                <h3><%= product.name %></h3>
-                                <p class="product-price"><span>Per Kg</span> $<%= product.price %></p>
-                                <a href="/user/product-details/<%= product._id %>" class="cart-btn">
-                                    <i class="fas fa-shopping-cart"></i> Shop
-                                </a>
                             </div>
-                        </div>
                         <% }) %>
                     <% } else { %>
                         <p>No products available at the moment.</p>
@@ -105,14 +99,15 @@
 <!-- Pagination -->
 <div class="container mt-3">
     <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center mb-20" style="margin-right:200px;">
+        <ul class="pagination justify-content-center mb-20">
             <% for(let i = 1; i <= totalPages; i++) { %>
                 <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
-                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                    <a class="page-link" href="?page=<%= i %>&sort=<%= sortOption %>&category=<%= selectedCategory %>"><%= i %></a>
                 </li>
             <% } %>
         </ul>
     </nav>
 </div>
+
 
 <%- include("../../views/partials/user/footer") %>

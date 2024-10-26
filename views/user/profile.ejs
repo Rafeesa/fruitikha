@@ -190,14 +190,18 @@
         <br>
         <a href="/profile">Dashboard</a>
         <br>
-        <a href="#">My Orders</a>
+        <a href="/myOrder">My Orders</a>
         <br>
         <a href="/add-new-address">My Address</a>
         <br>
         <a href="#changePassword">Change Password</a>
         <br>
         <a href="#editAccount">Edit Account</a>
-       
+        <br>
+        <a href="/wallet">My Wallet</a>
+       <br>
+       <a href="/wishlist">My Wishlist</a>
+
       </div>
 
       <div class="col-md-9 content">
@@ -211,7 +215,7 @@
           </div>
         </div>
 
-        <!-- My Orders Section -->
+        <!-- My Orders Section 
         <div class="card mb-4">
           <div class="card-body">
             <h4>My Orders</h4>
@@ -230,7 +234,7 @@
                 <% if (orders && orders.length > 0) { %>
                     <% orders.forEach(order => { %>
                         <tr>
-                            <td><%= order._id %></td>
+                          <td>  <a href="/orderSuccess" ><%= order._id %></a></td>
                             <td><%= order.createdAt %></td>
                             <td><%= order.status %></td>
                             <td><%= order.totalCost %></td>
@@ -255,7 +259,7 @@
             
             </table>
           </div>
-        </div>
+        </div>-->
 
        <!-- Address Management Section -->
 <div class="card mb-4">
@@ -335,6 +339,10 @@
             <h4>Change Password</h4>
             <form method="post" action="/changePassword" onsubmit="return validateForm()">
               <div class="mb-3 position-relative">
+                <input class="form-control" name="currentPass" id="currentPass" placeholder="Enter current password" type="password" required>
+                <div id="currentPassError" class="text-danger position-absolute"></div>
+              </div>
+              <div class="mb-3 position-relative">
                 <input class="form-control" name="newPass1" id="newPass1" placeholder="Enter new password" type="password" required>
                 <div id="newPass1Error" class="text-danger position-absolute"></div>
               </div>
@@ -353,6 +361,7 @@
             </form>
           </div>
         </div>
+        
       </div>
     </div>
   </div>
@@ -399,36 +408,47 @@
 
  
     
-function validateForm() {
-   let valid = true;
-   const newPass1 = document.getElementById('newPass1');
-   const newPass2 = document.getElementById('newPass2');
-   const newPass1Error = document.getElementById('newPass1Error');
-   const newPass2Error = document.getElementById('newPass2Error');
+    function validateForm() {
+  let valid = true;
+  const currentPass = document.getElementById('currentPass');
+  const newPass1 = document.getElementById('newPass1');
+  const newPass2 = document.getElementById('newPass2');
+  const currentPassError = document.getElementById('currentPassError');
+  const newPass1Error = document.getElementById('newPass1Error');
+  const newPass2Error = document.getElementById('newPass2Error');
 
+  // Clear previous errors
+  currentPassError.textContent = '';
+  newPass1Error.textContent = '';
+  newPass2Error.textContent = '';
 
-   newPass1Error.textContent = '';
-   newPass2Error.textContent = '';
+  // Current password validation
+  if (!currentPass.value.trim()) {
+    currentPassError.textContent = 'Current password cannot be empty.';
+    valid = false;
+  }
 
+  // New password validation
+  if (!newPass1.value.trim()) {
+    newPass1Error.textContent = 'Password cannot be empty.';
+    valid = false;
+  } else if (newPass1.value.length < 8) {
+    newPass1Error.textContent = 'Password must be at least 8 characters long.';
+    valid = false;
+  }
 
-   if (!newPass1.value.trim()) {
-       newPass1Error.textContent = 'Password cannot be empty.';
-       valid = false;
-   } else if (newPass1.value.length < 8) {
-       newPass1Error.textContent = 'Password must be at least 8 characters long.';
-       valid = false;
-   }
+  // Confirm password validation
+  if (!newPass2.value.trim()) {
+    newPass2Error.textContent = 'Please re-enter your password.';
+    valid = false;
+  } else if (newPass2.value !== newPass1.value) {
+    newPass2Error.textContent = 'Passwords do not match.';
+    valid = false;
+  }
 
-
-   if (!newPass2.value.trim()) {
-       newPass2Error.textContent = 'Please re-enter your password.';
-       valid = false;
-   } else if (newPass2.value !== newPass1.value) {
-       newPass2Error.textContent = 'Passwords do not match.';
-       valid = false;
-   }
-   return valid;
+  return valid;
 }
+
 
 function accountValidateEditForm() {
   const name = document.getElementById('name').value.trim();
