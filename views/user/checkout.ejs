@@ -22,7 +22,7 @@
 
         .navbar-brand img {
             width: 120px;
-            height: auto;
+            height: 100%;
         }
         /* Navbar background */
         .custom-navbar {
@@ -235,6 +235,7 @@
     </footer>
 
     <!-- JavaScript to handle address selection -->
+ 
     <script>
 
         function selectAddress(addressId) {
@@ -282,8 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check selected payment method
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
-       /* if (paymentMethod === 'cashOnDelivery') {
-            // Make a POST request to the server to place the COD order
+        if (paymentMethod === 'cashOnDelivery') {
             try {
                 const response = await fetch('/place-order', {
                     method: 'POST',
@@ -293,51 +293,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({
                         addressId: selectedAddressId,
                         paymentMethod: paymentMethod,
-                    })
+                    }),
                 });
 
-               const data = await response.json();
-               console.log(data)
-                if (data.success) {
-                   // alert('Order placed successfully with Cash on Delivery!');
-                   window.location.href = '/orderSuccess'; // Redirect to success page
-              } else {
-                alert('Order placement failed. Please try again.');
-               }
+                if (response.ok) {
+                    // If the response is ok, redirect to the order success page
+                    window.location.href = '/orderSuccess';
+                } else {
+                    const errorMessage = await response.text(); // Get error message from response
+                    alert(`Order placement failed: ${errorMessage}`);
+                }
             } catch (error) {
                 console.error('Error placing order:', error);
                 alert('An error occurred while placing your order. Please try again.');
             }
-        }*/ 
-        if (paymentMethod === 'cashOnDelivery') {
-    try {
-        const response = await fetch('/place-order', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                addressId: selectedAddressId,
-                paymentMethod: paymentMethod,
-            }),
-        });
-
-        if (response.ok) {
-            // If the response is ok, redirect to the order success page
-            window.location.href = '/orderSuccess';
-        } else {
-            const errorMessage = await response.text(); // Get error message from response
-            alert(`Order placement failed: ${errorMessage}`);
         }
-    } catch (error) {
-        console.error('Error placing order:', error);
-        alert('An error occurred while placing your order. Please try again.');
-    }
-}
-
-
     });
-   
 
     // Handle Razorpay payment
     document.getElementById('razorpayBtn').addEventListener('click', async function () {
@@ -346,11 +317,11 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Please select a shipping address.');
             return;
         }
-        const subtotal = <%= subtotal %>;
+        const subtotal = <%= subtotal %>; // Ensure this value is correct
         const shippingCost = <%= shippingCost %>;
 
-        // Fetch order amount from server or calculate based on subtotal
-        const orderAmount = parseFloat((subtotal + shippingCost).toFixed(2)) * 100; // In paisa for Razorpay
+        // Calculate order amount in paise
+        const orderAmount = parseFloat((subtotal + shippingCost).toFixed(2)) * 100;
 
         // AJAX request to create a Razorpay order on the server-side
         try {
@@ -365,38 +336,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            const { orderId, keyId } = await response.json();
+            const data = await response.json();
+            console.log("Razorpay Order Response:", data); // Debugging response
+
+            const { orderId, key_id } = data;
+            
 
             // Razorpay options setup
             const options = {
-                key: keyId, // Your Razorpay Key ID
+                key: key_id, 
                 amount: orderAmount,
                 currency: "INR",
                 name: "Fruitikha",
                 description: "Order Payment",
                 order_id: orderId,
-                handler: function (response) {
+                handler: async function (response) {
                     // On successful payment
-                    fetch('/complete-razorpay-payment', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            paymentId: response.razorpay_payment_id,
-                            orderId: response.razorpay_order_id,
-                            signature: response.razorpay_signature,
-                            addressId: selectedAddressId,
-                        })
-                    }).then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert('Payment successful!');
-                                window.location.href = '/order-success'; // Redirect on success
-                            } else {
-                                alert('Payment failed. Please try again.');
-                            }
+                    try {
+                        const paymentResponse = await fetch('/verify-payment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                paymentId: response.razorpay_payment_id,
+                                orderId: response.razorpay_order_id,
+                                signature: response.razorpay_signature,
+                                addressId: selectedAddressId,
+                            })
                         });
+
+                        const paymentData = await paymentResponse.json();
+                        if (paymentData.success) {
+                            alert('Payment successful!');
+                            window.location.href = '/orderSuccess';
+                        } else {
+                            alert('Payment failed. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error completing Razorpay payment:', error);
+                        alert('An error occurred while completing your payment. Please try again.');
+                    }
                 },
                 prefill: {
                     name: "<%= user.name %>",
@@ -407,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     color: "#3399cc"
                 }
             };
+
             const rzp1 = new Razorpay(options);
             rzp1.open();
         } catch (error) {
@@ -414,125 +395,37 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('An error occurred while processing your payment. Please try again.');
         }
     });
+
+    // Verify Payment by calling backend
+    async function verifyPayment(paymentData) {
+        try {
+        const paymentResponse = await fetch('/verify-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                signature: response.razorpay_signature,
+                addressId: selectedAddressId,
+            })
+        });
+        
+        const paymentData = await paymentResponse.json();
+        if (paymentData.success) {
+            alert('Payment successful!');
+            window.location.href = '/orderSuccess';
+        } else {
+            alert('Payment failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error completing Razorpay payment:', error);
+        alert('An error occurred while completing your payment. Please try again.');
+    }
+}
+
 });
-
-
-// Verify Payment by calling backend
-async function verifyPayment(paymentData) {
-    try {
-        const response = await fetch('/verify-payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(paymentData),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            alert('Payment verified successfully!');
-        } else {
-            alert('Payment verification failed.');
-        }
-    } catch (error) {
-        console.error('Verification error:', error);
-    }
-}
-/* Razorpay Payment Logic
-document.getElementById('razorpayBtn').addEventListener('click',async function () {
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-    const orderAmount = 50000; // Example amount in currency subunits (₹500)
-
-    if (paymentMethod === 'cashOnDelivery') {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/place-order';
-        const orderAmountField = document.createElement('input');
-        orderAmountField.type = 'hidden';
-        orderAmountField.name = 'orderAmount';
-        orderAmountField.value = orderAmount;
-        form.appendChild(orderAmountField);
-
-        document.body.appendChild(form);
-        form.submit();
-    } else if (paymentMethod === 'razorpay') {
-        createOrder(orderAmount);
-    }
-});
-
-// Create order by calling backend
-async function createOrder(amount) {
-    try {
-        const response = await fetch('/create-order', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ amount, paymentMethod: 'razorpay' }),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            console.log('Order created:', data.order);
-            initializeRazorpay(data.order, data.key_id);
-        } else {
-            console.error('Order creation failed:', data.message);
-        }
-    } catch (error) {
-        console.error('Network error:', error);
-    }
-}
-
-// Initialize Razorpay
-function initializeRazorpay(order, key_id) {
-    const options = {
-        key: key_id,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Fruitikha",
-        description: "Test Transaction",
-        order_id: order.id,
-        handler: async function (response) {
-            console.log('Payment successful:', response);
-            await verifyPayment(response);
-        },
-        theme: {
-            color: "#3399cc",
-        },
-    };
-
-    const rzp = new Razorpay(options);
-
-    // Handle Razorpay modal closing without payment
-    rzp.on('payment.failed', function (response) {
-        alert(`Payment failed: ${response.error.description}`);
-    });
-console.log("hai")
-    rzp.open();
-    
-}
-
-// Verify Payment by calling backend
-async function verifyPayment(paymentData) {
-    try {
-        const response = await fetch('http://localhost:3002/verify-payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(paymentData),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            alert('Payment verified successfully!');
-        } else {
-            alert('Payment verification failed.');
-        }
-    } catch (error) {
-        console.error('Verification error:', error);
-    }
-}*/ 
 
 </script>
   <!-- Bootstrap JS and Popper.js -->

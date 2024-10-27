@@ -55,7 +55,7 @@ router.put('/update-profile',profileController.updateProfile)
 router.post('/order/cancel/:id', profileController.cancelOrder);
 
 //razorpay
-router.post('/create-order', razorpayController.createOrder);
+router.post('/create-razorpay-order', razorpayController.createOrder);
 router.post('/verify-payment', razorpayController.verifyPayment);
 
 

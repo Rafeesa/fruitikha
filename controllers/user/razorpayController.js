@@ -31,7 +31,8 @@ const createOrder = async (req, res) => {
         }
 
         const options = {
-            amount: amount * 100, // Convert to paise
+            
+            amount: amount, // Convert to paise
             currency: "INR",
             receipt: `receipt_${Date.now()}`,
             payment_capture: 1,
@@ -42,7 +43,7 @@ const createOrder = async (req, res) => {
 
         res.json({
             success: true,
-            order,
+            orderId:order.id,
             key_id: process.env.RAZORPAY_KEY_ID 
         });
     } catch (error) {
@@ -57,21 +58,22 @@ const createOrder = async (req, res) => {
 
 // Verify Razorpay payment
 const verifyPayment = (req, res) => {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
+    const {  orderId, paymentId, signature } = req.body;
+console.log("razorpay signature",signature)
     console.log("Payment Verification Body:", req.body); 
 
     try {
         const generatedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_SECRET)
-            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+            .update(`${orderId}|${paymentId}`)
             .digest('hex');
 
-        if (generatedSignature === razorpay_signature) {
+        if (generatedSignature === signature) {
             console.log("Payment Verified:", generatedSignature);
+            
             return res.json({ success: true, message: "Payment verified successfully" });
         } else {
-            console.warn("Payment Verification Failed:", { generatedSignature, razorpay_signature });
+            console.warn("Payment Verification Failed:", { generatedSignature, signature });
             return res.status(400).json({ success: false, message: "Payment verification failed" });
         }
     } catch (error) {
@@ -83,6 +85,7 @@ const verifyPayment = (req, res) => {
         });
     }
 };
+
 
 module.exports = {
     createOrder,

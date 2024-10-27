@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css?family=Poppins:400,700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+
     <style>
         body {
             margin: 0;
@@ -97,6 +100,22 @@
         .dropdown-menu .dropdown-item {
             font-size: 0.85rem;
         }
+        .fasfa-map-marker-alt{
+            color: #ff6600; /* Color for the location symbol */
+    margin-right: 4px;
+        }
+        .address-section {
+    font-size: 1rem; /* Font size for address */
+    margin-top: 10px; /* Space above */
+    color: #333; /* Text color */
+}
+
+.content-title {
+    margin-top: 15px; /* Space above the title */
+    color: #ff6600; /* Title color */
+}
+
+        
 
     </style>
 </head>
@@ -149,7 +168,39 @@
     <header class="bg-light text-center py-3">
         <h1 class="m-0">My Orders</h1>
     </header>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <span>
+                <i class="material-icons md-calendar_today"></i> 
+                <b><%= new Date(orders[0].createdAt).toLocaleDateString() %></b> <!-- Display order date -->
+            </span>
+            <br>
+            <div>
+                <h2 class="content-title card-title">Order Detail</h2>
+                <p>Details for Order ID: <%= orders[0]._id %></p> <!-- Display Order ID -->
+            </div>
+</div>
+<div class="col-md-6 text-end"> <!-- Right side for any additional content (optional) -->
 
+    <% if (orders && orders.length > 0) { %> <!-- Check if there are orders -->
+        <div class="address-section text-center mt-3">
+            <i class="fas fa-map-marker-alt"></i>
+            <% addresses.forEach(addr => { %>
+                <div class="address-card" onclick="selectAddress('<%= addr._id %>')">
+                    <p><strong>Name:</strong> <%= addr.name %></p>
+                    <p><strong>House Name:</strong> <%= addr.houseName %></p>
+                    <p><strong>City:</strong> <%= addr.city %></p>
+                    <p><strong>State:</strong> <%= addr.state %></p>
+                    <p><strong>Pincode:</strong> <%= addr.pincode %></p>
+                </div>
+            <% }) %>
+        </div>
+    <% } %>
+    <!-- You can add more content here if needed -->
+   
+
+</div>
+</div>
     <table class="table wishlist-table table-striped text-center mt-4">
         <thead class="table-hover">
             <tr>
