@@ -3,30 +3,33 @@ const Product = require('../../models/productSchema');
 const Order=require("../../models/orderSchema")
 const Address = require('../../models/addressSchema');
 const getOrders = async (req, res) => {
-    try {
-      const userId = req.user._id; // Assuming req.user is set by authentication middleware
-      const addresses = await Address.find({ userId: req.user.id });
-      console.log('Fetched Addresses:', addresses); 
-      let userAddresses = [];
-      if (addresses.length > 0) {
-          userAddresses = addresses[0].address; 
-          console.log('User Addresses:', userAddresses); 
-      } else {
-          console.log('No addresses found for this user.');
-      }
-      // Fetch orders with user, product, and address details populated
-      const orders = await Order.find({ userId })
-        .populate("items.productId", "name productImage price")
-       // Fetching product details (name, image, price)
-        .lean();
-  
-      // Render the orders page with fetched orders
-      res.render("myOrder", { orders , addresses: userAddresses });
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      res.status(500).send("Server Error");
-    }
-  };
+  try {
+    const userId = req.user._id; // Ensure req.user is set by authentication middleware
+    const addresses = await Address.find({ userId }).lean();
+    
+    // Log the fetched addresses for debugging
+    console.log('Fetched Addresses:', addresses); 
+    let userAddresses = addresses.length > 0 ? addresses[0].address : []; 
+
+    // Fetch the logged-in user's details
+    const user = await User.findById(userId).lean();
+
+    // Fetch orders for the current user
+    const orders = await Order.find({ userId })
+      .populate("items.productId", "name productImage price") // Populating product details
+      .lean();
+
+    // Log fetched orders for debugging
+    console.log('Fetched Orders:', orders);
+
+    // Render orders view with fetched orders, addresses, and user details
+    res.render("myOrder", { orders, addresses: userAddresses, user });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).send("Server Error");
+  }
+};
+
 
 
   module.exports={

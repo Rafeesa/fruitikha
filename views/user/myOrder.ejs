@@ -39,7 +39,12 @@
             color: white;
         }
 
+        .account-menu .dropdown-item {
+            color: white;
+            transition: background-color 0.3s ease;
+        }
         .account-menu .dropdown-menu {
+            
             background-color: #051922;
             border: none;
             min-width: 150px;
@@ -111,6 +116,7 @@
 }
 
 .content-title {
+    font-family:Georgia, 'Times New Roman', Times, serif;
     margin-top: 15px; /* Space above the title */
     color: #ff6600; /* Title color */
 }
@@ -168,34 +174,44 @@
     <header class="bg-light text-center py-3">
         <h1 class="m-0">My Orders</h1>
     </header>
-    <div class="row mt-3">
-        <div class="col-md-6">
-            <span>
-                <i class="material-icons md-calendar_today"></i> 
-                <b><%= new Date(orders[0].createdAt).toLocaleDateString() %></b> <!-- Display order date -->
-            </span>
-            <br>
-            <div>
-                <h2 class="content-title card-title">Order Detail</h2>
-                <p>Details for Order ID: <%= orders[0]._id %></p> <!-- Display Order ID -->
-            </div>
-</div>
-<div class="col-md-6 text-end"> <!-- Right side for any additional content (optional) -->
-
-    <% if (orders && orders.length > 0) { %> <!-- Check if there are orders -->
-        <div class="address-section text-center mt-3">
-            <i class="fas fa-map-marker-alt"></i>
-            <% addresses.forEach(addr => { %>
-                <div class="address-card" onclick="selectAddress('<%= addr._id %>')">
-                    <p><strong>Name:</strong> <%= addr.name %></p>
-                    <p><strong>House Name:</strong> <%= addr.houseName %></p>
-                    <p><strong>City:</strong> <%= addr.city %></p>
-                    <p><strong>State:</strong> <%= addr.state %></p>
-                    <p><strong>Pincode:</strong> <%= addr.pincode %></p>
+   
+        <div class="row mt-3">
+            <% if (orders && orders.length > 0) { %> <!-- Check if orders are not empty -->
+                <div class="col-md-6">
+                    <span>
+                        <i class="material-icons md-calendar_today"></i> 
+                        <b><%= new Date(orders[0].createdAt).toLocaleDateString() %></b> <!-- Display order date -->
+                    </span>
+                    <br>
+                    <div>
+                        <h3 class="content-title card-title">Order Details of</h3>
+                        <p><strong>Name:</strong> <%= user.name %></p> <!-- Display User Name -->
+                        <p><strong>Phone Number:</strong> <%= user.phone %></p> <!-- Display User Phone Number -->
+                    </div>
                 </div>
-            <% }) %>
+    
+                <div class="col-md-6"> <!-- Right side for address section -->
+                    <div class="address-section text-center mt-3">
+                        <i class="fas fa-map-marker-alt"> <h2 class="content-title card-title">Addresses</h2></i>
+                        <% addresses.forEach(addr => { %>
+                            <div class="address-card p-3 mb-3" onclick="selectAddress('<%= addr._id %>')">
+                                <p><strong>Name:</strong> <%= addr.name %></p>
+                                <p><strong>House Name:</strong> <%= addr.houseName %></p>
+                                <p><strong>City:</strong> <%= addr.city %></p>
+                                <p><strong>State:</strong> <%= addr.state %></p>
+                                <p><strong>Pincode:</strong> <%= addr.pincode %></p>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            <% } else { %> 
+                <div class="col-12">
+                    <p>No orders found.</p>
+                </div>
+            <% } %>
         </div>
-    <% } %>
+    </div>
+    
     <!-- You can add more content here if needed -->
    
 

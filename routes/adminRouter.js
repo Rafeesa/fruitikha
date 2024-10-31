@@ -5,10 +5,12 @@ const customerController=require("../controllers/admin/customerController")
 const categoryController=require("../controllers/admin/categoryController")
 const productController =require("../controllers/admin/productController");
 const orderController = require('../controllers/admin/orderController');
+const couponController = require('../controllers/admin/couponController');
+
 
 
 const upload = require('../middlewares/multerConfig'); 
-const {userAuth,adminAuth}=require("../middlewares/auth")
+const {adminAuth}=require("../middlewares/auth")
 
 
 
@@ -19,6 +21,7 @@ const {userAuth,adminAuth}=require("../middlewares/auth")
 router.get("/login",adminController.loadLogin)
 router.post("/login",adminController.login)
 router.get("/",adminAuth,adminController.loadDashboard)
+router.get("/logout",adminController.logout)
 
 //customer management
 router.get("/users",adminAuth,customerController.customerInfo)
@@ -54,8 +57,10 @@ router.get('/orders',adminAuth,orderController.getAllOrders)
 router.put('/orders/:id/status',orderController.updateOrderStatus)
 router.delete('/orders/:id/delete', orderController.deleteOrder);
 
-
-
-
+//coupon management
+router.get('/coupon', couponController.getCouponPage);
+router.get('/coupon/add', couponController.getAddCouponPage);
+router.post('/coupon/add', couponController.createCoupon);
+router.delete('/coupons/:code', couponController.deleteCoupon);
 
 module.exports=router

@@ -43,16 +43,7 @@ app.use((req, res, next) => {
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Flash middleware to store messages across redirects
-app.use(flash());
 
-// Make flash messages available in templates
-app.use((req, res, next) => {
-    res.locals.success_msg = req.flash('success_msg');
-    res.locals.error_msg = req.flash('error_msg');
-    res.locals.error = req.flash('error'); 
-    next();
-});
 
 // Middleware to make user data available in all views
 app.use((req, res, next) => {
@@ -63,6 +54,17 @@ app.use((req, res, next) => {
 // Disable caching to prevent caching of user-specific pages
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store');
+    next();
+});
+
+// Flash middleware to store messages across redirects
+app.use(flash());
+
+// Make flash messages available in templates
+app.use((req, res, next) => {
+    res.locals.success_msg = req.flash('success_msg');
+    res.locals.error_msg = req.flash('error_msg');
+    res.locals.error = req.flash('error'); 
     next();
 });
 

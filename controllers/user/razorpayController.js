@@ -1,6 +1,12 @@
 const Razorpay = require('razorpay');
+const Address = require('../../models/addressSchema');
+const Cart = require('../../models/cartSchema');
+const Product = require('../../models/productSchema');
+const User = require("../../models/userSchema");
+const Order=require("../../models/orderSchema")
+
 const crypto = require('crypto');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config(); 
 const { body, validationResult } = require('express-validator');
 
 // Initialize Razorpay instance
@@ -11,7 +17,7 @@ const razorpay = new Razorpay({
 
 // Create Razorpay order
 const createOrder = async (req, res) => {
-    console.log("Order Request Body:", req.body); // Debugging request data
+    console.log("Order Request Body:", req.body); 
 
     // Validate amount field
     await body('amount')
@@ -32,7 +38,7 @@ const createOrder = async (req, res) => {
 
         const options = {
             
-            amount: amount, // Convert to paise
+            amount: amount, 
             currency: "INR",
             receipt: `receipt_${Date.now()}`,
             payment_capture: 1,
@@ -57,7 +63,7 @@ const createOrder = async (req, res) => {
 };
 
 // Verify Razorpay payment
-const verifyPayment = (req, res) => {
+/*const verifyPayment = async(req, res) => {
     const {  orderId, paymentId, signature } = req.body;
 console.log("razorpay signature",signature)
     console.log("Payment Verification Body:", req.body); 
@@ -69,8 +75,40 @@ console.log("razorpay signature",signature)
             .digest('hex');
 
         if (generatedSignature === signature) {
+            const userId = req.session.userId; // Assuming user is stored in session
+            console.log(userId)
+
+      // Fetch user's cart
+      const cart = await Cart.findOne({ userId });
+      if (!cart) return res.status(400).send({ success: false, message: 'Cart not found' });
+
+      // Create the new order
+      const newOrder = new Order({
+        userId,
+        orderId: orderId,
+        paymentId: paymentId,
+        amount: cart.totalCost,
+        items: cart.items,
+        addressId: addressId, // Save the address used
+        paymentStatus: 'Paid',
+        orderStatus: 'Processing',
+      });
+
+      const savedOrder = await newOrder.save();
+
+      // Clear the cart after order is placed
+      await Cart.deleteOne({ userId });
+
+      // Save order details to session
+      req.session.orderDetails = {
+        orderId: savedOrder._id,
+        totalCost: cart.totalCost,
+        orderItems: cart.items,
+        shippingCost: cart.shippingCost || 0, // Add shipping cost logic
+        subtotal: cart.subtotal || 0 // Add subtotal logic
+      };
             console.log("Payment Verified:", generatedSignature);
-            
+
             return res.json({ success: true, message: "Payment verified successfully" });
         } else {
             console.warn("Payment Verification Failed:", { generatedSignature, signature });
@@ -84,6 +122,77 @@ console.log("razorpay signature",signature)
             error: error.message 
         });
     }
+};
+*/
+// Verify payment route
+const verifyPayment = async (req, res) => {
+  try {
+    const { paymentId, orderId, signature, paymentMethod } = req.body; // Include paymentMethod in request
+    const userId = req.user._id;
+
+    // Fetch the user's cart with the items populated
+    const cart = await Cart.findOne({ userId }).populate('items.productId');
+    const address = await Address.findOne({ userId });
+
+    // Validate the address
+    if (!address || address.address.length === 0) {
+      return res.status(400).send('No address found');
+    }
+
+    // Calculate total cost from cart items
+    const totalCost = cart.items.reduce((acc, item) => {
+      return acc + item.productId.price * item.quantity;
+    }, 0);
+
+    const shippingCost = cart.shippingCost || 45; // Assign default or calculated shipping cost
+    const subtotal = totalCost - shippingCost;
+
+    // Verify the payment signature
+    const generatedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    if (generatedSignature === signature) {
+      // Create the new order
+      const newOrder = new Order({
+        userId,
+        orderId,
+        paymentId,
+        amount: totalCost,
+        shippingCost,
+        subtotal,
+        totalCost,
+        address: address.address[0],
+        items: cart.items,
+        paymentStatus: 'Paid',
+        paymentMethod: paymentMethod || 'Online Payment', // Dynamically set payment method
+        orderStatus: 'Processing',
+      });
+
+      // Save the new order to the database
+      const savedOrder = await newOrder.save();
+
+      // Clear the user's cart after order placement
+      await Cart.deleteOne({ userId });
+
+      // Save order details to the session
+      req.session.orderDetails = {
+        orderId: savedOrder._id,
+        totalCost,
+        orderItems: cart.items,
+        shippingCost,
+        subtotal,
+        paymentMethod: newOrder.paymentMethod // Save the payment method in the session
+      };
+      return res.status(200).json({ success: true, message: 'Payment verified and order created successfully' });
+    } else {
+      res.status(400).json({ success: false, message: 'Payment verification failed' });
+    }
+  } catch (err) {
+    console.error('Payment verification error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 };
 
 

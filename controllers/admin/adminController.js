@@ -53,9 +53,21 @@ const loadDashboard=async(req,res)=>
     }
 }
 
-
+const logout=async(req,res)=>{
+    try {
+        req.session.destroy(err =>{
+            if(err){
+                console.log("Error destroying session",err)
+            }
+            res.redirect("/admin/login")
+        })
+    } catch (error) {
+      console.log("unexpexcted error during logout",error)  
+    }
+}
 module.exports={
     loadLogin,
     login,
-    loadDashboard
+    loadDashboard,
+    logout
 }

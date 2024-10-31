@@ -1,0 +1,114 @@
+<%- include("../../views/partials/admin/header") %>
+
+<div class="container">
+    <h2>Existing Coupons</h2>
+    <br><br>
+    <button onclick="window.location.href='/admin/coupon/add'">Add New Coupon</button>
+    
+    <div id="couponList">
+        <div id="couponsContainer"> <% if (coupons.length === 0) { %>
+            <p>No coupons available</p>
+          <% } else { %>
+            <% coupons.forEach(coupon => { %>
+              <div class="coupon-item">
+                <strong>Code:</strong> <%= coupon.code %> <br>
+                <strong>Type:</strong> <%= coupon.discountType %> <br>
+                <strong>Value:</strong> <%= coupon.value %> <%= coupon.discountType === 'percentage' ? '%' : '₹' %> <br>
+                <strong>Expiration:</strong> <%= new Date(coupon.expirationDate).toLocaleDateString() %> <br>
+                <strong>Usage Limit:</strong> <%= coupon.usageLimit %> <br>
+                <strong>Min Purchase:</strong> ₹<%= coupon.minimumPurchaseAmount %> <br>
+                <br>
+                <button onclick="deleteCoupon('<%= coupon.code %>')" style="background-color:red">Delete</button>
+              </div>
+            <% }) %>
+          <% } %></div>
+    </div>
+</div>
+
+
+<script>
+async function fetchCoupons() {
+    try {
+        const response = await fetch('/admin/coupon');
+        const coupons = await response.json();
+
+        // Clear the existing coupons container
+        const couponsContainer = document.getElementById('couponsContainer');
+        couponsContainer.innerHTML = '';
+
+        // Render each coupon
+        coupons.forEach(coupon => {
+            const couponItem = document.createElement('div');
+            couponItem.classList.add('coupon-item');
+            couponItem.innerHTML = `
+                <strong>Code:</strong> ${coupon.code} <br>
+                <strong>Type:</strong> ${coupon.discountType} <br>
+                <strong>Value:</strong> ${coupon.value} ${coupon.discountType === 'percentage' ? '%' : ' ₹'} <br>
+                <strong>Expiration:</strong> ${new Date(coupon.expirationDate).toLocaleDateString()} <br>
+                <strong>Usage Limit:</strong> ${coupon.usageLimit} <br>
+                <strong>Min Purchase:</strong> ₹${coupon.minimumPurchaseAmount} <br>
+                <button onclick="deleteCoupon('${coupon.code}')">Delete</button>
+            `;
+            couponsContainer.appendChild(couponItem);
+        });
+    } catch (error) {
+        console.error('Error fetching coupons:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', fetchCoupons);
+
+// Function to delete a coupon
+async function deleteCoupon(code) {
+    if (confirm(`Are you sure you want to delete the coupon "${code}"?`)) {
+        try {
+            const response = await fetch(`/admin/coupons/${code}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert('Coupon deleted successfully!');
+                fetchCoupons(); // Refresh the coupon list
+            } else {
+                const result = await response.json();
+                alert(`Error deleting coupon: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error deleting coupon:', error);
+            alert('Failed to delete coupon. Please try again.');
+        }
+    }
+}
+</script>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+    button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-bottom: 20px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    .coupon-item {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin: 10px 0;
+        background-color: #fff;
+        border-radius: 8px;
+    }
+</style>
+
+<%- include("../../views/partials/admin/footer") %>

@@ -139,6 +139,8 @@
             
                     <th>Shipping Cost</th>
                     <th>Subtotal</th>
+                    <th>Payment method</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -152,9 +154,10 @@
                           </td>
                         <td><%= item.productId.name %></td>
                         <td><%= item.quantity %></td>
-                        <td>₹<%= (item.productId.price * item.quantity).toFixed(2) %></td>
+                        <td>₹<%= (item.productId.price *   item.quantity).toFixed(2) %></td>
                         <td>₹<%= shippingCost %></td>
-                        <td>₹<%= (subtotal + shippingCost).toFixed(2) %></td> <!-- Now this will work -->
+                        <td>₹<%= (subtotal + shippingCost).toFixed(2) %></td> 
+                        <td>₹<%= paymentMethod %></td>
                     </tr>
                 <% }) %>
             </tbody>

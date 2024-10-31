@@ -110,22 +110,24 @@ const placeOrder = async (req, res) => {
 };
 
 const getOrderSuccessPage = (req, res) => {
-    // Check if orderDetails exists in the session
+    // Check if orderDetails exist in the session
     if (!req.session.orderDetails) {
-        return res.redirect('/'); // Redirect to home or another page if no order details are found
+      return res.redirect('/'); // Redirect to home or another page if no order details are found
     }
-
-    const { orderId, totalCost, orderItems, subtotal, shippingCost } = req.session.orderDetails;
-
+  
+    const { orderId, totalCost, orderItems, subtotal, shippingCost, paymentMethod } = req.session.orderDetails;
+  
     res.render('orderSuccess', {
-        title: 'Order Success',
-        orderId: orderId,
-        totalCost: totalCost,
-        orderItems: orderItems,
-        subtotal: subtotal,
-        shippingCost: shippingCost
+      title: 'Order Success',
+      orderId,
+      totalCost,
+      orderItems,
+      subtotal,
+      shippingCost,
+      paymentMethod // Include payment method for display
     });
-};
+  };
+  
 
 
 module.exports = {

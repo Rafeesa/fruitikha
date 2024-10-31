@@ -2,7 +2,7 @@ const express=require("express")
 const router=express.Router()
 const userController =require("../controllers/user/userController")
 const passport = require("passport")
-const checkBlocked = require("../middlewares/checkBlocked");
+//const checkBlocked = require("../middlewares/checkBlocked");
 const profileController=require("../controllers/user/profileController")
 const cartController=require("../controllers/user/cartController")
 const checkoutController=require("../controllers/user/checkoutController")
@@ -10,7 +10,7 @@ const razorpayController=require("../controllers/user/razorpayController")
 const walletController=require("../controllers/user/walletController")
 const wishlistController=require("../controllers/user/wishlistController")
 const orderController=require("../controllers/user/orderController")
-
+const { userAuth } = require("../middlewares/auth")
 
 
 
@@ -18,8 +18,8 @@ const orderController=require("../controllers/user/orderController")
 
 //homepage
 router.get("/",userController.loadHomepage)
-router.get('/user/product-details/:id',checkBlocked,userController.getProductDetails);
-router.get('/shop',checkBlocked,userController.getShop)
+router.get('/user/product-details/:id',userController.getProductDetails);
+router.get('/shop',userController.getShop)
 
 //sign up management
 router.get("/signup",userController.loadSignup)
@@ -39,7 +39,7 @@ router.get("/logout",userController.logout)
 
 // profile 
 router.get('/forgot-password',profileController.getForgotPassPage)
-router.get('/profile', profileController.getProfile);
+router.get('/profile',profileController.getProfile);
 
 router.post('/forgot-email-valid',profileController.forgotEmailValid)
 router.post("/verify-passForgot-otp",profileController.verifyForgotPassOtp)
@@ -66,7 +66,7 @@ router.get('/wallet',walletController.getWallet)
 router.get('/wishlist',wishlistController.getWishlist)
 router.post('/addToWishlist',wishlistController.addToWishlist)
 //router.delete('/removeWishlist/:id',wishlistController.removeWishlist)
-router.delete('/removeWishlist/:productId', wishlistController.removeWishlist);
+router.delete('/removeWishlist/:productId',wishlistController.removeWishlist);
 
 //myOrder
 router.get('/myOrder',orderController.getOrders)
@@ -76,15 +76,15 @@ router.get('/myOrder',orderController.getOrders)
 //address management
 router.get('/add-new-address', profileController.getAddNewAddress);
 router.post('/my-address',profileController.addNewAddress);
-router.get('/edit-address/:id', profileController.getEditAddressForm);
+router.get('/edit-address/:id',profileController.getEditAddressForm);
 router.put('/edit-address/:id',profileController.editAddress)
-router.delete('/delete-address/:id', profileController.deleteAddress);
+router.delete('/delete-address/:id',profileController.deleteAddress);
 
 
 
 
 //cart management
-router.get('/cart',checkBlocked,cartController.getCartPage);
+router.get('/cart',cartController.getCartPage);
 router.post('/cart/add',cartController.addToCart)
 router.post('/cart/remove', cartController.removeFromCart);
 router.post('/cart/update', cartController.updateCartQuantity);  
