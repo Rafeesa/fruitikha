@@ -38,6 +38,10 @@ app.use((req, res, next) => {
     next();
 });
 */
+app.use((req, res, next) => {
+    res.locals.user = req.session.user || null;
+    next();
+});
 
 // Passport middleware (must come after session)
 app.use(passport.initialize());
@@ -47,7 +51,7 @@ app.use(passport.session());
 
 // Middleware to make user data available in all views
 app.use((req, res, next) => {
-    res.locals.user = req.user || null; 
+    res.locals.user = req.session.user || null; 
     next();
 });
 

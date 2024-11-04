@@ -33,13 +33,27 @@ const getCheckoutPage = async (req, res) => {
                 subtotal += item.productId.price * item.quantity;
             }
         });
+let discountAmount=0;
 
+if(subtotal>150&&subtotal<500)
+{
+    discountAmount=50
+}
+else if(subtotal>500)
+{
+    discountAmount=100
+}
         const shippingCost = 45;
+        const totalCost = subtotal + shippingCost;
         res.render('checkout', {
+            user: req.user,
+        
             addresses: userAddresses,  
             cartItems: cart.items, 
             subtotal: subtotal,     
             shippingCost: shippingCost,
+            totalCost:totalCost,
+            discountAmount:discountAmount
         });
     } catch (err) {
         console.error(err);
@@ -68,6 +82,8 @@ const placeOrder = async (req, res) => {
         const shippingCost = 45;
         const totalCost = subtotal + shippingCost;
 
+        const paymentMethod = req.body.paymentMethod || 'Cash On Delivery';
+
         const newOrder = new Order({
             userId: userId,
             items: cart.items,
@@ -75,8 +91,10 @@ const placeOrder = async (req, res) => {
             subtotal: subtotal,
             shippingCost: shippingCost,
             totalCost: totalCost,
-            paymentMethod: req.body.paymentMethod // Get payment method from request body
+            paymentMethod: paymentMethod,  // Use defined paymentMethod
+            status: 'order placed'
         });
+        
 
         const savedOrder = await newOrder.save();
 
@@ -96,11 +114,14 @@ const placeOrder = async (req, res) => {
         await Cart.deleteOne({ userId });
         req.session.orderDetails = {
             orderId: savedOrder._id,
-            totalCost: totalCost,
-            orderItems: cart.items, // Save the cart items to pass to the view
-            subtotal: subtotal,
-            shippingCost: shippingCost
+            totalCost,
+            orderItems: cart.items,
+            shippingCost,
+            subtotal,
+            paymentMethod: savedOrder.paymentMethod // Add paymentMethod here
         };
+        console.log('Payment Method:', paymentMethod);
+
         // Redirect to the success page
         res.redirect('/orderSuccess');
     } catch (err) {

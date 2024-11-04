@@ -368,8 +368,8 @@ const deleteAddress = async (req, res) => {
             return res.status(404).send('Order not found or does not belong to you.');
         }
 
-        if (order.status !== 'Pending') {
-            return res.status(400).send('Only pending orders can be canceled.');
+        if (order.status !== 'order placed') {
+            return res.status(400).send('Only orderplaced orders can be canceled.');
         }
 
         const refundAmount =  order.totalCost; // Fetch correct refund amount

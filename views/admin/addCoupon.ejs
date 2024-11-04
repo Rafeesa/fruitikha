@@ -3,28 +3,24 @@
 <div class="container">
     <h2>Create Coupon</h2>
     <form id="couponForm" class="form-container" method="POST">
-
+        
         <label for="code">Coupon Code</label>
-        <input type="text" id="code" placeholder="Enter Coupon Code" required /><br><br>
-
-        <label for="discountType">Discount Type</label>
-        <select id="discountType" required>
-            <option value="">Select Discount Type</option>
-            <option value="fixed">Fixed Amount</option>
-            <option value="percentage">Percentage Discount</option>
-        </select><br><br>
+        <input type="text" id="code" name="code" placeholder="Enter Coupon Code" required /><br><br>
 
         <label for="value">Discount Value</label>
-        <input type="number" id="value" placeholder="Enter Discount Value" required /><br><br>
+        <input type="number" id="value" name="value" placeholder="Enter Discount Value" required /><br><br>
 
         <label for="expirationDate">Expiration Date</label>
-        <input type="date" id="expirationDate" required /><br><br>
+        <input type="date" id="expirationDate" name="expirationDate" required /><br><br>
 
         <label for="usageLimit">Usage Limit</label>
-        <input type="number" id="usageLimit" placeholder="Enter Usage Limit" min="1" value="1" /><br><br>
+        <input type="number" id="usageLimit" name="usageLimit" placeholder="Enter Usage Limit" min="1" value="1" /><br><br>
 
         <label for="minimumPurchaseAmount">Minimum Purchase Amount</label>
-        <input type="number" id="minimumPurchaseAmount" placeholder="Enter Minimum Purchase Amount" min="0" value="0" /><br><br>
+        <input type="number" id="minimumPurchaseAmount" name="minimumPurchaseAmount" placeholder="Enter Minimum Purchase Amount" min="0" value="0" /><br><br>
+
+        <!-- Hidden input for isActive -->
+        <input type="hidden" id="isActive" name="isActive" value="true" />
 
         <button type="submit">Create Coupon</button>
     </form>
@@ -36,11 +32,12 @@ document.getElementById('couponForm').addEventListener('submit', async function 
     
     const couponData = {
         code: document.getElementById('code').value,
-        discountType: document.getElementById('discountType').value,
+       
         value: document.getElementById('value').value,
         expirationDate: document.getElementById('expirationDate').value,
         usageLimit: document.getElementById('usageLimit').value,
         minimumPurchaseAmount: document.getElementById('minimumPurchaseAmount').value,
+         isActive: document.getElementById('isActive').value 
     };
 
     try {

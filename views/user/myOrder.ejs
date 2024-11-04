@@ -247,12 +247,16 @@
                             <td><%= order._id %></td>
                             <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                             <td><%= order.status %></td>
-                            <td>$<%= order.totalCost.toFixed(2) %></td>
+                            <td>₹<%= order.totalCost.toFixed(2) %></td>
                             <td><%= order.paymentMethod %></td>
                             <td>
-                                <% if (order.status === 'Pending') { %>
+                                <% if (order.status === 'order placed') { %>
                                     <form action="/order/cancel/<%= order._id %>" method="POST" style="display:inline;">
                                         <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this order?');">Cancel</button>
+                                    </form>
+                                <% } else if (order.status === 'Delivered') { %>
+                                    <form action="/order/return/<%= order._id %>" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to request a return?');">Return</button>
                                     </form>
                                 <% } else { %>
                                     <span>N/A</span>

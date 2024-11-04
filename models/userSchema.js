@@ -42,6 +42,10 @@ const userSchema=new Schema({
         type: Number, 
         default: 0 
     }, 
+    redeemList: {
+        type: [mongoose.Schema.Types.ObjectId], // Array of coupon IDs
+        ref: 'Coupon' // Reference to the Coupon model
+    },
     walletTransactions: [{ 
       amount: Number, 
       date: Date, 

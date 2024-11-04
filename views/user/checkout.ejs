@@ -137,8 +137,51 @@
             </div>
         </div>
     </nav>
+    <br><br>  <br><br>
     
-
+    <div class="container">
+        <div class="row">
+            <!-- Display Available Coupons Section -->
+            <div class="col-lg-6 mb-sm-15">
+                <div class="toggle_info">
+                    <span>
+                        <i class="fi-rs-user mr-10"></i><span class="text-muted"></span>
+                        <a href="/available" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Available Coupons?</a>
+                    </span>
+                </div>
+                <div class="panel-collapse collapse" id="availableCoupons">
+                    <table id="coupon-table">
+                        <!-- Dynamic coupon rows will be injected here by JavaScript -->
+                    </table>
+                </div>
+            </div>
+   
+            <!-- Apply Coupon Section -->
+            <div class="col-lg-6">
+                <div class="toggle_info">
+                    <span>
+                        <i class="fi-rs-label mr-10"></i><span class="text-muted">Have a coupon?</span>
+                        <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to enter your code</a>
+                    </span>
+                </div>
+                <div class="panel-collapse collapse coupon_form" id="coupon">
+                    <div class="panel-body">
+                        <p class="mb-30 font-sm">If you have a coupon code, please apply it below.</p>
+                        <span id="showcouponmessage" class="text-primary"></span>
+                        <div class="form-group">
+                            <input type="text" placeholder="Enter Coupon Code..." id="coupon-entered">
+                        </div>
+                        <br>
+                        <div class="form-group">
+                            <button class="btn btn-secondary" onclick="applyCoupon()">Apply Coupon</button>
+                            <button class="btn btn-secondary" id="delete-coupon-btn" onclick="deleteCoupon()">Delete Coupon</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Main Checkout Content -->
     <div class="container mt-5 mb-5 content-wrap">
         <div class="row">
@@ -186,9 +229,9 @@
                                 <% if (item.productId) { %>
                                     <tr>
                                         <td><%= item.productId.name %> (x<%= item.quantity %>)</td>
-                                        <td> ₹<%= item.productId.price * item.quantity %></td>
+                                        <td> ₹<%= item.productId.salePrice * item.quantity %></td>
                                     </tr>
-                                    <% subtotal += item.productId.price * item.quantity; %>
+                                    <% subtotal += item.productId.salePrice * item.quantity; %>
                                 <% } %>
                             <% }) %>
                             <tr>
@@ -196,12 +239,21 @@
                                 <td> ₹<%= subtotal.toFixed(2) %></td>
                             </tr>
                             <tr>
-                                <td><strong>Shipping</strong></td>
+                                <td><strong>Shipping charge</strong></td>
                                 <td> ₹<%= shippingCost.toFixed(2) %></td>
                             </tr>
+                           
                             <tr>
                                 <th>Total</th>
                                 <th> ₹<%= (subtotal + shippingCost).toFixed(2) %></th>
+                            </tr>
+                            <tr>
+                                <td><strong>Discount</strong></td>
+                                <td> ₹<%= discountAmount.toFixed(2) %></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total amount to pay</strong></td>
+                                <th> ₹<%= (subtotal + shippingCost-discountAmount).toFixed(2) %></th>
                             </tr>
                         </tbody>
                     </table>
@@ -427,6 +479,99 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+
+async function applyCoupon() {
+    const couponCode = document.getElementById('coupon-entered').value;
+   
+    try {
+        const response = await fetch('/couponapply', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code: couponCode })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            document.getElementById('showcouponmessage').textContent = `Coupon applied! Discount: ${result.discountAmount}`;
+            // Update price display based on the result.discountAmount
+        } else {
+            document.getElementById('showcouponmessage').textContent = result.error || 'Invalid coupon.';
+        }
+    } catch (error) {
+        console.error('Error applying coupon:', error);
+        document.getElementById('showcouponmessage').textContent = 'Error applying coupon. Please try again.';
+    }
+}
+
+async function deleteCoupon() {
+    try {
+        const response = await fetch('/deleteCoupon', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            document.getElementById('showcouponmessage').textContent = 'Coupon removed.';
+            // Update price display to original price
+        } else {
+            document.getElementById('showcouponmessage').textContent = result.error || 'Failed to remove coupon.';
+        }
+    } catch (error) {
+        console.error('Error removing coupon:', error);
+        document.getElementById('showcouponmessage').textContent = 'Error removing coupon. Please try again.';
+    }
+}
+document.querySelector('[href="/available"]').addEventListener('click', async function (e) {
+    e.preventDefault(); // Prevent the default link behavior
+
+    const userId = "<%= user.id %>"; // Replace with the actual user ID from your application
+    const orderTotal = "<%= totalCost %>"; // Replace with the actual order total value
+ 
+    try {
+        const response = await fetch(`/available?userId=${userId}&orderTotal=${orderTotal}`, {
+            method: 'GET'
+        });
+
+        if (response.ok) {
+            const coupons = await response.json();
+            const couponTable = document.getElementById('coupon-table');
+            document.getElementById("coupon-table").border= 3;
+            couponTable.innerHTML = ''; // Clear any previous content
+
+            // Create table headers
+            const headerRow = document.createElement('tr');
+            headerRow.innerHTML = `<th>Code&nbsp&nbsp</th><th>Discount&nbsp&nbsp</th><th>Expiry Date</th>`;
+            couponTable.appendChild(headerRow);
+
+            // Add rows for each available coupon
+            coupons.forEach(coupon => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${coupon.code}</td>
+                    <td>${coupon.value}</td>
+                    <td>${new Date(coupon.expirationDate).toLocaleDateString()}</td>
+                `;
+                couponTable.appendChild(row);
+            });
+
+            // Show the table if it's hidden
+            document.getElementById('availableCoupons').classList.add('show');
+        } else {
+            console.error('Failed to fetch coupons');
+            alert('No available coupons found.');
+        }
+    } catch (error) {
+        console.error('Error fetching coupons:', error);
+        alert('Could not fetch available coupons. Please try again later.');
+    }
+});
 </script>
   <!-- Bootstrap JS and Popper.js -->
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>

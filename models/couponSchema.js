@@ -6,11 +6,11 @@ const couponSchema = new mongoose.Schema({
         required: true,
         unique: true 
     },
-    discountType: {
+   /* discountType: {
         type: String,
         enum: ['fixed', 'percentage'], 
         required: true
-    },
+    },*/
     value: {
         type: Number,
         required: true,
@@ -28,6 +28,15 @@ const couponSchema = new mongoose.Schema({
     minimumPurchaseAmount: {
         type: Number,
         default: 0 
+    },
+    isActive: {
+        type: Boolean,
+        default: true // By default, coupons are active
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     }
 });
 

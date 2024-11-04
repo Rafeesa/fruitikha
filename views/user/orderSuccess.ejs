@@ -125,7 +125,7 @@
         <h1 class="mt-4">Order Placed Successfully!</h1>
         <p>Thank you for your purchase. Your order is on the way!</p>
         <p>Order ID: <strong><%= orderId %></strong></p>
-        <p>Total Amount: <strong>$<%= totalCost.toFixed(2) %></strong></p>
+        <p>Total Amount: ₹<strong><%= totalCost.toFixed(2) %></strong></p>
 
         <!-- Order Details Section -->
         <h2 class="mt-4">Order Details</h2>
@@ -154,10 +154,10 @@
                           </td>
                         <td><%= item.productId.name %></td>
                         <td><%= item.quantity %></td>
-                        <td>₹<%= (item.productId.price *   item.quantity).toFixed(2) %></td>
+                        <td>₹<%= (item.productId.salePrice *   item.quantity).toFixed(2) %></td>
                         <td>₹<%= shippingCost %></td>
                         <td>₹<%= (subtotal + shippingCost).toFixed(2) %></td> 
-                        <td>₹<%= paymentMethod %></td>
+                        <td><%= paymentMethod %></td>
                     </tr>
                 <% }) %>
             </tbody>

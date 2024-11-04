@@ -101,7 +101,7 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: 'Pending'  
+        default: 'OrderPlaced'  
     },
     paymentMethod :{
       type:String,

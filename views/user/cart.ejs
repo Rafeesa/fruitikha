@@ -194,7 +194,7 @@
                                       style="width: 80px; height: auto;">
                                   </td>
                                   <td><%= item.productId.name %></td>
-                                  <td> ₹<%= item.productId.price.toFixed(2) %></td>
+                                  <td> ₹<%= item.productId.salePrice.toFixed(2) %></td>
                                   <td>
                                     <input 
                                       type="number" 
@@ -207,8 +207,8 @@
                                     readonly/>
                                   </td>
                                   <td class="stock"><%= item.productId.stock %> in stock</td>
-                                  <td class="subtotal" data-price="<%= item.productId.price %>">
-                                    ₹<%= (item.productId.price * item.quantity).toFixed(2) %>
+                                  <td class="subtotal" data-price="<%= item.productId.salePrice %>">
+                                    ₹<%= (item.productId.salePrice * item.quantity).toFixed(2) %>
                                   </td>
                                   <td>
                                     <form action="/cart/remove" method="POST" style="display:inline;">
@@ -273,10 +273,10 @@
         } else if (this.value < 1) {
             this.value = 1;
         }
-            const price = parseFloat(this.closest('tr').querySelector('.subtotal').dataset.price);
+            const price = parseFloat(this.closest('tr').querySelector('.subtotal').dataset.slaePrice);
             const quantity = parseInt(this.value);
             const subtotalCell = this.closest('tr').querySelector('.subtotal');
-            const newTotal = (price * quantity).toFixed(2);
+            const newTotal = (slaePrice * quantity).toFixed(2);
             subtotalCell.textContent = `$${newTotal}`;
             
             // Update the order summary total

@@ -12,8 +12,7 @@
             <% coupons.forEach(coupon => { %>
               <div class="coupon-item">
                 <strong>Code:</strong> <%= coupon.code %> <br>
-                <strong>Type:</strong> <%= coupon.discountType %> <br>
-                <strong>Value:</strong> <%= coupon.value %> <%= coupon.discountType === 'percentage' ? '%' : '₹' %> <br>
+               
                 <strong>Expiration:</strong> <%= new Date(coupon.expirationDate).toLocaleDateString() %> <br>
                 <strong>Usage Limit:</strong> <%= coupon.usageLimit %> <br>
                 <strong>Min Purchase:</strong> ₹<%= coupon.minimumPurchaseAmount %> <br>
@@ -42,8 +41,7 @@ async function fetchCoupons() {
             couponItem.classList.add('coupon-item');
             couponItem.innerHTML = `
                 <strong>Code:</strong> ${coupon.code} <br>
-                <strong>Type:</strong> ${coupon.discountType} <br>
-                <strong>Value:</strong> ${coupon.value} ${coupon.discountType === 'percentage' ? '%' : ' ₹'} <br>
+              
                 <strong>Expiration:</strong> ${new Date(coupon.expirationDate).toLocaleDateString()} <br>
                 <strong>Usage Limit:</strong> ${coupon.usageLimit} <br>
                 <strong>Min Purchase:</strong> ₹${coupon.minimumPurchaseAmount} <br>

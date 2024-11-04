@@ -10,6 +10,7 @@ const razorpayController=require("../controllers/user/razorpayController")
 const walletController=require("../controllers/user/walletController")
 const wishlistController=require("../controllers/user/wishlistController")
 const orderController=require("../controllers/user/orderController")
+const couponController=require("../controllers/user/couponController")
 const { userAuth } = require("../middlewares/auth")
 
 
@@ -70,7 +71,12 @@ router.delete('/removeWishlist/:productId',wishlistController.removeWishlist);
 
 //myOrder
 router.get('/myOrder',orderController.getOrders)
+router.post('/order/return/:id',orderController.requestReturn)
 
+
+//coupon management
+router.post('/couponapply',couponController.applyCoupon)
+//router.post('/deleteCoupon',couponController.deleteCoupon)
 
 
 //address management
@@ -103,6 +109,6 @@ router.get('/orderSuccess', checkoutController.getOrderSuccessPage);
 router.post('/changePassword',profileController.changePassword)
 
 
-
+router.get('/available',couponController.availableCoupon)
 
 module.exports=router 

@@ -387,7 +387,24 @@
 
                 <!-- Product Price -->
                 <div class="product-price">
-                    ₹<%= product.price %>
+                    <% if (product.productOffer > 0) { %>
+                      
+                
+                        <!-- Display the discount percentage -->
+                        <p style="color: #e63946;">
+                            <%= product.productOffer %>% Off
+                        </p>
+                
+                        <!-- Display the discounted sale price -->
+                        <p style="font-size: 1.5em; font-weight: bold;">
+                             ₹<%= product.salePrice %> <span style="text-decoration: line-through; color: #888;">
+                                ₹<%= product.price %>
+                            </span>
+                        </p>
+                    <% } else { %>
+                        <!-- If there's no discount, show only the original price -->
+                        <p> ₹<%= product.salePrice %>  </p>
+                    <% } %>
                 </div>
                 <div class="stock">
                   <p><%= product.stock %> in stock</p>  
@@ -448,7 +465,24 @@
                             </a>
                         </div>
                         <h3 class="product-name"><%= product.name %></h3>
-                        <p class="product-price"><span>Per Kg</span> $<%= product.price %></p>
+                        <p class="product-price"><span>Per Kg</span> <% if (product.productOffer > 0) { %>
+                      
+                
+                            <!-- Display the discount percentage -->
+                            <p style="color: #e63946;">
+                                <%= product.productOffer %>% Off
+                            </p>
+                    
+                            <!-- Display the discounted sale price -->
+                            <p style="font-size: 1.5em; font-weight: bold;">
+                                 ₹<%= product.salePrice %> <span style="text-decoration: line-through; color: #888;">
+                                    ₹<%= product.price %>
+                                </span>
+                            </p>
+                        <% } else { %>
+                            <!-- If there's no discount, show only the original price -->
+                            <p> ₹<%= product.salePrice %>  </p>
+                        <% } %></p>
                         <a href="/user/product-details/<%= product._id%>" class="cart-btn"><i class="fas fa-shopping-cart"></i> Shop</a>
                     </div>
                 </div>

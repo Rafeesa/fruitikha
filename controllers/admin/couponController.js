@@ -16,18 +16,17 @@ const getAddCouponPage=async(req,res)=>{
     res.render('addCoupon')
 }
 const createCoupon=async (req, res) => {
-    const { code, discountType, value, expirationDate, usageLimit, minimumPurchaseAmount } = req.body;
+    const { code, value, expirationDate, usageLimit, minimumPurchaseAmount } = req.body;
     console.log(req.body)
 
     // Validate required fields
-    if (!code || !discountType || value == null || !expirationDate) {
+    if (!code  || value == null || !expirationDate) {
         return res.status(400).json({ error: 'All fields are required' });
     }
 
     try {
         const newCoupon = new Coupon({
             code,
-            discountType,
             value,
             expirationDate,
             usageLimit,

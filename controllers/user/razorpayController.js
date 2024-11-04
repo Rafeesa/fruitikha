@@ -167,7 +167,7 @@ const verifyPayment = async (req, res) => {
         items: cart.items,
         paymentStatus: 'Paid',
         paymentMethod: paymentMethod || 'Online Payment', // Dynamically set payment method
-        orderStatus: 'Processing',
+        status: 'order placed',
       });
 
       // Save the new order to the database

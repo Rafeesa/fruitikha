@@ -30,8 +30,29 @@ const getOrders = async (req, res) => {
   }
 };
 
+// Controller method for handling return requests
+const requestReturn = async (req, res) => {
+  try {
+      const orderId = req.params.id;
+      
+      const order = await Order.findById(orderId);
+      
+      // Check if the order is eligible for return
+      if (order.status === 'Delivered') {
+          order.status = 'Return Requested';
+          await order.save();
+         // res.send('Return request submitted successfully.');
+      } else {
+          res.status(400).send('Return is only available for delivered orders.');
+      }
+  } catch (error) {
+      console.error(error);
+      res.status(500).send('Error processing return request.');
+  }
+};
 
 
   module.exports={
-    getOrders
+    getOrders,
+    requestReturn 
   }
