@@ -34,7 +34,7 @@ if (!cart) {
     let subtotal = 0;
     cart.items.forEach(item => {
       if (item.productId) { 
-        subtotal += item.productId.price * item.quantity;
+        subtotal += item.productId.salePrice * item.quantity;
       }
     });
 

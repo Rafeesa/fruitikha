@@ -31,6 +31,7 @@ const createOrder = async (req, res) => {
 
     try {
         const { amount, paymentMethod } = req.body;
+        console.log("amount passing",amount)
 
         if (paymentMethod === "cashOnDelivery") {
             return res.json({ success: true, message: "Order placed successfully with Cash on Delivery." });
@@ -140,12 +141,12 @@ const verifyPayment = async (req, res) => {
     }
 
     // Calculate total cost from cart items
-    const totalCost = cart.items.reduce((acc, item) => {
-      return acc + item.productId.price * item.quantity;
+    const subtotal = cart.items.reduce((acc, item) => {
+      return acc + item.productId.salePrice * item.quantity;
     }, 0);
 
     const shippingCost = cart.shippingCost || 45; // Assign default or calculated shipping cost
-    const subtotal = totalCost - shippingCost;
+    const totalCost = subtotal + shippingCost;
 
     // Verify the payment signature
     const generatedSignature = crypto
@@ -154,21 +155,34 @@ const verifyPayment = async (req, res) => {
       .digest('hex');
 
     if (generatedSignature === signature) {
+      // Calculate discount amount based on subtotal
+let discountAmount = 0;
+if (subtotal > 150 && subtotal < 500) {
+    discountAmount = 50;
+} else if (subtotal > 500) {
+    discountAmount = 100;
+}
+
+// Apply discount to totalCost
+const finalTotal = totalCost - discountAmount;
+
       // Create the new order
       const newOrder = new Order({
         userId,
         orderId,
         paymentId,
-        amount: totalCost,
+        amount: finalTotal, // Use final total after discount
         shippingCost,
         subtotal,
-        totalCost,
+        totalCost: finalTotal, // Store final total with discount applied
+        discountAmount, // Store discount amount for reference
         address: address.address[0],
         items: cart.items,
         paymentStatus: 'Paid',
-        paymentMethod: paymentMethod || 'Online Payment', // Dynamically set payment method
+        paymentMethod: paymentMethod || 'Online Payment',
         status: 'order placed',
-      });
+    });
+    
 
       // Save the new order to the database
       const savedOrder = await newOrder.save();
@@ -179,12 +193,14 @@ const verifyPayment = async (req, res) => {
       // Save order details to the session
       req.session.orderDetails = {
         orderId: savedOrder._id,
-        totalCost,
+        totalCost: finalTotal,
         orderItems: cart.items,
         shippingCost,
         subtotal,
-        paymentMethod: newOrder.paymentMethod // Save the payment method in the session
-      };
+        discountAmount, // Add discountAmount to session
+        paymentMethod: newOrder.paymentMethod
+    };
+    
       return res.status(200).json({ success: true, message: 'Payment verified and order created successfully' });
     } else {
       res.status(400).json({ success: false, message: 'Payment verification failed' });

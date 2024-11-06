@@ -1,10 +1,12 @@
 const Coupon = require('../../models/couponSchema');
 const User=require('../../models/userSchema');
-const { deleteCoupon } = require('../admin/couponController');
+
 const availableCoupon= async (req, res) => {
     try {
-        const userId = req.query.userId; // Get user ID from the request query
+        const userId = req.query.userId || req.session.userId || req.session.passport?.user;
+        // Get user ID from the request query
         const orderTotal = parseFloat(req.query.orderTotal); // Get order total to check against minimum purchase amount
+        console.log(orderTotal)
 
         if (!orderTotal) {
             return res.status(400).json({ error: 'Order total is required' });
@@ -38,12 +40,11 @@ const availableCoupon= async (req, res) => {
 
 const applyCoupon = async (req, res) => {
     try {
-        const code = req.body.code
-        const userId=req.session.user
+        const code = req.body.code;
+        const userId = req.session.passport?.user;
         
         console.log("Code received:", code);
-        console.log("UserId received from sessioN:", userId);
-
+        console.log("UserId received from session:", userId);
 
         // Find the coupon based on code and active status
         const coupon = await Coupon.findOne({ code: code, isActive: true });
@@ -57,7 +58,7 @@ const applyCoupon = async (req, res) => {
             return res.status(404).json({ error: "User not found." });
         }
 
-        // Check if user has already used the coupon
+        // Check if the user has already used the coupon
         if (user.redeemList && user.redeemList.includes(coupon._id)) {
             return res.status(400).json({ error: "You have already used this coupon." });
         }
@@ -65,16 +66,18 @@ const applyCoupon = async (req, res) => {
         // Add the coupon to the user's redeem list
         user.redeemList.push(coupon._id);
         await user.save();
-        const discountAmount=coupon.value||0
 
-        return res.status(200).json({ message: "Coupon applied successfully.",discountAmount:discountAmount });
+        const discountAmount = coupon.value || 0;
 
+        // Store discount in session for later use in checkout rendering
+        req.session.discountAmount = discountAmount;
+
+        return res.status(200).json({ message: "Coupon applied successfully.", discountAmount: discountAmount });
     } catch (error) {
-        console.error('Error applying coupons:', error);
+        console.error('Error applying coupon:', error);
         res.status(500).json({ error: "Internal server error." });
     }
 };
-
 
 
 module.exports={

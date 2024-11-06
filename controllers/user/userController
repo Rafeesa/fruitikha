@@ -252,6 +252,8 @@ const verifyOtp = async (req, res) => {
             });
 
             await newUser.save();
+           req.session.user = newUser._id;
+            console.log(req.session.user)
             req.login(newUser, (err) => {
                 if (err) return res.status(500).json({ success: false, message: "Login failed" });
                 res.json({ success: true, redirectUrl: "/" });

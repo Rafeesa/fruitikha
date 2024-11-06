@@ -8,58 +8,46 @@ const Order=require("../../models/orderSchema")
 
 
 
-const getCheckoutPage = async (req, res) => {
+const getCheckoutPage = async (req, res) => { 
     try {
-    
         const addresses = await Address.find({ userId: req.user.id });
-        console.log('Fetched Addresses:', addresses); 
-        let userAddresses = [];
-        if (addresses.length > 0) {
-            userAddresses = addresses[0].address; 
-            console.log('User Addresses:', userAddresses); 
-        } else {
-            console.log('No addresses found for this user.');
-        }
+        let userAddresses = addresses.length > 0 ? addresses[0].address : [];
 
-        
         const cart = await Cart.findOne({ userId: req.user.id }).populate('items.productId');
-
         if (!cart) {
             return res.status(404).send('Cart not found');
         }
+        
         let subtotal = 0;
         cart.items.forEach(item => {
             if (item.productId) {
-                subtotal += item.productId.price * item.quantity;
+                subtotal += item.productId.salePrice * item.quantity;
             }
         });
-let discountAmount=0;
 
-if(subtotal>150&&subtotal<500)
-{
-    discountAmount=50
-}
-else if(subtotal>500)
-{
-    discountAmount=100
-}
         const shippingCost = 45;
         const totalCost = subtotal + shippingCost;
+
+        // Store values in session for further use after coupon application
+        req.session.subtotal = subtotal;
+        req.session.shippingCost = shippingCost;
+
         res.render('checkout', {
             user: req.user,
-        
             addresses: userAddresses,  
             cartItems: cart.items, 
-            subtotal: subtotal,     
+            subtotal: subtotal,
             shippingCost: shippingCost,
-            totalCost:totalCost,
-            discountAmount:discountAmount
+            discountAmount: 0, // No discount initially
+            totalCost: totalCost,
+            finalTotal: totalCost // Initial total without any discount
         });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
     }
 };
+
 const placeOrder = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -76,11 +64,14 @@ const placeOrder = async (req, res) => {
 
         let subtotal = 0;
         cart.items.forEach(item => {
-            subtotal += item.productId.price * item.quantity;
+            subtotal += item.productId.salePrice * item.quantity;
         });
         
         const shippingCost = 45;
         const totalCost = subtotal + shippingCost;
+        const discountAmount = req.session.discountAmount || 0;
+        const finalTotal = req.session.finalTotal || 0;
+
 
         const paymentMethod = req.body.paymentMethod || 'Cash On Delivery';
 
@@ -90,7 +81,8 @@ const placeOrder = async (req, res) => {
             address: address.address[0],
             subtotal: subtotal,
             shippingCost: shippingCost,
-            totalCost: totalCost,
+            discountAmount: discountAmount,
+            totalCost: finalTotal,
             paymentMethod: paymentMethod,  // Use defined paymentMethod
             status: 'order placed'
         });
@@ -114,11 +106,12 @@ const placeOrder = async (req, res) => {
         await Cart.deleteOne({ userId });
         req.session.orderDetails = {
             orderId: savedOrder._id,
-            totalCost,
+            totalCost: finalTotal,
             orderItems: cart.items,
-            shippingCost,
+            shippingCost: 45,
             subtotal,
-            paymentMethod: savedOrder.paymentMethod // Add paymentMethod here
+            discountAmount: discountAmount,
+            paymentMethod: savedOrder.paymentMethod
         };
         console.log('Payment Method:', paymentMethod);
 
@@ -133,22 +126,23 @@ const placeOrder = async (req, res) => {
 const getOrderSuccessPage = (req, res) => {
     // Check if orderDetails exist in the session
     if (!req.session.orderDetails) {
-      return res.redirect('/'); // Redirect to home or another page if no order details are found
+        return res.redirect('/'); // Redirect to home or another page if no order details are found
     }
-  
-    const { orderId, totalCost, orderItems, subtotal, shippingCost, paymentMethod } = req.session.orderDetails;
-  
+
+    const { orderId, totalCost, orderItems, subtotal, shippingCost, discountAmount, paymentMethod } = req.session.orderDetails;
+
     res.render('orderSuccess', {
-      title: 'Order Success',
-      orderId,
-      totalCost,
-      orderItems,
-      subtotal,
-      shippingCost,
-      paymentMethod // Include payment method for display
+        title: 'Order Success',
+        orderId,
+        totalCost,
+        orderItems,
+        subtotal,
+        shippingCost,
+        discountAmount, // Include discount amount for display
+        paymentMethod // Include payment method for display
     });
-  };
-  
+};
+
 
 
 module.exports = {

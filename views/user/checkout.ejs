@@ -205,6 +205,8 @@
                             <input type="hidden" id="selectedAddressId" name="selectedAddressId" value="">
                         </form>
                     <% } else { %>
+
+
                         <p>No addresses found. Please add a new address.</p>
                     <% } %>
                 </div>
@@ -229,32 +231,34 @@
                                 <% if (item.productId) { %>
                                     <tr>
                                         <td><%= item.productId.name %> (x<%= item.quantity %>)</td>
-                                        <td> ₹<%= item.productId.salePrice * item.quantity %></td>
+                                        <td> ₹<%= (item.productId.salePrice * item.quantity).toFixed(2) %></td>
                                     </tr>
                                     <% subtotal += item.productId.salePrice * item.quantity; %>
                                 <% } %>
                             <% }) %>
                             <tr>
                                 <td><strong>Subtotal</strong></td>
-                                <td> ₹<%= subtotal.toFixed(2) %></td>
+                                <td id="subtotal"> ₹<%= subtotal.toFixed(2) %></td>
                             </tr>
                             <tr>
                                 <td><strong>Shipping charge</strong></td>
-                                <td> ₹<%= shippingCost.toFixed(2) %></td>
-                            </tr>
-                           
-                            <tr>
-                                <th>Total</th>
-                                <th> ₹<%= (subtotal + shippingCost).toFixed(2) %></th>
+                                <td id="shippingCost"> ₹<%= shippingCost.toFixed(2) %></td>
                             </tr>
                             <tr>
                                 <td><strong>Discount</strong></td>
-                                <td> ₹<%= discountAmount.toFixed(2) %></td>
+                                <td id="discountAmount"> ₹<%= discountAmount ? discountAmount.toFixed(2) : '0.00' %></td>
                             </tr>
                             <tr>
                                 <td><strong>Total amount to pay</strong></td>
-                                <th> ₹<%= (subtotal + shippingCost-discountAmount).toFixed(2) %></th>
+                                <th id="finalTotal"> ₹<%= (subtotal + shippingCost - (discountAmount || 0)).toFixed(2) %></th>
                             </tr>
+                            
+                            <!-- Hidden fields for JavaScript access -->
+                            <input type="hidden" id="subtotalHidden" value="<%= subtotal.toFixed(2) %>">
+                            <input type="hidden" id="shippingCostHidden" value="<%= shippingCost.toFixed(2) %>">
+                            <input type="hidden" id="discountAmountHidden" value="<%= discountAmount ? discountAmount.toFixed(2) : '0.00' %>">
+                            <input type="hidden" id="finalTotalHidden" value="<%= (subtotal + shippingCost - (discountAmount || 0)).toFixed(2) %>">
+                            
                         </tbody>
                     </table>
                 <% } else { %>
@@ -281,10 +285,10 @@
             </div>
         </div>
 
-    <!-- Footer -->
+    <!-- Footer 
     <footer class="bg-dark text-white text-center py-3 footer">
         <p class="m-0">© 2024 Fruitikha. All Rights Reserved.</p>
-    </footer>
+    </footer>-->
 
     <!-- JavaScript to handle address selection -->
  
@@ -369,12 +373,10 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Please select a shipping address.');
             return;
         }
-        const subtotal = <%= subtotal %>; // Ensure this value is correct
-        const shippingCost = <%= shippingCost %>;
+        const finalTotal = parseFloat(document.getElementById('finalTotalHidden').value);
+    const orderAmount = finalTotal * 100; // Convert to paise for Razorpay
 
-        // Calculate order amount in paise
-        const orderAmount = parseFloat((subtotal + shippingCost).toFixed(2)) * 100;
-
+         
         // AJAX request to create a Razorpay order on the server-side
         try {
             const response = await fetch('/create-razorpay-order', {
@@ -482,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function applyCoupon() {
     const couponCode = document.getElementById('coupon-entered').value;
-   
+
     try {
         const response = await fetch('/couponapply', {
             method: 'POST',
@@ -495,8 +497,23 @@ async function applyCoupon() {
         const result = await response.json();
 
         if (response.ok) {
-            document.getElementById('showcouponmessage').textContent = `Coupon applied! Discount: ${result.discountAmount}`;
-            // Update price display based on the result.discountAmount
+            document.getElementById('showcouponmessage').textContent = `Coupon applied! Discount: ₹${result.discountAmount.toFixed(2)}`;
+
+            // Parse the current subtotal and shipping cost values
+            const subtotal = parseFloat(document.getElementById('subtotal').textContent.replace('₹', '').trim());
+            const shippingCost = parseFloat(document.getElementById('shippingCost').textContent.replace('₹', '').trim());
+
+            // Calculate the final total after applying the discount
+            const discountAmount = result.discountAmount;
+            const finalTotal = subtotal + shippingCost - discountAmount;
+
+            // Update the discount and final total in the HTML
+            document.getElementById('discountAmount').textContent = `₹${discountAmount.toFixed(2)}`;
+            document.getElementById('finalTotal').textContent = `₹${finalTotal.toFixed(2)}`;
+
+            // Store the finalTotal in a hidden input for Razorpay
+            document.getElementById('finalTotalHidden').value = finalTotal;
+
         } else {
             document.getElementById('showcouponmessage').textContent = result.error || 'Invalid coupon.';
         }
@@ -505,6 +522,7 @@ async function applyCoupon() {
         document.getElementById('showcouponmessage').textContent = 'Error applying coupon. Please try again.';
     }
 }
+
 
 async function deleteCoupon() {
     try {
@@ -528,6 +546,8 @@ async function deleteCoupon() {
         document.getElementById('showcouponmessage').textContent = 'Error removing coupon. Please try again.';
     }
 }
+
+
 document.querySelector('[href="/available"]').addEventListener('click', async function (e) {
     e.preventDefault(); // Prevent the default link behavior
 
