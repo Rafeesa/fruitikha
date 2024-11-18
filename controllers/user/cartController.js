@@ -94,11 +94,8 @@ if (existingItemIndex > -1) {
         return res.redirect(`/product-details/${productId}?error=You can only add up to ${product.stock} items in total for this product.`);
       }
 
-      if (totalQuantity > maxQtyPerPerson) {
-        return res.redirect(`/product-details/${productId}?error=You can only add up to ${product.stock} items in total for this product.`);
-        //return res.status(400).send(`You can only add up to ${maxQtyPerPerson} items of this product.`);
-      }
-
+   
+      
       cart.items[existingItemIndex].quantity += quantityToAdd;
     } else {
       // New item - check if quantity exceeds max limit

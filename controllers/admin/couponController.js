@@ -15,31 +15,27 @@ const getCouponPage=async(req,res)=>{
 const getAddCouponPage=async(req,res)=>{
     res.render('addCoupon')
 }
-const createCoupon=async (req, res) => {
-    const { code, value, expirationDate, usageLimit, minimumPurchaseAmount } = req.body;
-    console.log(req.body)
+const createCoupon = async (req, res) => {
+    try{
+    const { code, value, expirationDate, usageLimit, minimumPurchaseAmount, isActive } = req.body;
 
-    // Validate required fields
-    if (!code  || value == null || !expirationDate) {
-        return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    try {
         const newCoupon = new Coupon({
             code,
             value,
-            expirationDate,
+            expirationDate: new Date(expirationDate),
             usageLimit,
-            minimumPurchaseAmount
+            minimumPurchaseAmount,
+            isActive
         });
 
-        await newCoupon.save(); 
-       res.status(201).json(newCoupon);
-      // res.redirect('/coupon')
+        await newCoupon.save();
+        res.status(201).json(newCoupon);
     } catch (error) {
+        console.error('Error saving coupon:', error);
         res.status(500).json({ error: 'Error creating coupon' });
     }
 };
+
 
 // Route to delete a coupon by code
 const deleteCoupon= async (req, res) => {

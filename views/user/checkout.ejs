@@ -174,7 +174,7 @@
                         <br>
                         <div class="form-group">
                             <button class="btn btn-secondary" onclick="applyCoupon()">Apply Coupon</button>
-                            <button class="btn btn-secondary" id="delete-coupon-btn" onclick="deleteCoupon()">Delete Coupon</button>
+                           
                         </div>
                     </div>
                 </div>
@@ -275,13 +275,21 @@
                         <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="razorpay">
                         <label class="form-check-label" for="razorpay">Razorpay</label>
                     </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="wallet" value="wallet">
+                        <label class="form-check-label" for="wallet">Wallet</label>
+                    </div>
                 </div>
+                
                 
                 <!-- Hidden button for Razorpay (will trigger when Razorpay is selected) -->
                 <button id="razorpayBtn" class="btn btn-primary w-100 mt-4" style="display:none;">Pay with Razorpay</button>
                 
                 <!-- Place Order Button -->
                 <button type="button" id="placeOrderBtn" class="btn btn-primary w-100 mt-4">Place Order</button>
+                <!-- Wallet Payment Button -->
+                <button id="walletPayBtn" class="btn btn-primary w-100 mt-4" style="display:none;">Pay with Wallet</button>
+
             </div>
         </div>
 
@@ -317,16 +325,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('input[name="paymentMethod"]').forEach(input => {
         input.addEventListener('change', function () {
             if (this.value === 'razorpay') {
-                // Show Razorpay button if Razorpay is selected
                 document.getElementById('placeOrderBtn').style.display = 'none';
                 document.getElementById('razorpayBtn').style.display = 'block';
-            } else {
-                // Show Place Order button for Cash on Delivery
+                document.getElementById('walletPayBtn').style.display = 'none';
+            } else if (this.value === 'cashOnDelivery') {
                 document.getElementById('placeOrderBtn').style.display = 'block';
+                document.getElementById('razorpayBtn').style.display = 'none';
+                document.getElementById('walletPayBtn').style.display = 'none';
+            } else if (this.value === 'wallet') {
+                document.getElementById('walletPayBtn').style.display = 'block';
+                document.getElementById('placeOrderBtn').style.display = 'none';
                 document.getElementById('razorpayBtn').style.display = 'none';
             }
         });
     });
+
+
 
     // Handle Cash on Delivery order placement
     document.getElementById('placeOrderBtn').addEventListener('click', async function () {
@@ -336,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Check selected payment method
+        
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
         if (paymentMethod === 'cashOnDelivery') {
@@ -391,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            console.log("Razorpay Order Response:", data); // Debugging response
+            console.log("Razorpay Order Response:", data); 
 
             const { orderId, key_id } = data;
             
@@ -444,11 +458,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const rzp1 = new Razorpay(options);
             rzp1.open();
-        } catch (error) {
-            console.error('Error creating Razorpay order:', error);
-            alert('An error occurred while processing your payment. Please try again.');
-        }
-    });
+            //failiure payment
+            rzp1.on('payment.failed', function (response) {
+            console.error('Payment failed:', response.error);
+            alert('Payment failed. Please try again.\nError: ' + response.error.description);
+
+            // Optionally, send failure details to the backend
+            fetch('/payment-failure', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    error: response.error,
+                    orderId: orderId,
+                }),
+            }).catch(error => console.error('Error logging payment failure:', error));
+        });
+
+        // Open Razorpay checkout
+        rzp1.open();
+    } catch (error) {
+        console.error('Error creating Razorpay order:', error);
+        alert('An error occurred while processing your payment. Please try again.');
+    }
+});
+    
 
     // Verify Payment by calling backend
     async function verifyPayment(paymentData) {
@@ -478,6 +513,41 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('An error occurred while completing your payment. Please try again.');
     }
 }
+document.getElementById('walletPayBtn').addEventListener('click', async function () {
+    const selectedAddressId = document.getElementById('selectedAddressId').value;
+    console.log("Selected Address ID:", selectedAddressId);
+    if (!selectedAddressId) {
+        alert('Please select a shipping address.');
+        return;
+    }
+
+    const finalTotal = parseFloat(document.getElementById('finalTotalHidden').value);
+
+    try {
+        const response = await fetch('/pay-with-wallet', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                addressId: selectedAddressId,
+                amount: finalTotal,
+            }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert('Payment successful!');
+            window.location.href = '/orderSuccess';
+        } else {
+            alert(`Payment failed: ${data.message}`);
+        }
+    } catch (error) {
+        console.error('Error processing wallet payment:', error);
+        alert('An error occurred while processing your wallet payment. Please try again.');
+    }
+});
+
 
 });
 
@@ -511,7 +581,7 @@ async function applyCoupon() {
             document.getElementById('discountAmount').textContent = `₹${discountAmount.toFixed(2)}`;
             document.getElementById('finalTotal').textContent = `₹${finalTotal.toFixed(2)}`;
 
-            // Store the finalTotal in a hidden input for Razorpay
+            
             document.getElementById('finalTotalHidden').value = finalTotal;
 
         } else {
@@ -549,10 +619,10 @@ async function deleteCoupon() {
 
 
 document.querySelector('[href="/available"]').addEventListener('click', async function (e) {
-    e.preventDefault(); // Prevent the default link behavior
+    e.preventDefault(); 
 
-    const userId = "<%= user.id %>"; // Replace with the actual user ID from your application
-    const orderTotal = "<%= totalCost %>"; // Replace with the actual order total value
+    const userId = "<%= user.id %>"; 
+    const orderTotal = "<%= totalCost %>"; 
  
     try {
         const response = await fetch(`/available?userId=${userId}&orderTotal=${orderTotal}`, {
@@ -581,7 +651,7 @@ document.querySelector('[href="/available"]').addEventListener('click', async fu
                 couponTable.appendChild(row);
             });
 
-            // Show the table if it's hidden
+
             document.getElementById('availableCoupons').classList.add('show');
         } else {
             console.error('Failed to fetch coupons');

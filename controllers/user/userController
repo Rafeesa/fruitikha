@@ -36,58 +36,70 @@ const loadHomepage = async (req, res) => {
 };
 
 const getShop = async (req, res) => {
+    const user = req.user;
     try {
-        const search = req.query.search || ""; // Search query
-        const sort = req.query.sort || "popularity"; // Default sort
-        const category = req.query.category || ""; // Selected category filter
-        const page = parseInt(req.query.page) || 1; // Current page
-        const limit = 6; // Items per page
+        const search = req.query.search || ""; 
+        const sort = req.query.sort || "popularity"; 
+        const category = req.query.category || ""; 
+        const page = parseInt(req.query.page) || 1; 
+        const limit = 6;
 
-        // Query object to filter by search and category
         const query = {
-            ...(category && { category }), // Filter by category if provided
-            name: { $regex: new RegExp(search, "i") }, // Case-insensitive search
+            ...(category && { category }), 
+            name: { $regex: new RegExp(search, "i") }, 
         };
 
-        // Determine sorting option
         let sortOption;
         switch (sort) {
             case "price-low-high":
-                sortOption = { price: 1 }; // Ascending order by price
+                sortOption = { price: 1 }; 
                 break;
             case "price-high-low":
-                sortOption = { price: -1 }; // Descending order by price
+                sortOption = { price: -1 }; 
                 break;
             case "average-rating":
-                sortOption = { rating: -1 }; // Descending order by rating
+                sortOption = { rating: -1 }; 
                 break;
             case "featured":
                 sortOption = { featured: -1 };
                 break;
             case "new-arrivals":
-                sortOption = { createdAt: -1 }; // New arrivals first
+                sortOption = { createdAt: -1 }; 
                 break;
             case "a-z":
-                sortOption = { name: 1 }; // A to Z sorting
+                sortOption = { name: 1 }; 
                 break;
             case "z-a":
-                sortOption = { name: -1 }; // Z to A sorting
+                sortOption = { name: -1 }; 
                 break;
             default:
-                sortOption = { popularity: -1 }; // Default sort
+                sortOption = { popularity: -1 }; 
         }
 
         // Fetch products with query, sorting, and pagination
         const productData = await Product.find(query)
-            .populate("category")
+            .populate("category", "name categoryOffer") // Include categoryOffer field
             .sort(sortOption)
             .limit(limit)
             .skip((page - 1) * limit);
 
-        const count = await Product.countDocuments(query); // Total product count
-        const categories = await Category.find(); // All categories
+        const count = await Product.countDocuments(query); 
+        const categories = await Category.find(); 
 
-        const totalPages = Math.ceil(count / limit); // Total pages
+        // Apply offers for each product
+        productData.forEach(product => {
+            const categoryOffer = product.category ? product.category.categoryOffer : 0;
+            const productOffer = product.productOffer || 0;
+
+            const categoryDiscount = (product.price * categoryOffer) / 100;
+            const productDiscount = (product.price * productOffer) / 100;
+
+            const maxDiscount = Math.max(categoryDiscount, productDiscount);
+
+            product.salePrice = Math.round(product.price - maxDiscount);
+        });
+
+        const totalPages = Math.ceil(count / limit); 
 
         res.render("shop", {
             products: productData,
@@ -97,6 +109,7 @@ const getShop = async (req, res) => {
             sortOption: sort,
             searchQuery: search,
             selectedCategory: category,
+            user: user
         });
     } catch (error) {
         console.error("Error fetching shop data:", error);
@@ -108,7 +121,7 @@ const getShop = async (req, res) => {
 const getProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
-        const userId = req.session._id; // Assuming userId is stored in session
+        const userId = req.session._id; 
 
         // Fetch the product details
         const product = await Product.findById(productId).exec();
@@ -119,30 +132,30 @@ const getProductDetails = async (req, res) => {
             category: product.category
         }).limit(3).exec();
 
-        // Check if the user exists and fetch their wishlist
         let isInWishlist = false;
         if (userId) {
-            const user = await User.findById(userId).select('wishlist').exec(); // Select only the wishlist field
-            // Check if the product ID is in the user's wishlist
+            const user = await User.findById(userId).select('wishlist').exec(); 
+            
             isInWishlist = user && user.wishlist.includes(productId);
         }
 
-        // Capture error message if available
-        const errorMessage = req.query.error || null; // Default to null if no error
-        console.log('Error message:', errorMessage); // Debug line
+        
+        const errorMessage = req.query.error || null; 
+        console.log('Error message:', errorMessage); 
 
-        // Render the product details page with the product, related products, wishlist info, and error message
+        
         res.render('product-details', {
             product,
             relatedProducts,
             isInWishlist,
-            errorMessage // Pass the error message to the template
+            errorMessage 
         });
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 
 // Load Signup Page
@@ -380,7 +393,7 @@ const login= (req, res, next) => {
 */
 const addNewAddress = async (req, res) => {
     try {
-        const userId = req.params.id; // Assuming the user ID is in the request params
+        const userId = req.params.id; 
         const user = await User.findById(userId);
 
         if (!user) {

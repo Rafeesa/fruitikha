@@ -58,10 +58,12 @@ router.post('/order/cancel/:id', profileController.cancelOrder);
 //razorpay
 router.post('/create-razorpay-order', razorpayController.createOrder);
 router.post('/verify-payment', razorpayController.verifyPayment);
+router.post('/payment-failure',razorpayController.paymentFailure)
 
 
 //wallet
 router.get('/wallet',walletController.getWallet)
+router.post('/pay-with-wallet',walletController.payWithWallet)
 
 //wishlist
 router.get('/wishlist',wishlistController.getWishlist)

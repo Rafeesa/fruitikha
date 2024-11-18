@@ -29,15 +29,15 @@
 <script>
 document.getElementById('couponForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    
+
+    // Convert values to numbers as needed
     const couponData = {
         code: document.getElementById('code').value,
-       
-        value: document.getElementById('value').value,
+        value: Number(document.getElementById('value').value), // Ensures it's a number
         expirationDate: document.getElementById('expirationDate').value,
-        usageLimit: document.getElementById('usageLimit').value,
-        minimumPurchaseAmount: document.getElementById('minimumPurchaseAmount').value,
-         isActive: document.getElementById('isActive').value 
+        usageLimit: Number(document.getElementById('usageLimit').value),
+        minimumPurchaseAmount: Number(document.getElementById('minimumPurchaseAmount').value),
+        isActive: document.getElementById('isActive').value === 'true' // Converts to boolean
     };
 
     try {
@@ -51,9 +51,7 @@ document.getElementById('couponForm').addEventListener('submit', async function 
 
         const result = await response.json();
 
-        
-       if (response.ok) {
-           // alert('Coupon created successfully!');
+        if (response.ok) {
             window.location.href = '/admin/coupon'; 
         } else {
             alert(`Error creating coupon: ${result.error}`);
@@ -63,6 +61,7 @@ document.getElementById('couponForm').addEventListener('submit', async function 
         alert('Failed to create coupon. Please try again.');
     }
 });
+
 </script>
 
 <style>

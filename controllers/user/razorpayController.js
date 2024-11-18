@@ -211,8 +211,19 @@ const finalTotal = totalCost - discountAmount;
   }
 };
 
+const paymentFailure=async(req, res) => {
+  const { error, orderId } = req.body;
+
+  // Log the error details in a database or file
+  console.error(`Payment failed for Order ID ${orderId}:`, error);
+
+  // Respond to the client
+  res.status(200).json({ success: true, message: 'Payment failure logged successfully.' });
+};
+
 
 module.exports = {
     createOrder,
-    verifyPayment
+    verifyPayment,
+    paymentFailure
 };

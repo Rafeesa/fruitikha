@@ -6,6 +6,7 @@ const categoryController=require("../controllers/admin/categoryController")
 const productController =require("../controllers/admin/productController");
 const orderController = require('../controllers/admin/orderController');
 const couponController = require('../controllers/admin/couponController');
+const salesReportController = require('../controllers/admin/salesReportController');
 
 
 
@@ -62,5 +63,10 @@ router.get('/coupon', couponController.getCouponPage);
 router.get('/coupon/add', couponController.getAddCouponPage);
 router.post('/coupon/add', couponController.createCoupon);
 router.delete('/coupons/:code', couponController.deleteCoupon);
+
+//sales report management
+router.get('/sales-report',salesReportController.getSalesReport)
+router.get('/download-sales-report-pdf', salesReportController.downloadSalesReportPDF);
+router.get('/download-sales-report-excel', salesReportController.downloadSalesReportExcel);
 
 module.exports=router

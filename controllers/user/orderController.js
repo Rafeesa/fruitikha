@@ -2,33 +2,52 @@ const User = require("../../models/userSchema");
 const Product = require('../../models/productSchema'); 
 const Order=require("../../models/orderSchema")
 const Address = require('../../models/addressSchema');
-const getOrders = async (req, res) => {
+const getOrders = async (req, res) => { 
   try {
-    const userId = req.user._id; // Ensure req.user is set by authentication middleware
-    const addresses = await Address.find({ userId }).lean();
-    
-    // Log the fetched addresses for debugging
-    console.log('Fetched Addresses:', addresses); 
-    let userAddresses = addresses.length > 0 ? addresses[0].address : []; 
+      let page = 1;
+      if (req.query.page) {
+          page = parseInt(req.query.page);
+      }
 
-    // Fetch the logged-in user's details
-    const user = await User.findById(userId).lean();
+      const limit = 4; // Number of orders per page
+      const skip = (page - 1) * limit;
 
-    // Fetch orders for the current user
-    const orders = await Order.find({ userId })
-      .populate("items.productId", "name productImage price") // Populating product details
-      .lean();
+      const userId = req.user._id; // Ensure req.user is set by authentication middleware
 
-    // Log fetched orders for debugging
-    console.log('Fetched Orders:', orders);
+      // Fetch user addresses
+      const addresses = await Address.find({ userId }).lean();
+      console.log('Fetched Addresses:', addresses); 
+      let userAddresses = addresses.length > 0 ? addresses[0].address : []; 
 
-    // Render orders view with fetched orders, addresses, and user details
-    res.render("myOrder", { orders, addresses: userAddresses, user });
+      // Fetch orders with pagination
+      const orders = await Order.find({ userId })
+          .populate("items.productId", "name productImage price") 
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean();
+      
+      console.log('Fetched Orders:', orders);
+
+      // Get total number of orders for pagination
+      const totalOrders = await Order.find({ userId }).countDocuments();
+      const totalPages = Math.ceil(totalOrders / limit);
+
+      // Render the myOrder view with pagination data
+      res.render("myOrder", {
+          orders,
+          addresses: userAddresses,
+          user: req.user,
+          currentPage: page,
+          totalPages: totalPages,
+          totalOrders: totalOrders
+      });
   } catch (error) {
-    console.error("Error fetching orders:", error);
-    res.status(500).send("Server Error");
+      console.error("Error fetching orders:", error);
+      res.status(500).send("Server Error");
   }
 };
+
 
 // Controller method for handling return requests
 const requestReturn = async (req, res) => {
