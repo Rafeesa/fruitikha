@@ -81,30 +81,46 @@
                                     </div>
                                     <h3><%= product.name %></h3>
                                    
-                                        <p class="product-price"><span>Per Kg</span>  
+                                   <!--- <p class="product-price"><span>Per Kg</span>
+                                        <% if (product.category && product.category.categoryOffer > 0) { %>
+                                          ₹<%= product.salePrice %>
+                                          <p>
+                                            <span style="text-decoration: line-through; color: #888;">
+                                              ₹<%= product.price.toFixed(2) %>
+                                            </span>
+                                            <span><%= product.category.categoryOffer %>% Off</span>
+                                          </p>
+                                        <% } else if (product.productOffer > 0) { %>
+                                          ₹<%= product.salePrice %>
+                                          <p>
+                                            <span style="text-decoration: line-through; color: #888;">
+                                              ₹<%= product.price.toFixed(2) %>
+                                            </span>
+                                            <span><%= product.productOffer %>% Off</span>
+                                          </p>
+                                        <% } else { %>
+                                          ₹<%= product.price %>
+                                        <% } %>
+                                      </p>-->
+                                      <p class="product-price"><span>Per Kg</span>
+                                        <% if (product.salePrice < product.price) { %>
+                                          ₹<%= product.salePrice.toFixed(2) %>
+                                          <p>
+                                            <span style="text-decoration: line-through; color: #888;">
+                                              ₹<%= product.price.toFixed(2) %>
+                                            </span>
                                             <% if (product.category && product.category.categoryOffer > 0) { %>
-                                                <!-- Apply Category Offer -->
-                                                ₹<%= Math.round(product.salePrice) %>
-                                                <p>
-                                                    <span style="text-decoration: line-through; color: #888;">
-                                                        ₹<%= product.price.toFixed(2) %>
-                                                    </span>
-                                                    <span> <%= product.category.categoryOffer %>% Off</span>
-                                                </p>
+                                              <span><%= product.category.categoryOffer %>% Off</span>
                                             <% } else if (product.productOffer > 0) { %>
-                                                <!-- Apply Product Offer -->
-                                                ₹<%= Math.round(product.salePrice) %>
-                                                <p>
-                                                    <span style="text-decoration: line-through; color: #888;">
-                                                        ₹<%= product.price.toFixed(2) %>
-                                                    </span>
-                                                    <span> <%= product.productOffer %>% Off</span>
-                                                </p>
-                                            <% } else { %>
-                                                <!-- Show Original Price -->
-                                                ₹<%= product.price %>
+                                              <span><%= product.productOffer %>% Off</span>
                                             <% } %>
-                                        </p>
+                                          </p>
+                                        <% } else { %>
+                                          ₹<%= product.price.toFixed(2) %>
+                                        <% } %>
+                                      </p>
+                                      
+                                      
                                         </p>
                                     <a href="/user/product-details/<%= product._id %>" class="cart-btn">
                                         <i class="fas fa-shopping-cart"></i> Shop

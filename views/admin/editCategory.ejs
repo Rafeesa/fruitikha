@@ -1,22 +1,73 @@
+
 <%- include("../../views/partials/admin/header") %>
 <h1 class="text-center mb-4">Edit Category</h1>
 <div class="container">
-    <form action="/admin/editCategory/<%= category._id%>?_method=PUT" method="post" class="form-group">
-       <!--<input type="hidden" name="_method" value="PUT">-->
+    <form action="/admin/editCategory/<%= category._id %>?_method=PUT" method="post" class="form-group" onsubmit="return validateForm()">
         <div class="mb-3">
             <label for="name" class="form-label">Category Name:</label>
             <input type="text" class="form-control" id="name" name="name" value="<%= category.name %>" required>
+            <small id="name-error" class="text-danger"></small> <!-- Error message -->
         </div>
         <div class="mb-3">
             <label for="description" class="form-label">Description:</label>
             <input type="text" class="form-control" id="description" name="description" value="<%= category.description %>" required>
+            <small id="description-error" class="text-danger"></small> <!-- Error message -->
         </div>
         <div class="mb-3">
             <label for="code" class="form-label">Code:</label>
             <input type="text" class="form-control" id="code" name="code" value="<%= category.code %>" required>
+            <small id="code-error" class="text-danger"></small> <!-- Error message -->
         </div>
        
         <button type="submit" class="btn btn-success">Update Category</button>
     </form>
 </div>
 <%- include("../../views/partials/admin/footer") %>
+
+<script>
+    function validateForm() {
+        clearErrorMessages(); // Clear previous error messages
+        const name = document.getElementsByName("name")[0].value.trim();
+        const description = document.getElementById("description").value.trim();
+        const code = document.getElementById("code").value.trim();
+        let isValid = true;
+
+        // Validate name
+        if (name === "") {
+            displayErrorMessage("name-error", "Please enter a name");
+            isValid = false;
+        } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+            displayErrorMessage("name-error", "Category name should contain only alphabetic characters");
+            isValid = false;
+        }
+
+        // Validate description
+        if (description === "") {
+            displayErrorMessage("description-error", "Please enter a description");
+            isValid = false;
+        }
+
+        // Validate code
+        if (code === "") {
+            displayErrorMessage("code-error", "Please enter a code");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // Helper function to display error messages
+    function displayErrorMessage(id, message) {
+        const errorElement = document.getElementById(id);
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+    }
+
+    // Helper function to clear error messages
+    function clearErrorMessages() {
+        const errorMessages = document.querySelectorAll('.text-danger');
+        errorMessages.forEach(error => error.textContent = "");
+    }
+</script>
+

@@ -14,6 +14,18 @@ const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_SECRET,
 });
+const calculateSalePrice = (product) => {
+  const categoryOffer = product.category?.categoryOffer || 0;
+  const productOffer = product.productOffer || 0;
+
+  const categoryDiscount = (product.price * categoryOffer) / 100;
+  const productDiscount = (product.price * productOffer) / 100;
+
+  const maxDiscount = Math.max(categoryDiscount, productDiscount);
+
+  // Return the rounded sale price
+  return Math.round(product.price - maxDiscount);
+};
 
 // Create Razorpay order
 const createOrder = async (req, res) => {
@@ -129,6 +141,11 @@ console.log("razorpay signature",signature)
 const verifyPayment = async (req, res) => {
   try {
     const { paymentId, orderId, signature, paymentMethod } = req.body; // Include paymentMethod in request
+    console.log( paymentId)
+    console.log( orderId)
+    console.log( signature)
+    console.log( paymentMethod)
+    console.log("hai",req.body)
     const userId = req.user._id;
 
     // Fetch the user's cart with the items populated
@@ -141,9 +158,16 @@ const verifyPayment = async (req, res) => {
     }
 
     // Calculate total cost from cart items
-    const subtotal = cart.items.reduce((acc, item) => {
-      return acc + item.productId.salePrice * item.quantity;
-    }, 0);
+    let subtotal = 0;
+
+        // Calculate subtotal using the rounded sale price
+        cart.items.forEach(item => {
+            if (item.productId) {
+                const salePrice = calculateSalePrice(item.productId);
+                item.productId.salePrice = salePrice; // Update salePrice for use in the template
+                subtotal += salePrice * item.quantity;
+            }
+        });
 
     const shippingCost = cart.shippingCost || 45; // Assign default or calculated shipping cost
     const totalCost = subtotal + shippingCost;
@@ -165,11 +189,11 @@ if (subtotal > 150 && subtotal < 500) {
 
 // Apply discount to totalCost
 const finalTotal = totalCost - discountAmount;
-
+const orderID = Math.floor(100000 + Math.random() * 900000); // Random 6-digit number
       // Create the new order
       const newOrder = new Order({
         userId,
-        orderId,
+       orderID,
         paymentId,
         amount: finalTotal, // Use final total after discount
         shippingCost,
@@ -192,7 +216,7 @@ const finalTotal = totalCost - discountAmount;
 
       // Save order details to the session
       req.session.orderDetails = {
-        orderId: savedOrder._id,
+        orderId: orderID,
         totalCost: finalTotal,
         orderItems: cart.items,
         shippingCost,

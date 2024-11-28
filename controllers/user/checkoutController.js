@@ -8,6 +8,19 @@ const Order=require("../../models/orderSchema")
 
 
 
+const calculateSalePrice = (product) => {
+    const categoryOffer = product.category?.categoryOffer || 0;
+    const productOffer = product.productOffer || 0;
+
+    const categoryDiscount = (product.price * categoryOffer) / 100;
+    const productDiscount = (product.price * productOffer) / 100;
+
+    const maxDiscount = Math.max(categoryDiscount, productDiscount);
+
+    // Return the rounded sale price
+    return Math.round(product.price - maxDiscount);
+};
+
 const getCheckoutPage = async (req, res) => { 
     try {
         const addresses = await Address.find({ userId: req.user.id });
@@ -17,11 +30,15 @@ const getCheckoutPage = async (req, res) => {
         if (!cart) {
             return res.status(404).send('Cart not found');
         }
-        
+
         let subtotal = 0;
+
+        // Calculate subtotal using the rounded sale price
         cart.items.forEach(item => {
             if (item.productId) {
-                subtotal += item.productId.salePrice * item.quantity;
+                const salePrice = calculateSalePrice(item.productId);
+                item.productId.salePrice = salePrice; // Update salePrice for use in the template
+                subtotal += salePrice * item.quantity;
             }
         });
 
@@ -48,6 +65,7 @@ const getCheckoutPage = async (req, res) => {
     }
 };
 
+
 const placeOrder = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -64,73 +82,80 @@ const placeOrder = async (req, res) => {
 
         let subtotal = 0;
         cart.items.forEach(item => {
-            subtotal += item.productId.salePrice * item.quantity;
+            if (item.productId) {
+                const salePrice = calculateSalePrice(item.productId);
+                item.productId.salePrice = salePrice; // Update salePrice for use in the template
+                subtotal += salePrice * item.quantity;
+            }
         });
         
         const shippingCost = 45;
-        const totalCost = subtotal + shippingCost;
         const discountAmount = req.session.discountAmount || 0;
-        const finalTotal = req.session.finalTotal || 0;
-
+        const totalCost = subtotal + shippingCost - discountAmount;
 
         const paymentMethod = req.body.paymentMethod || 'Cash On Delivery';
+        const finalTotal = totalCost; // Total cost includes discount applied
 
+        // Generate a unique 6-7 digit orderID
+        const orderID = Math.floor(100000 + Math.random() * 900000); // Random 6-digit number
+        
         const newOrder = new Order({
-            userId: userId,
+            userId,
+            orderID, // Save the generated orderID
             items: cart.items,
             address: address.address[0],
-            subtotal: subtotal,
-            shippingCost: shippingCost,
-            discountAmount: discountAmount,
+            subtotal,
+            shippingCost,
+            discountAmount,
             totalCost: finalTotal,
-            paymentMethod: paymentMethod,  // Use defined paymentMethod
+            paymentMethod,
             status: 'order placed'
         });
-        
 
         const savedOrder = await newOrder.save();
 
-        // Update product stock
+        // Update product stock safely
         for (let item of cart.items) {
-            const product = await Product.findById(item.productId._id);
-            if (product) {
-                product.stock -= item.quantity;
-                if (product.stock < 0) {
-                    product.stock = 0;
-                }
-                await product.save();
-            }
+            await Product.updateOne(
+                { _id: item.productId._id, stock: { $gte: item.quantity } },
+                { $inc: { stock: -item.quantity } }
+            );
         }
 
         // Clear the cart
         await Cart.deleteOne({ userId });
+
+        // Store order details in the session
         req.session.orderDetails = {
-            orderId: savedOrder._id,
+            orderId: savedOrder.orderID, // Use orderID for display
             totalCost: finalTotal,
             orderItems: cart.items,
-            shippingCost: 45,
+            shippingCost,
             subtotal,
-            discountAmount: discountAmount,
-            paymentMethod: savedOrder.paymentMethod
+            discountAmount,
+            paymentMethod
         };
-        console.log('Payment Method:', paymentMethod);
+
+        // Clear discount session data
+        delete req.session.discountAmount;
 
         // Redirect to the success page
         res.redirect('/orderSuccess');
     } catch (err) {
         console.error(err);
-        res.status(500).send('Error placing order');
+        res.redirect('/errorPage'); // Redirect to an error page
     }
 };
 
+
 const getOrderSuccessPage = (req, res) => {
-    // Check if orderDetails exist in the session
+    
     if (!req.session.orderDetails) {
-        return res.redirect('/'); // Redirect to home or another page if no order details are found
+        return res.redirect('/'); 
     }
 
     const { orderId, totalCost, orderItems, subtotal, shippingCost, discountAmount, paymentMethod } = req.session.orderDetails;
-
+console.log(req.session.orderDetails)
     res.render('orderSuccess', {
         title: 'Order Success',
         orderId,

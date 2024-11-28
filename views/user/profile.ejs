@@ -205,6 +205,8 @@
         <a href="/wallet">My Wallet</a>
        <br>
        <a href="/wishlist">My Wishlist</a>
+       <br>
+       <a href="#referralCode">Referal Code</a>
 
       </div>
 
@@ -370,7 +372,20 @@
     </div>
   </div>
 
-  
+  <div class="col-md-9">
+    <div class="card mb-4">
+        <div class="card-body" id="referralCode">
+            <h4>Referral Code</h4>
+            <% if (user.referralCode) { %>
+                <p><strong>Your Referral Code:</strong> <%= user.referralCode %></p>
+            <% } else { %>
+                <p><strong>Your Referral Code:</strong> Not generated yet.</p>
+            <% } %>
+        </div>
+    </div>
+</div>
+</div>
+</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
   <script>

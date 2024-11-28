@@ -219,6 +219,7 @@ const getProfile = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
+                referralCode: user.referralCode,
                 addresses: addresses,
                 
             
@@ -355,59 +356,68 @@ const deleteAddress = async (req, res) => {
      res.redirect('/profile')
     }
   };
-  
   const cancelOrder = async (req, res) => {
     try {
-        const orderId = req.params.id;
-        const userId = req.session.passport?.user;
-
-        // Find the order by ID and ensure it belongs to the user
-        const order = await Order.findOne({ _id: orderId, userId });
-
-        if (!order) {
-            return res.status(404).send('Order not found or does not belong to you.');
+      const orderId = req.params.id;
+      const userId = req.session.passport?.user;
+  
+      // Find the order by ID and ensure it belongs to the user
+      const order = await Order.findOne({ _id: orderId, userId });
+  
+      if (!order) {
+        return res.status(404).send('Order not found or does not belong to you.');
+      }
+  
+      if (order.status !== 'order placed') {
+        return res.status(400).send('Only orders in "order placed" status can be canceled.');
+      }
+  
+      const refundAmount = order.totalCost; // Fetch correct refund amount
+      console.log(refundAmount);
+  
+      // Update order status to 'Cancelled'
+      order.status = 'Cancelled';
+      await order.save();
+  
+      // Manage stock for each product in the order
+      for (const item of order.items) { 
+        const product = await Product.findById(item.productId);
+        if (product) {
+          product.stock += item.quantity; 
+          await product.save(); 
         }
-
-        if (order.status !== 'order placed') {
-            return res.status(400).send('Only orderplaced orders can be canceled.');
-        }
-
-        const refundAmount =  order.totalCost; // Fetch correct refund amount
-        console.log(refundAmount)
-
-        // Update order status to 'Cancelled'
-        order.status = 'Cancelled';
-        await order.save();
-
-        // Find the user and update their wallet balance
-        const user = await User.findById(userId);
-
-        if (!user) {
-            return res.status(404).send('User not found.');
-        }
-
-        user.walletBalance += refundAmount; // Add refund to wallet balance
-
-        // Log the transaction in walletTransactions
-        user.walletTransactions.push({
-            amount: refundAmount,
-            date: new Date(),
-            description: `Refund for canceled order #${orderId}`,
-        });
-
-        await user.save(); // Save updated user details
-
-        // Flash a success message and redirect to the profile page
-        req.flash(
-            'success_msg',
-            `Order canceled successfully. ₹${refundAmount} has been credited to your wallet.`
-        );
-        res.redirect('/profile');
+      }
+  
+      // Find the user and update their wallet balance
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return res.status(404).send('User not found.');
+      }
+  
+      user.walletBalance += refundAmount; // Add refund to wallet balance
+  
+      // Log the transaction in walletTransactions
+      user.walletTransactions.push({
+        amount: refundAmount,
+        date: new Date(),
+        description: `Refund for canceled order #${order.orderID}`,
+      });
+  
+      await user.save(); // Save updated user details
+  
+      // Flash a success message and redirect to the profile page
+      req.flash(
+        'success_msg',
+        `Order canceled successfully. ₹${refundAmount} has been credited to your wallet.`
+      );
+      res.redirect('/profile');
     } catch (error) {
-        console.error('Error canceling order:', error);
-        res.status(500).send('Internal Server Error');
+      console.error('Error canceling order:', error);
+      res.status(500).send('Internal Server Error');
     }
-};
+  };
+  
 
 
 const changePassword = async (req, res) => {

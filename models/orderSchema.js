@@ -111,7 +111,8 @@ const orderSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    orderID: { type: Number, required: true, unique: true },
 });
 
 const Order = mongoose.model('Order', orderSchema);

@@ -51,7 +51,10 @@ const userSchema=new Schema({
       date: Date, 
       description: String 
     }],
-    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]  
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],  
+    referralCode: { type: String, unique: true },
+   
+    referrals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
     
    
 })

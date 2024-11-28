@@ -63,8 +63,11 @@ if(categories){
     res.status(500).send("Internal Server Error");
   }
 };
+
+
 const addProducts=async(req,res)=>{
   try {
+
     const products=req.body
     const { name, description, category, price,stock } = req.body;
     const productExist = await Product.findOne({
@@ -73,6 +76,7 @@ const addProducts=async(req,res)=>{
    //   productName:products.productName,
 
     //})
+   
     if(!productExist){
       const images=[];
       if(req.files && req.files.length>0)
@@ -96,6 +100,7 @@ const addProducts=async(req,res)=>{
         description:description,
         category:categoryId._id,
         price:price,
+        salePrice:price,
         stock:stock,
         createdOn: new Date(), 
        productImage: images 
@@ -213,6 +218,7 @@ const getEditProduct = async (req, res) => {
       res.render("edit-product", {
           product,
           cat: category,
+          
       });
   } catch (error) {
       console.error("Error fetching product for editing", error);
@@ -230,11 +236,11 @@ const editProduct = async (req, res) => {
       return res.status(400).json({ error: "Product with this name already exists, please try another name" });
     }
 
-    // Find category by name
-    const categoryId = await Category.findOne({ name: data.category });
-    if (!categoryId) {
-      return res.status(400).json({ error: "Invalid category" });
-    }
+
+     const categoryId = await Category.findById(data.category);
+     if (!categoryId) {
+       return res.status(400).json({ error: "Invalid category" });
+     }
     console.log("Uploaded files:", req.files);
 
     const newImages = [];
@@ -258,7 +264,8 @@ const editProduct = async (req, res) => {
       name: data.name,
       description: data.description,
       category: categoryId._id,
-      price: data.price,
+      price:data.price,
+      //salePrice: data.price,
       stock: data.stock,
     };
     console.log("Update Fields:", updateFields);

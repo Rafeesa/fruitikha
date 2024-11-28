@@ -25,6 +25,7 @@ router.get('/shop',userController.getShop)
 //sign up management
 router.get("/signup",userController.loadSignup)
 router.post("/signup",userController.signup)
+router.get('/checkReferral',userController.checkReferralCode);
 router.post("/verify-otp",userController.verifyOtp)
 router.post("/resend-otp",userController.resendOtp)
 
@@ -51,9 +52,6 @@ router.post("/reset-password",profileController.postNewPassword)
 //Edit account
 router.put('/update-profile',profileController.updateProfile)
 
-//ordermanagement
-
-router.post('/order/cancel/:id', profileController.cancelOrder);
 
 //razorpay
 router.post('/create-razorpay-order', razorpayController.createOrder);
@@ -74,6 +72,7 @@ router.delete('/removeWishlist/:productId',wishlistController.removeWishlist);
 //myOrder
 router.get('/myOrder',orderController.getOrders)
 router.post('/order/return/:id',orderController.requestReturn)
+router.post('/order/cancel/:id', profileController.cancelOrder);
 
 
 //coupon management
@@ -102,6 +101,7 @@ router.post('/cart/update', cartController.updateCartQuantity);
 router.get('/checkout',checkoutController.getCheckoutPage)
 router.post('/place-order',checkoutController.placeOrder);
 router.get('/orderSuccess', checkoutController.getOrderSuccessPage);
+router.get('/order/invoice/:id',orderController.getInvoicePdf);
 
 
 

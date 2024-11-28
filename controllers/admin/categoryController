@@ -62,22 +62,25 @@ const createCategory = async (req, res) => {
         const existingCategory = await Category.findOne({ name });
 
         if (existingCategory) {
-            req.flash('error_msg', 'Category already exists');
-            return res.redirect('/admin/categories/new'); // Redirect to the new category form
+            return res.status(400).json({
+                status: "error",
+                message: "Category already exists",
+            });
         }
 
         const newCategory = new Category({ name, description, code });
         await newCategory.save();
-        
-        req.flash('success_msg', 'Category added successfully');
-     
-     console.log('Flash Success Message:', req.flash('success_msg'));
-    return res.redirect("/admin/category") // Redirect to the category list page
-      
+
+        return res.status(200).json({
+            status: "success",
+            message: "Category added successfully",
+        });
     } catch (err) {
         console.error(err);
-        req.flash('error_msg', 'Internal Server Error');
-        res.redirect('/admin/Category'); // Redirect to the category list page
+        return res.status(500).json({
+            status: "error",
+            message: "Internal Server Error",
+        });
     }
 };
 
@@ -99,13 +102,13 @@ const updateCategory = async (req, res) => {
         const id=req.params.id
         console.log('Updating category with ID:', req.params.id);
         console.log('Request body:', req.body);
-        const { categoryName, description, code } = req.body;
-        const existingCategory=await Category.findOne({name:categoryName})
+        const { name, description, code } = req.body;
+        const existingCategory=await Category.findOne({name:name})
         if(existingCategory){
             return res.status(400).json({error:"Category exists,please choose another name"})
         }
         const updateCategory=await Category.findByIdAndUpdate(id,{
-            name:categoryName,
+            name:name,
             description:description,
             code:code
         },{new:true})

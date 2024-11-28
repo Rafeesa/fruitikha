@@ -31,20 +31,9 @@ app.use(session({
         maxAge: 72 * 60 * 60 * 1000 
     }
 }));
-
-/* Debugging session middleware
-app.use((req, res, next) => {
-    console.log('Current session:', req.session);
-    next();
-});
-*/
-
-
 // Passport middleware (must come after session)
 app.use(passport.initialize());
 app.use(passport.session());
-
-
 
 // Middleware to make user data available in all views
 app.use((req, res, next) => {
@@ -57,12 +46,12 @@ app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store');
     next();
 });
-
 // Flash middleware to store messages across redirects
 app.use(flash());
 
 // Make flash messages available in templates
 app.use((req, res, next) => {
+   
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
     res.locals.error = req.flash('error'); 
@@ -81,11 +70,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
-//const razorpayRoutes = require("./routes/razorpayRoutes"); // Import Razorpay routes
 
 app.use("/", userRouter);
 app.use('/admin', adminRouter);
-//app.use("/razorpay", razorpayRoutes); // Register Razorpay routes
 
 // Database connection
 db();

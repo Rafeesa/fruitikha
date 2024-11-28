@@ -220,13 +220,22 @@
 .product-price {
     font-size: 1.1rem;
     font-weight: bold;
-    color: #FF5733;
+    color: #ff6600;
     margin-bottom: 10px;
 }
-
+.add-to-cart-btn {
+    background-color: #ff6600; /* Orange color */
+    color: white;
+    border: none;
+    padding: 6px 12px; /* Smaller padding */
+    border-radius: 4px; /* Slightly smaller border radius */
+    cursor: pointer;
+    font-size: 14px; /* Smaller font size */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition */
+}
 /* Light Orange Add to Cart Button */
 .cart-btn {
-    background-color: #FFA07A; /* Light orange button */
+    background-color:#ff6600; /* Light orange button */
     color: #fff;
     padding: 8px 15px;
     border-radius: 5px;
@@ -236,12 +245,12 @@
 }
 
 .cart-btn:hover {
-    background-color: #ff7f50; /* Darker light orange on hover */
+    background-color: #ff6600; /* Darker light orange on hover */
 }
 
 /* Custom Light Orange Button Class */
 .btn-light-orange {
-    background-color: #FFA07A;
+    background-color: #ff6600;
     color: white;
 }
 .wishlist-icon {
@@ -387,25 +396,21 @@
 
                 <!-- Product Price -->
                 <div class="product-price">
-                    <% if (product.productOffer > 0) { %>
-                      
-                
-                        <!-- Display the discount percentage -->
-                        <p style="color: #e63946;">
-                            <%= product.productOffer %>% Off
-                        </p>
-                
-                        <!-- Display the discounted sale price -->
-                        <p style="font-size: 1.5em; font-weight: bold;">
-                             ₹<%= product.salePrice %> <span style="text-decoration: line-through; color: #888;">
-                                ₹<%= product.price %>
-                            </span>
-                        </p>
+                    <% if (product.salePrice < product.price) { %>
+                      <p style="color: #e63946;">
+                        <%= Math.max(product.category?.categoryOffer || 0, product.productOffer || 0) %>% Off
+                      </p>
+                      <p style="font-size: 1.5em; font-weight: bold;">
+                        ₹<%= product.salePrice.toFixed(2) %> 
+                        <span style="text-decoration: line-through; color: #888;">
+                          ₹<%= product.price.toFixed(2) %>
+                        </span>
+                      </p>
                     <% } else { %>
-                        <!-- If there's no discount, show only the original price -->
-                        <p> ₹<%= product.salePrice %>  </p>
+                      <p>₹<%= product.price.toFixed(2) %></p>
                     <% } %>
-                </div>
+                  </div>
+                  
                 <div class="stock">
                   <p><%= product.stock %> in stock</p>  
                   </div>
@@ -415,13 +420,14 @@
                 <form id="addToCartForm" action="/cart/add" method="POST">
                     <input type="hidden" name="productId" value="<%= product._id %>">
                     <input type="number" name="quantity" value="1" min="1" max="<%= product.stock %>">
-                    <button type="submit">Add to Cart</button>
+                    <button type="submit" class="add-to-cart-btn">Add to Cart</button>
                   </form>
-                  <% if (errorMessage) { %> 
+                  <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
                     <div class="alert alert-danger">
-                        <%= errorMessage %> 
+                        <%= errorMessage %>
                     </div>
                 <% } %>
+                
                   <!-- Display the error message here 
                   <div id="error-message" style="color: red;"></div>-->
             
@@ -592,5 +598,3 @@
       
 </body>
 </html>
-
-

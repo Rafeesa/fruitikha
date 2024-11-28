@@ -36,26 +36,29 @@
             background-color: #051922;
             padding: 10px 15px;
         }
-
+        
         .navbar .navbar-nav .nav-link {
             color: white;
         }
+        .account-menu {
+            color: white;
+            position: relative;
+        }
+        .account-menu .dropdown-menu {
+    background-color: #051922;
+    border: none;
+    min-width: 150px;
+}
 
-        .account-menu .dropdown-item {
-    color: white !important;
+.account-menu .dropdown-item {
+    color: white !important; /* Ensures white text */
+    font-size: 0.85rem;
     transition: background-color 0.3s ease;
 }
 
-        .account-menu .dropdown-menu {
-            
-            background-color: #051922;
-            border: none;
-            min-width: 150px;
-        }
-
-        .account-menu .dropdown-item:hover {
-            background-color: #ff6600;
-        }
+.account-menu .dropdown-item:hover {
+    background-color: #ff6600;
+}
 
         h1 {
             font-family: 'Poppins', sans-serif;
@@ -105,10 +108,7 @@
 
         
         
-        .dropdown-menu .dropdown-item {
-            
-            font-size: 0.85rem;
-        }
+       
         .fasfa-map-marker-alt{
             color: #ff6600; /* Color for the location symbol */
     margin-right: 4px;
@@ -232,6 +232,7 @@
                 <th>Total</th>
                 <th>Payment Method</th>
                 <th>Action</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -246,7 +247,7 @@
                             <% } %>
             
                             <td><%= item.productId.name %></td>
-                            <td><%= order._id %></td>
+                            <td><%= order.orderID %></td>
                             <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                             <td><%= order.status %></td>
                             <td>₹<%= order.totalCost.toFixed(2) %></td>
@@ -254,17 +255,35 @@
                             
                             <td>
                                 <% if (order.status === 'order placed') { %>
-                                    <form action="/order/cancel/<%= order._id %>" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this order?');">Cancel</button>
-                                    </form>
+                                  <form 
+                                    action="/order/cancel/<%= order._id %>" 
+                                    method="POST" 
+                                    style="display:inline;" 
+                                    onsubmit="return confirmCancel(event);"
+                                  >
+                                    <button type="submit" class="btn btn-danger">Cancel</button>
+                                  </form>
                                 <% } else if (order.status === 'Delivered') { %>
-                                    <form action="/order/return/<%= order._id %>" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to request a return?');">Return</button>
-                                    </form>
+                                  <form 
+                                    id="returnForm-<%= order._id %>" 
+                                    style="display:inline;" 
+                                    onsubmit="return handleReturnRequest(event, '<%= order._id %>');"
+                                  >
+                                    <button type="submit" class="btn btn-warning">Return</button>
+                                  </form>
                                 <% } else { %>
-                                    <span>N/A</span>
+                                  <span>N/A</span>
                                 <% } %>
-                            </td>
+                              </td>
+                               <td>
+                            <!-- Invoice Button -->
+                            <% if (order.status === 'Delivered' || order.status === 'return') { %>
+                                <form action="/order/invoice/<%= order._id %>" method="GET" style="display:inline;">
+                                    <button type="submit" class="btn btn-primary">Download Invoice</button>
+                                </form>
+                            <% } %>
+                        </td>
+                            
                         </tr>
                     <% }) %> <!-- Closing item loop -->
                 <% }) %> <!-- Closing order loop -->
@@ -295,4 +314,93 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  async function handleReturnRequest(event, orderId) {
+    event.preventDefault(); // Prevent default form submission
+
+    try {
+      const response = await fetch(`/order/return/${orderId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Display success message using SweetAlert
+        Swal.fire({
+          title: 'Success!',
+          text: result.message,
+          icon: 'success',
+          confirmButtonText: 'OK',
+        });
+      } else {
+        // Display error message using SweetAlert
+        Swal.fire({
+          title: 'Error!',
+          text: result.message || 'An error occurred while processing your request.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
+    } catch (error) {
+      console.error('Error handling return request:', error);
+
+      // Handle network or unexpected errors
+      Swal.fire({
+        title: 'Error!',
+        text: 'Something went wrong. Please try again later.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
+    }
+  }
+</script>
+
+<script>
+    function confirmCancel(event) {
+        event.preventDefault(); // Prevent the form from submitting immediately
+
+        Swal.fire({
+            title: 'Are you sure you want to cancel this order?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, cancel it!',
+            cancelButtonText: 'No, keep it',
+            reverseButtons: true
+        }).then((result) => {
+    if (result.isConfirmed) {
+        Swal.fire('Successfully Cancelled', '', 'success').then(() => {
+            event.target.submit(); // Submit the form after the alert is dismissed
+        });
+            } else {
+                Swal.fire('Cancelled', 'Your order was not cancelled.', 'info'); // Show a cancellation message
+            }
+        });
+    }
+
+    function confirmReturn(event) {
+        event.preventDefault(); // Prevent the form from submitting immediately
+
+        Swal.fire({
+            title: 'Are you sure you want to request a return?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, request return!',
+            cancelButtonText: 'No, keep it',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                event.target.submit(); // Submit the form if confirmed
+            } else {
+                Swal.fire('Cancelled', 'Your return request was not submitted.', 'info'); // Show a cancellation message
+            }
+        });
+    }
+</script>
+
 <%- include("../../views/partials/user/footer") %>

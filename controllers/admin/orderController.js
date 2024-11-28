@@ -38,11 +38,8 @@ const getAllOrders = async (req, res) => {
             .limit(limit)
             .exec();
 
-        // Get total number of orders for pagination
         const totalOrders = await Order.find(searchCondition).countDocuments();
         const totalPages = Math.ceil(totalOrders / limit);
-
-        // Render orders view with data
         res.render('orders', {
             orders: orders,
             currentPage: page,
@@ -57,31 +54,60 @@ const getAllOrders = async (req, res) => {
 
 
 
-// Update order status
+
 const updateOrderStatus = async (req, res) => {
     try {
-        const { status } = req.body; 
-        console.log("HELLO")
-        console.log(req.body)
-        console.log("hai")
-        console.log(status)
+        const { status } = req.body;
+        console.log("HELLO");
+        console.log(req.body);
+        console.log("Status being updated to: ", status);
 
         const order = await Order.findById(req.params.id);
-        
         if (order) {
-            order.status = status; 
-        
-            await order.save(); 
+            if (status === 'Return') {
+                if (order.status === 'Return Requested') {
+                    const user = await User.findById(order.userId);
+                    if (user) {
+                        const refundAmount = order.totalCost; 
+                        user.walletBalance += refundAmount;
+                        user.walletTransactions.push({
+                            amount: refundAmount,
+                            date: new Date(),
+                            description: `Refund for returned order #${order._id}`,
+                        });
+
+                        await user.save(); 
+                    } else {
+                        return res.status(404).json({ error: "User not found for refund" });
+                    }
+
+                    for (const item of order.items) { 
+                        const product = await Product.findById(item.productId);
+                        if (product) {
+                            product.stock += item.quantity; 
+                            await product.save(); 
+                        } else {
+                            console.error(`Product with ID ${item.productId} not found`);
+                        }
+                    }
+                } else {
+                    return res.status(400).json({ error: "Return can only be processed for orders with 'Return Requested' status." });
+                }
+            }
+
+            
+            order.status = status;
+            await order.save();
+            req.flash('success_msg', `Order #${order._id} status updated to ${status}.`);
             res.redirect('/admin/orders');
         } else {
             res.status(404).json({ error: "Order not found" });
         }
     } catch (err) {
-        console.error(err);
+        console.error('Error updating order status:', err);
         res.redirect('/admin/orders');
     }
 };
-
 
 
 // Delete an order

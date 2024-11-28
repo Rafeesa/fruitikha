@@ -1,127 +1,115 @@
 <%- include("../../views/partials/admin/header") %>
 <body>
-<h1 class="text-center mb-4">Add New Category</h1>
+    <h1 class="text-center mb-4">Add New Category</h1>
 
-<!-- Flash Messages Section -->
-<% if (success_msg) { %>
-    <div class="alert alert-success" style="display: block;"><%= success_msg %></div>
-<% } %>
-<% if (error_msg) { %>
-    <div class="alert alert-danger" style="display: block;"><%= error_msg %></div>
-<% } %>
+    <div class="container">
+        <form action="/admin/categories" method="POST" class="form-group" onsubmit="return handleFormSubmit(event)" novalidate>
+            <div class="mb-3">
+                <label for="name" class="form-label">Category Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+                <small id="name-error" class="text-danger error-message"></small>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description:</label>
+                <input type="text" class="form-control" id="description" name="description" required>
+                <small id="description-error" class="text-danger error-message"></small>
+            </div>
+            <div class="mb-3">
+                <label for="code" class="form-label">Code:</label>
+                <input type="text" class="form-control" id="code" name="code" required>
+                <small id="code-error" class="text-danger error-message"></small>
+            </div>
 
-<div class="container">
-    <form action="/admin/categories" method="POST" class="form-group" onsubmit="return handleFormSubmit(event)" novalidate>
-        <div class="mb-3">
-            <label for="name" class="form-label">Category Name:</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-            <small id="name-error" class="text-danger error-message"></small>
-        </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Description:</label>
-            <input type="text" class="form-control" id="description" name="description" required>
-            <small id="description-error" class="text-danger error-message"></small>
-        </div>
-        <div class="mb-3">
-            <label for="code" class="form-label">Code:</label>
-            <input type="text" class="form-control" id="code" name="code" required>
-            <small id="code-error" class="text-danger error-message"></small>
-        </div>
-       
-        <button type="submit" class="btn btn-success">Add Category</button>
-    </form>
-</div>
+            <button type="submit" class="btn btn-success">Add Category</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-    function handleFormSubmit(event) {
-        event.preventDefault(); 
-        if (!validateForm()) {
-            return;
-        }
-        const name = document.getElementsByName("name")[0].value;
-        const description = document.getElementById("description").value; 
-        const code = document.getElementById("code").value;
+    <script>
+        function handleFormSubmit(event) {
+            event.preventDefault();
 
-        fetch('/admin/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, description, code })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.error);  
-                });
+            if (!validateForm()) {
+                return;
             }
-            return response.json();
-        })
-        .then(data => {
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: 'Category added successfully!'
-            }).then(() => {
-                location.reload();
+
+            const name = document.getElementsByName("name")[0].value;
+            const description = document.getElementById("description").value;
+            const code = document.getElementById("code").value;
+
+            fetch('/admin/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description, code }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message,
+                }).then(() => {
+                    window.location.href = '/admin/Category'; // Redirect after success
+                });
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops',
+                    text: error.message,
+                });
             });
-        })
-        .catch(error => {
-            if (error.message === "Category already exists") {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops',
-                    text: 'Category already exists'
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops',
-                    text: 'An error occurred while adding the category'
-                });
+        }
+
+        function validateForm() {
+            clearErrorMessages();
+            const name = document.getElementsByName("name")[0].value.trim();
+            const description = document.getElementById("description").value.trim();
+            const code = document.getElementById("code").value.trim();
+            let isValid = true;
+
+            if (name === "") {
+                displayErrorMessage("name-error", "Please enter a name");
+                isValid = false;
+            } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+                displayErrorMessage("name-error", "Category name should contain only alphabetic characters");
+                isValid = false;
             }
-        });
-    }
 
-    function validateForm() {
-        clearErrorMessages();
-        const name = document.getElementsByName("name")[0].value.trim();
-        const description = document.getElementById("description").value.trim();
-        const code = document.getElementById("code").value.trim();
-        let isValid = true;
+            if (description === "") {
+                displayErrorMessage("description-error", "Please enter a description");
+                isValid = false;
+            }
 
-        if (name === "") {
-            displayErrorMessage("name-error", "Please enter a name");
-            isValid = false;
-        } else if (!/^[a-zA-Z\s]+$/.test(name)) {
-            displayErrorMessage("name-error", "Category name should contain only alphabetic characters");
-            isValid = false;
+            if (code === "") {
+                displayErrorMessage("code-error", "Please enter a code");
+                isValid = false;
+            }
+
+            return isValid;
         }
 
-        if (description === "") {
-            displayErrorMessage("description-error", "Please enter a description");
-            isValid = false;
+        function displayErrorMessage(elementId, message) {
+            var errorElement = document.getElementById(elementId);
+            errorElement.innerText = message;
+            errorElement.style.display = "block";
         }
 
-        if (code === "") {
-            displayErrorMessage("code-error", "Please enter a code");
-            isValid = false;
+        function clearErrorMessages() {
+            const errorElements = document.getElementsByClassName("error-message");
+            Array.from(errorElements).forEach((element) => {
+                element.innerText = "";
+                element.style.display = "none";
+            });
         }
-
-        return isValid;
-    }
-
-    function displayErrorMessage(elementId, message) {
-        var errorElement = document.getElementById(elementId);
-        errorElement.innerText = message;
-        errorElement.style.display = "block";
-    }
-
-    function clearErrorMessages() {
-        const errorElements = document.getElementsByClassName("error-message");
-        Array.from(errorElements).forEach((element) => {
-            element.innerText = "";
-            element.style.display = "none";
-        });
-    }
-</script>
+    </script>
 </body>
+
 <%- include("../../views/partials/admin/footer") %>

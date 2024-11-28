@@ -97,6 +97,17 @@
                         </a>
                     </div>
                     <br>
+                    <div class="form-check d-flex justify-content-center mb-4">
+                        <label class="form-check-label" for="terms" onclick="toggleReferralCodeInput()">
+                            Have a referral code? <a href="#!">Click here</a>
+                        </label>
+                    </div>
+                    
+                    <div id="referralCodeInputContainer" style="display: none;">
+                        <input type="text" id="referralCodeInput" class="form-control form-control-lg" name="referralCode" placeholder="Enter Referral Code" />
+                        <span class="text-secondary" id="referralMessage"></span>
+                    </div>
+                    <br>
                     <div class="form-group text-center"><p>If already have an account? <a href="login"> Login</a></p></div>
                     
                 </form>
@@ -204,5 +215,34 @@
             });
         });
     </script>
+    <script>
+        function toggleReferralCodeInput() {
+            const referralCodeInputContainer = document.getElementById('referralCodeInputContainer');
+            // Toggle the display property between 'none' and 'block'
+            if (referralCodeInputContainer.style.display === 'none') {
+                referralCodeInputContainer.style.display = 'block';
+            } else {
+                referralCodeInputContainer.style.display = 'none';
+            }
+        }
+    </script>
+    
+    <script>
+        function checkReferral() {
+            const code = document.getElementById('referralCodeInput').value;
+    
+            // Call the backend route to validate the referral code
+            fetch(`/checkReferral?code=${code}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the referral code validation message in the UI
+                    document.getElementById('referralMessage').innerHTML = data.message;
+                })
+                .catch(error => {
+                    console.error('Error validating referral code:', error);
+                });
+        }
+    </script>
+    
 </body>
 </html>

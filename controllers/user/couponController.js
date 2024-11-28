@@ -46,24 +46,20 @@ const applyCoupon = async (req, res) => {
         console.log("Code received:", code);
         console.log("UserId received from session:", userId);
 
-        // Find the coupon based on code and active status
         const coupon = await Coupon.findOne({ code: code, isActive: true });
         if (!coupon) {
             return res.status(404).json({ error: "Coupon not found or inactive." });
         }
 
-        // Find the user by ID
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: "User not found." });
         }
 
-        // Check if the user has already used the coupon
         if (user.redeemList && user.redeemList.includes(coupon._id)) {
             return res.status(400).json({ error: "You have already used this coupon." });
         }
 
-        // Add the coupon to the user's redeem list
         user.redeemList.push(coupon._id);
         await user.save();
 

@@ -5,6 +5,7 @@ const env = require("dotenv").config();
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
+const session = require('express-session') 
 
 // Load Homepage
 const loadHomepage = async (req, res) => {
@@ -118,13 +119,23 @@ const getShop = async (req, res) => {
 };
 
 
-const getProductDetails = async (req, res) => {
+/*const getProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
         const userId = req.session._id; 
-
+        
         // Fetch the product details
-        const product = await Product.findById(productId).exec();
+        const product = await Product.findById(productId).populate('category').exec();
+
+        // Calculate salePrice with consistent logic
+        const categoryOffer = product.category ? product.category.categoryOffer : 0;
+        const productOffer = product.productOffer || 0;
+
+        const categoryDiscount = (product.price * categoryOffer) / 100;
+        const productDiscount = (product.price * productOffer) / 100;
+
+        const maxDiscount = Math.max(categoryDiscount, productDiscount);
+        product.salePrice = Math.round(product.salePrice - maxDiscount); // Rounded price
 
         // Fetch related products
         const relatedProducts = await Product.find({
@@ -132,18 +143,17 @@ const getProductDetails = async (req, res) => {
             category: product.category
         }).limit(3).exec();
 
+        // Check if the product is in the user's wishlist
         let isInWishlist = false;
         if (userId) {
             const user = await User.findById(userId).select('wishlist').exec(); 
-            
             isInWishlist = user && user.wishlist.includes(productId);
         }
 
-        
         const errorMessage = req.query.error || null; 
         console.log('Error message:', errorMessage); 
 
-        
+        // Render the product details page
         res.render('product-details', {
             product,
             relatedProducts,
@@ -155,7 +165,58 @@ const getProductDetails = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
+*/
+const calculateSalePrice = (product) => {
+    const categoryOffer = product.category?.categoryOffer || 0;
+    const productOffer = product.productOffer || 0;
 
+    const categoryDiscount = (product.price * categoryOffer) / 100;
+    const productDiscount = (product.price * productOffer) / 100;
+
+    const maxDiscount = Math.max(categoryDiscount, productDiscount);
+    return Math.round(product.price - maxDiscount); // Consistently subtract from product.price
+};
+
+// Update in both getProductDetails and getShopPage
+const getProductDetails = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const userId = req.session._id;
+
+        // Fetch the product details
+        const product = await Product.findById(productId).populate('category').exec();
+
+        // Calculate sale price
+        product.salePrice = calculateSalePrice(product);
+
+        // Fetch related products
+        const relatedProducts = await Product.find({
+            _id: { $ne: productId },
+            category: product.category
+        }).limit(3).exec();
+
+        // Check if the product is in the user's wishlist
+        let isInWishlist = false;
+        if (userId) {
+            const user = await User.findById(userId).select('wishlist').exec();
+            isInWishlist = user?.wishlist.includes(productId);
+        }
+
+        // Define errorMessage as null by default
+        const errorMessage = req.query.error || null;
+
+        // Render the product details page
+        res.render('product-details', {
+            product,
+            relatedProducts,
+            isInWishlist,
+            errorMessage // Pass the errorMessage to the view
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
 
 // Load Signup Page
@@ -204,7 +265,7 @@ async function sendVerificationEmail(email, otp) {
 }
 
 // Signup Controller
-const signup = async (req, res) => {
+/*const signup = async (req, res) => {
     try {
         const { name, email, phone, password, cPassword } = req.body;
 
@@ -234,8 +295,70 @@ const signup = async (req, res) => {
     } catch (error) {
         console.error("Signup error", error);
     }
+};*/
+const signup = async (req, res) => {
+    try {
+        const { name, email, phone, password, cPassword, referralCode } = req.body;
+        if (password !== cPassword) {
+            return res.render("signup", { message: "Passwords do not match" });
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.render("signup", { message: "User with this email already exists" });
+        }
+
+        //referel code generating
+        const referralCodeGenerated = `${name}_${Math.random().toString(36).substr(2, 6)}`;
+
+        // Check referral code validity (if provided)
+        let referrer = null;
+        if (referralCode) {
+            referrer = await User.findOne({ referralCode });
+            if (!referrer) {
+                return res.render("signup", { message: "Invalid referral code" });
+            }
+        }
+
+        // Create the new user
+        const newUser = await User.create({
+            name,
+            email,
+            phone,
+            password,
+            referralCode: referralCodeGenerated,
+            walletBalance: referralCode ? 100 : 0 // Credit ₹100 if referral code was used
+        });
+
+        // Update referrer's wallet and referrals list (if applicable)
+        if (referrer) {
+            referrer.walletBalance += 100;
+            referrer.referrals.push(newUser._id);
+            await referrer.save();
+        }
+
+        res.render("login", { message: "Sign-up successful! You can now log in." });
+    } catch (error) {
+        console.error("Sign-up error", error);
+        res.render("signup", { message: "An error occurred during sign-up." });
+    }
 };
 
+const checkReferralCode = async (req, res) => {
+    try {
+        const { code } = req.query;
+        const user = await User.findOne({ referralCode: code });
+
+        if (user) {
+            res.json({ message: "Referral code is valid!" });
+        } else {
+            res.json({ message: "Invalid referral code" });
+        }
+    } catch (error) {
+        console.error("Error checking referral code", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
 
 // Hash Password
 const securePassword = async (password) => {
@@ -265,12 +388,14 @@ const verifyOtp = async (req, res) => {
             });
 
             await newUser.save();
-           req.session.user = newUser._id;
+        /*   req.session.user = newUser._id;
             console.log(req.session.user)
             req.login(newUser, (err) => {
                 if (err) return res.status(500).json({ success: false, message: "Login failed" });
                 res.json({ success: true, redirectUrl: "/" });
-            });
+            });*/ 
+            // Do not set req.session.user here. Instead, redirect to login page.
+            res.json({ success: true, redirectUrl: "/login" });
 
         } else {
             res.status(400).json({ success: false, message: "Invalid OTP, please try again" });
@@ -344,7 +469,7 @@ const loadLogin = async (req, res) => {
 };*/
 
 // In your login route
-const login= (req, res, next) => {
+const login = (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
         if (err) return next(err);
         if (!user) {
@@ -353,11 +478,13 @@ const login= (req, res, next) => {
         }
         req.logIn(user, (err) => {
             if (err) return next(err);
-            req.session.user = user._id; // Set the session user ID here
-            return res.redirect('/'); // Redirect to a secure page after login
+            req.session.user = user._id;  // Store user ID in session
+            req.flash('success_msg', 'You are now logged in');  // Success message
+            return res.redirect('/');  // Redirect to the home page
         });
     })(req, res, next);
 };
+
 
 
 
@@ -476,9 +603,16 @@ const getProfile = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 };
-const getAddNewAddress=async(req,res)=>{
-res.render('addNewAddress')
-}
+const getAddNewAddress = async (req, res) => {
+    try {
+      const user = req.user; 
+      res.render('addNewAddress', { user });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server Error');
+    }
+  };
+  
 
 module.exports = {
     loadHomepage,
@@ -493,4 +627,5 @@ module.exports = {
     getProfile,
     getAddNewAddress,
     getShop,
+    checkReferralCode
 };
