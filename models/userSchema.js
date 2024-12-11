@@ -54,8 +54,8 @@ const userSchema=new Schema({
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],  
     referralCode: { type: String, unique: true },
    
-    referrals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
-    
+    referrals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    createdAt: { type: Date, default: Date.now } 
    
 })
 

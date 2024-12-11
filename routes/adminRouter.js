@@ -22,6 +22,7 @@ const {adminAuth}=require("../middlewares/auth")
 router.get("/login",adminController.loadLogin)
 router.post("/login",adminController.login)
 router.get("/",adminAuth,adminController.loadDashboard)
+router.get("/getChartData", adminAuth, adminController.getChartData);
 router.get("/logout",adminController.logout)
 
 //customer management

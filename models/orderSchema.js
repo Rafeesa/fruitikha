@@ -108,6 +108,11 @@ const orderSchema = new mongoose.Schema({
       type:String,
       default:'Cash On Delivery'
     },
+    paymentStatus: {  
+      type: String,
+    
+      default: 'success' // Default value
+  },
     createdAt: {
         type: Date,
         default: Date.now

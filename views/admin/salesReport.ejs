@@ -82,31 +82,90 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const filterType = document.getElementById('filterType');
-        const customDateRange = document.getElementById('custom-date-range');
-        const startDate = document.getElementById('startDate');
-        const endDate = document.getElementById('endDate');
-    
-        filterType.addEventListener('change', function() {
-            const isCustom = filterType.value === 'custom';
-            customDateRange.classList.toggle('d-none', !isCustom);
-    
-            if (!isCustom) {
-                startDate.value = '';
-                endDate.value = '';
-            }
-        });
-    
-        // Auto-select custom date range if dates are provided
-        const currentFilterType = '<%= period %>';
-        if (currentFilterType === 'custom') {
-            filterType.value = 'custom';
-            customDateRange.classList.remove('d-none');
-        } else {
-            filterType.value = currentFilterType || 'daily';
+   document.addEventListener('DOMContentLoaded', () => {
+    const filterType = document.getElementById('filterType');
+    const customDateRange = document.getElementById('custom-date-range');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    const generateReportBtn = document.querySelector('button[type="submit"]');
+
+    function validateDateRange() {
+        // Check if custom date is selected
+        if (filterType.value !== 'custom') return true;
+
+        // Validate start date is not empty
+        if (!startDate.value) {
+            alert('Please select a start date');
+            startDate.focus();
+            return false;
+        }
+
+        // Validate end date is not empty
+        if (!endDate.value) {
+            alert('Please select an end date');
+            endDate.focus();
+            return false;
+        }
+
+        // Convert dates to Date objects for comparison
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+        const today = new Date();
+
+        // Reset time components for fair comparison
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        // Validate start date is not in the future
+        if (start > today) {
+            alert('Start date cannot be in the future');
+            startDate.focus();
+            return false;
+        }
+
+        // Validate end date is not before start date
+        if (end < start) {
+            alert('End date must be after or equal to the start date');
+            endDate.focus();
+            return false;
+        }
+
+        return true;
+    }
+
+    // Add event listener for form submission
+    generateReportBtn.addEventListener('click', function(event) {
+        if (!validateDateRange()) {
+            event.preventDefault(); // Prevent form submission if validation fails
         }
     });
+
+    // Event listener for filter type change
+    filterType.addEventListener('change', function() {
+        const isCustom = filterType.value === 'custom';
+        customDateRange.classList.toggle('d-none', !isCustom);
+
+        if (!isCustom) {
+            startDate.value = '';
+            endDate.value = '';
+        }
+    });
+
+    const currentFilterType = '<%= period %>';
+    if (currentFilterType === 'custom') {
+        filterType.value = 'custom';
+        customDateRange.classList.remove('d-none');
+       
+        const serverStartDate = '<%= startDate || "" %>';
+        const serverEndDate = '<%= endDate || "" %>';
+        
+        if (serverStartDate) startDate.value = serverStartDate;
+        if (serverEndDate) endDate.value = serverEndDate;
+    } else {
+        filterType.value = currentFilterType || 'daily';
+    }
+});
     </script>
     
 

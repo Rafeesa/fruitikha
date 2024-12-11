@@ -1,10 +1,193 @@
 <%- include("../../views/partials/admin/header") %>
+
 <section class="content-main">
     <div class="content-header">
         <div>
-            <h2 class="content-title card-title">Dashboard </h2>
+            <h2 class="content-title card-title">Dashboard</h2>
         </div>
-       
+    </div>
+
+    <!-- Summary Cards Section -->
+    <div class="card-container row mb-4">
+        <!-- Total Customers Card -->
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="card-body text-center">
+                    <h5>Total Customers</h5>
+                    <p class="card-text fs-3"><%= users.length %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders Card -->
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="card-body text-center">
+                    <h5>Total Orders</h5>
+                    <p class="card-text fs-3"><%= orders.length %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Products Card -->
+        <div class="col-md-3">
+            <div class="card p-3">
+                <div class="card-body text-center">
+                    <h5>Total Products</h5>
+                    <p class="card-text fs-3"><%= products.length %></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="container-fluid mt-4">
+        <h3 class="text-center mb-4">Analytics</h3>
+        <div class="text-center mb-3">
+            <button class="btn btn-primary me-2" onclick="fetchChartData('daily')">Daily</button>
+            <button class="btn btn-primary me-2" onclick="fetchChartData('weekly')">Weekly</button>
+            <button class="btn btn-primary me-2" onclick="fetchChartData('monthly')">Monthly</button>
+            <button class="btn btn-primary" onclick="fetchChartData('yearly')">Yearly</button>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="col-md-6">
+                <canvas id="doughnutChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Selling Products Section -->
+    <div class="container-fluid mt-4">
+        <h3>Top 10 Selling Products</h3>
+        <div class="row">
+            <% topSellingProducts.forEach(product => { %>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <img src="/uploads/product-images/<%= product.productImage && product.productImage.length > 0 ? product.productImage[0] : 'default-image.jpg' %>"
+                        class="card-img-top"
+                        alt="<%= product.name %>">
+                        
+                        <div class="card-body">
+                            <h5 class="card-title"><%= product.productDetails.name %></h5>
+                            <p class="card-text">
+                                Sold: <%= product.totalQuantitySold %> units
+                                <br>
+                                Price: Rs. <%= product.productDetails.salePrice %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <!-- Top Categories Section -->
+    <div class="container-fluid mt-4">
+        <h3>Top 10 Selling Categories</h3>
+        <div class="row">
+            <% topCategories.forEach(category => { %>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title"><%= category._id %></h5>
+                            <p class="card-text">Sold: <%= category.totalQuantitySold %> units</p>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
     </div>
 </section>
+
+<!-- Add Chart.js and custom script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let barChartInstance = null;
+let doughnutChartInstance = null;
+
+async function fetchChartData(filter = 'monthly') {
+   try {
+        const response = await fetch(`/admin/getChartData?filter=${filter}`);
+        const data = await response.json();
+
+        // Data for Bar Chart (Users, Orders, Products)
+        const barChartData = data.barChartData;
+
+        // Data for Doughnut Chart (Revenue and Number of Orders by Categories)
+        const doughnutChartData = data.doughnutChartData;
+
+        // Destroy previous bar chart if it exists
+        if (barChartInstance) {
+            barChartInstance.destroy();
+        }
+
+        // Destroy previous doughnut chart if it exists
+        if (doughnutChartInstance) {
+            doughnutChartInstance.destroy();
+        }
+
+        // Create the Bar Chart
+        const barCtx = document.getElementById("barChart").getContext("2d");
+        barChartInstance = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Users', 'Orders', 'Products'],
+                datasets: [{
+                    label: 'Count',
+                    data: barChartData,
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc'],
+                    borderColor: ['#4e73df', '#1cc88a', '#36b9cc'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+        // Doughnut Chart
+        const doughnutCtx = document.getElementById("doughnutChart").getContext("2d");
+        doughnutChartInstance = new Chart(doughnutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.doughnutChartData.map(item => item._id),
+                datasets: [{
+                    label: 'Revenue by Category',
+                    data: data.doughnutChartData.map(item => item.totalRevenue),
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', 
+                        '#4BC0C0', '#9966FF', '#FF9F40'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const category = data.doughnutChartData[context.dataIndex];
+                                return `${category._id}: Rs. ${category.totalRevenue.toFixed(2)}, Orders: ${category.totalOrders}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching chart data:', error);
+    }
+}
+
+// Initial chart load
+document.addEventListener('DOMContentLoaded', () => {
+    fetchChartData('monthly');
+});
+</script>
+
 <%- include("../../views/partials/admin/footer") %>

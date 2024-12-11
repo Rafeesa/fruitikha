@@ -342,6 +342,7 @@ if(req.files.length>0){
 const deleteSingleImage = async (req, res) => {
   try {
       const { imageNameToServer, productIdToServer } = req.body;
+      console.log(req.body)
 
       // Ensure imageNameToServer is defined
       if (!imageNameToServer || !productIdToServer) {

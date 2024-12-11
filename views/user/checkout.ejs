@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link rel="stylesheet" href="/assets/css/main.css">
+    
 
     <style>
        html, body {
@@ -89,6 +90,17 @@
             border-color: #007bff;
             background-color: #e7f1ff;
         }
+        /* Custom radio button styling */
+.form-check-input:checked {
+    background-color:#051922;
+    border-color:#051922;
+}
+
+/* Optional: Change the outline color when selected */
+.form-check-input:focus {
+    border-color:#051922;
+    box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25);
+}
         footer {
     width: 100%;
     background-color: #051922; /* Or any other background color */
@@ -153,8 +165,8 @@
             <div class="col-lg-6 mb-sm-15">
                 <div class="toggle_info">
                     <span>
-                        <i class="fi-rs-user mr-10"></i><span class="text-muted"></span>
-                        <a href="/available" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Available Coupons?</a>
+                        <i class="fi-rs-user mr-10"></i><span class="text-muted"></span> 
+                        <a href="/available" data-bs-toggle="collapse" class="collapsed" aria-expanded="false" style="color:#ff6600">Available Coupons?</a>
                     </span>
                 </div>
                 <div class="panel-collapse collapse" id="availableCoupons">
@@ -169,7 +181,7 @@
                 <div class="toggle_info">
                     <span>
                         <i class="fi-rs-label mr-10"></i><span class="text-muted">Have a coupon?</span>
-                        <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to enter your code</a>
+                        <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false" style="color:#ff6600">Click here to enter your code</a>
                     </span>
                 </div>
                 <div class="panel-collapse collapse coupon_form" id="coupon">
@@ -219,7 +231,7 @@
                     <% } %>
                 </div>
                 
-                <a href="/add-new-address" class="btn btn-outline-primary w-100">Add New Address</a>
+                <a href="/add-new-address" class="btn btn-outline-primary w-100" style="background-color: #ff6600; color: white;">Add New Address</a>
             </div>
 
             <!-- Right Side - Order Summary -->
@@ -280,7 +292,7 @@
                         <label class="form-check-label" for="cashOnDelivery">Cash on Delivery</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="paymentMethod" id="razorpay" value="razorpay">
+                        <input class="form-check-input"  type="radio" name="paymentMethod" id="razorpay" value="razorpay">
                         <label class="form-check-label" for="razorpay">Razorpay</label>
                     </div>
                     <div class="form-check">
@@ -291,12 +303,12 @@
                 
                 
                 <!-- Hidden button for Razorpay (will trigger when Razorpay is selected) -->
-                <button id="razorpayBtn" class="btn btn-primary w-100 mt-4" style="display:none;">Pay with Razorpay</button>
+                <button id="razorpayBtn" class="btn btn-primary w-100 mt-4" style="display:none; background-color: #ff6600; color: white;">Pay with Razorpay</button>
                 
                 <!-- Place Order Button -->
-                <button type="button" id="placeOrderBtn" class="btn btn-primary w-100 mt-4">Place Order</button>
+                <button type="button" id="placeOrderBtn" class="btn btn-primary w-100 mt-4"style="background-color: #ff6600; color: white;">Place Order</button>
                 <!-- Wallet Payment Button -->
-                <button id="walletPayBtn" class="btn btn-primary w-100 mt-4" style="display:none;">Pay with Wallet</button>
+                <button id="walletPayBtn" class="btn btn-primary w-100 mt-4" style="display:none; background-color: #ff6600; color: white;">Pay with Wallet</button>
 
             </div>
         </div>
@@ -307,8 +319,8 @@
     </footer>-->
 
     <!-- JavaScript to handle address selection -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
     <script>
 
         function selectAddress(addressId) {
@@ -359,11 +371,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        
+        const finalTotal = parseFloat(document.getElementById('finalTotalHidden').value);
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
         if (paymentMethod === 'cashOnDelivery') {
             try {
+                if (finalTotal > 1000) {
+                
+                Swal.fire({
+                  
+                    text: 'Cash on Delivery is not allowed for orders above ₹1000.',
+                   
+                    confirmButtonText: 'OK'
+                });
+                return; // Stop further execution
+            }
+
                 const response = await fetch('/place-order', {
                     method: 'POST',
                     headers: {
@@ -469,24 +492,38 @@ document.addEventListener('DOMContentLoaded', () => {
             rzp1.open();
             //failiure payment
             rzp1.on('payment.failed', function (response) {
-            console.error('Payment failed:', response.error);
-            alert('Payment failed. Please try again.\nError: ' + response.error.description);
+    console.error('Payment failed:', response.error);
+ 
+    // Show SweetAlert for payment failure
+    Swal.fire({
+        icon: 'error',
+        title: 'Payment Failed',
+        text: 'Your payment could not be processed. Please try again.',
+        confirmButtonText: 'Go to My Orders',
+    }).then(() => {
+        console.log('Redirecting to My Orders...');
+        window.location.href = '/myOrder'; // Redirect after alert confirmation
+    });
 
-            // Optionally, send failure details to the backend
-            fetch('/payment-failure', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    error: response.error,
-                    orderId: orderId,
-                }),
-            }).catch(error => console.error('Error logging payment failure:', error));
-        });
+    // Log failure details
+    fetch('/payment-failure', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            error: response.error,
+            orderId: response.error.metadata?.order_id || 'unknown_order', // Handle undefined order_id
+        }),
+    })
+    .then(res => res.json())
+    .then(data => console.log('Payment failure logged:', data))
+    .catch(error => console.error('Error logging payment failure:', error));
+});
+
 
         // Open Razorpay checkout
-        rzp1.open();
+       rzp1.open();
     } catch (error) {
         console.error('Error creating Razorpay order:', error);
         alert('An error occurred while processing your payment. Please try again.');
@@ -494,68 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
     
 
-    // Verify Payment by calling backend
-   /* async function verifyPayment(paymentData) {
-        try {
-        const paymentResponse = await fetch('/verify-payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                paymentId: response.razorpay_payment_id,
-                orderId: response.razorpay_order_id,
-                signature: response.razorpay_signature,
-                addressId: selectedAddressId,
-            })
-        });
-        
-        const paymentData = await paymentResponse.json();
-        if (paymentData.success) {
-            alert('Payment successful!');
-            window.location.href = '/orderSuccess';
-        } else {
-            alert('Payment failed. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error completing Razorpay payment:', error);
-        alert('An error occurred while completing your payment. Please try again.');
-    }
-}
-document.getElementById('walletPayBtn').addEventListener('click', async function () {
-    const selectedAddressId = document.getElementById('selectedAddressId').value;
-    console.log("Selected Address ID:", selectedAddressId);
-    if (!selectedAddressId) {
-        alert('Please select a shipping address.');
-        return;
-    }
-
-    const finalTotal = parseFloat(document.getElementById('finalTotalHidden').value);
-
-    try {
-        const response = await fetch('/pay-with-wallet', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                addressId: selectedAddressId,
-                amount: finalTotal,
-            }),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            alert('Payment successful!');
-            window.location.href = '/orderSuccess';
-        } else {
-            alert(`Payment failed: ${data.message}`);
-        }
-    } catch (error) {
-        console.error('Error processing wallet payment:', error);
-        alert('An error occurred while processing your wallet payment. Please try again.');
-    }
-});*/
+    
 async function verifyPayment(response) {
     try {
         const paymentResponse = await fetch('/verify-payment', {
@@ -584,10 +560,11 @@ async function verifyPayment(response) {
     }
 }
 
+
 document.getElementById('walletPayBtn').addEventListener('click', async function () {
     const selectedAddressId = document.getElementById('selectedAddressId').value;
     console.log("Selected Address ID:", selectedAddressId);
-    
+
     if (!selectedAddressId) {
         alert('Please select a shipping address.');
         return;
@@ -608,12 +585,17 @@ document.getElementById('walletPayBtn').addEventListener('click', async function
         });
 
         const data = await response.json();
-        if (data.success) {
-            alert('Payment successful!');
-            window.location.href = '/orderSuccess';
-        } else {
-            alert(`Payment failed: ${data.message}`);
+
+        // Enhanced error handling
+        if (!data.success) {
+            // This will now show specific error messages like "Insufficient wallet balance"
+            alert(data.message || 'Payment failed');
+            return;
         }
+
+        alert('Payment successful!');
+        window.location.href = '/orderSuccess';
+
     } catch (error) {
         console.error('Error processing wallet payment:', error);
         alert('An error occurred while processing your wallet payment. Please try again.');

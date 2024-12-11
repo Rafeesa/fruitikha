@@ -13,7 +13,7 @@ const customerInfo=async(req,res)=>{
         if(req.query.page){
             page=parseInt(req.query.page)
         }
-        const limit=3
+        const limit=5
         
         //fetch customers with pagination
         const userData=await User.find({

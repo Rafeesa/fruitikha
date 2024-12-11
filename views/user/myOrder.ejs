@@ -179,22 +179,22 @@
         <h1 class="m-0">My Orders</h1>
     </header>
    
-        <div class="row mt-3">
-            <% if (orders && orders.length > 0) { %> <!-- Check if orders are not empty -->
+        <!--<div class="row mt-3">
+            <% if (orders && orders.length > 0) { %> 
                 <div class="col-md-6">
                     <span>
                         <i class="material-icons md-calendar_today"></i> 
-                        <b><%= new Date(orders[0].createdAt).toLocaleDateString() %></b> <!-- Display order date -->
+                        <b><%= new Date(orders[0].createdAt).toLocaleDateString() %></b> 
                     </span>
                     <br>
                     <div>
                         <h3 class="content-title card-title">Order Details of</h3>
-                        <p><strong>Name:</strong> <%= user.name %></p> <!-- Display User Name -->
-                        <p><strong>Phone Number:</strong> <%= user.phone %></p> <!-- Display User Phone Number -->
+                        <p><strong>Name:</strong> <%= user.name %></p> 
+                        <p><strong>Phone Number:</strong> <%= user.phone %></p> 
                     </div>
                 </div>
     
-                <div class="col-md-6"> <!-- Right side for address section -->
+                <div class="col-md-6"> 
                     <div class="address-section text-center mt-3">
                         <i class="fas fa-map-marker-alt"> <h2 class="content-title card-title">Addresses</h2></i>
                         <% addresses.forEach(addr => { %>
@@ -216,86 +216,113 @@
         </div>
     </div>
     
-    <!-- You can add more content here if needed -->
+-->
    
 
 </div>
 </div>
-    <table class="table wishlist-table table-striped text-center mt-4">
-        <thead class="table-hover">
-            <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Order ID</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Total</th>
-                <th>Payment Method</th>
-                <th>Action</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (orders && orders.length > 0) { %>
-                <% orders.forEach(order => { %> <!-- Loop through each order -->
-                    <% order.items.forEach(item => { %> <!-- Loop through each item in the order -->
-                        <tr>
-                            <% if (item.productId && item.productId.productImage && item.productId.productImage.length > 0) { %>
-                                <td><img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="Product Image"></td>
-                            <% } else { %>
-                                <td><img src="/path/to/placeholder-image.jpg" alt="No Image Available"></td> <!-- Fallback image -->
-                            <% } %>
-            
-                            <td><%= item.productId.name %></td>
-                            <td><%= order.orderID %></td>
-                            <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
-                            <td><%= order.status %></td>
-                            <td>₹<%= order.totalCost.toFixed(2) %></td>
-                            <td><%= order.paymentMethod %></td>
-                            
-                            <td>
-                                <% if (order.status === 'order placed') { %>
-                                  <form 
-                                    action="/order/cancel/<%= order._id %>" 
-                                    method="POST" 
-                                    style="display:inline;" 
-                                    onsubmit="return confirmCancel(event);"
-                                  >
-                                    <button type="submit" class="btn btn-danger">Cancel</button>
-                                  </form>
-                                <% } else if (order.status === 'Delivered') { %>
-                                  <form 
-                                    id="returnForm-<%= order._id %>" 
-                                    style="display:inline;" 
-                                    onsubmit="return handleReturnRequest(event, '<%= order._id %>');"
-                                  >
-                                    <button type="submit" class="btn btn-warning">Return</button>
-                                  </form>
-                                <% } else { %>
-                                  <span>N/A</span>
-                                <% } %>
-                              </td>
-                               <td>
-                            <!-- Invoice Button -->
-                            <% if (order.status === 'Delivered' || order.status === 'return') { %>
-                                <form action="/order/invoice/<%= order._id %>" method="GET" style="display:inline;">
-                                    <button type="submit" class="btn btn-primary">Download Invoice</button>
-                                </form>
-                            <% } %>
-                        </td>
-                            
-                        </tr>
-                    <% }) %> <!-- Closing item loop -->
-                <% }) %> <!-- Closing order loop -->
-            <% } else { %>
+   
+        <table class="table wishlist-table table-striped text-center mt-4">
+            <thead class="table-hover">
                 <tr>
-                    <td colspan="9" class="text-center">No orders found.</td>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Payment Method</th>
+                    <th>Payment Status</th> <!-- New Column -->
+                    <th>Action</th>
+                    <th></th>
                 </tr>
-            <% } %>
-        </tbody>
+            </thead>
+            <tbody>
+                <% if (orders && orders.length > 0) { %>
+                    <% orders.forEach(order => { %> <!-- Loop through each order -->
+                        <% order.items.forEach(item => { %> <!-- Loop through each item in the order -->
+                            <tr>
+                                <% if (item.productId && item.productId.productImage && item.productId.productImage.length > 0) { %>
+                                    <td><img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="Product Image"></td>
+                                <% } else { %>
+                                    <td><img src="/path/to/placeholder-image.jpg" alt="No Image Available"></td> <!-- Fallback image -->
+                                <% } %>
+        
+                                <td><%= item.productId.name %></td>
+                                <td><%= order.orderID %></td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td><%= order.status %></td>
+                                <td>₹<%= order.totalCost.toFixed(2) %></td>
+                                <td><%= order.paymentMethod %></td>
+                                <td><%= order.paymentStatus %></td>
+
+        
+                                <!-- New Payment Status Column 
+                                <td>
+                                    <% if (order.paymentMethod === 'Razorpay' && order.paymentStatus === 'failure') { %>
+                                        Payment Pending
+                                    <% } else if (order.paymentMethod === 'Online Payment' || order.paymentStatus === 'success') { %>
+                                        Success
+                                    <% } else if (order.paymentMethod === 'cashOnDelivery') { %>
+                                        Success
+                                    <% } else { %>
+                                        Unknown
+                                    <% } %>
+                                </td>-->
+        
+                                <td>
+                                    <% if (order.status === 'order placed') { %>
+                                      <form 
+                                        action="/order/cancel/<%= order._id %>" 
+                                        method="POST" 
+                                        style="display:inline;" 
+                                        onsubmit="return confirmCancel(event);"
+                                      >
+                                        <button type="submit" class="btn btn-danger">Cancel</button>
+                                      </form>
+                                    <% } else if (order.status === 'Delivered') { %>
+                                      <form 
+                                        id="returnForm-<%= order._id %>" 
+                                        style="display:inline;" 
+                                        onsubmit="return handleReturnRequest(event, '<%= order._id %>');"
+                                      >
+                                        <button type="submit" class="btn btn-warning">Return</button>
+                                      </form>
+                                    <% } else { %>
+                                      <span>N/A</span>
+                                    <% } %>
+                                  </td>
+                                <td>
+                                    <% if (order.paymentStatus === 'payment pending') { %>
+                                        <button 
+                                            class="btn btn-success" 
+                                           onclick="handleRepay('<%= order.orderID %>','<%= order.totalCost.toFixed(2) %>')">Repay
+
+                                        
+                                            
+                                        </button>
+                                    <% } else if  (order.status === 'Delivered' || order.status === 'return') { %>
+                                    <!-- Invoice Button -->
+                                  
+                                        <form action="/order/invoice/<%= order._id %>" method="GET" style="display:inline;">
+                                            <button type="submit" class="btn btn-primary">Download Invoice</button>
+                                        </form>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %> <!-- Closing item loop -->
+                    <% }) %> <!-- Closing order loop -->
+                <% } else { %>
+                    <tr>
+                        <td colspan="10" class="text-center">No orders found.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+        
             
         
-    </table>
+
 </div>
 <!-- Pagination -->
 <div class="container mt-3">
@@ -315,6 +342,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 
 <script>
   async function handleReturnRequest(event, orderId) {
@@ -329,6 +358,7 @@
       });
 
       const result = await response.json();
+      console.log(result)
 
       if (response.ok && result.success) {
         // Display success message using SweetAlert
@@ -401,6 +431,219 @@
             }
         });
     }
+
+   /* async function handleRepay(orderID, amount) {
+    try {
+        console.log("Handling repayment for order:", orderID);
+
+        // Fetch repayment details from the backend
+        const response = await fetch('/create-razorpay-reorder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                orderID,
+                amount,
+            }),
+        });
+
+        const data = await response.json();
+        console.log('Repayment Response:', data);
+
+        if (data.success) {
+            const { paymentDetails, key_id } = data;
+            const razorpayOrderID = paymentDetails.id; // Razorpay order ID
+            const amount = paymentDetails.amount; // Amount in paise
+console.log(paymentDetails)
+            console.log('Razorpay Order ID:', razorpayOrderID);
+
+            const options = {
+                key: key_id,
+                amount: amount,
+                currency: 'INR',
+                name: 'Fruitikha',
+                description: 'Repayment for Order',
+                order_id: razorpayOrderID, // Existing Razorpay order ID
+                handler: async function (response) {
+                    try {
+                        // Verify repayment
+                        await verifyPayment(response);
+                    } catch (error) {
+                        console.error('Error in repayment handler:', error);
+                        alert('An error occurred during repayment. Please try again.');
+                    }
+                },
+                prefill: {
+                    name: data.userName,
+                    email: data.userEmail,
+                    contact: data.userPhone,
+                },
+                theme: {
+                    color: '#3399cc',
+                },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } else {
+            alert('Failed to fetch repayment details. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error initiating repayment:', error);
+        alert('An error occurred while processing your repayment. Please try again.');
+    }
+}*/
+async function handleRepay(orderID, amount) {
+  try {
+    console.log("Handling repayment for order:", orderID);
+    console.log("Handling repayment for orderamount:", amount);
+
+    // Fetch repayment details from the backend
+    const response = await fetch('/create-razorpay-reorder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        orderID,
+        amount,
+      }),
+    });
+
+    const data = await response.json();
+    console.log('Repayment Response:', data);
+
+    if (data.success) {
+      const { paymentDetails, key_id } = data;
+      const razorpayOrderID = paymentDetails.id; // Razorpay order ID
+      const amount = paymentDetails.amount; // Amount in paise
+
+      console.log('Razorpay Order ID:', razorpayOrderID);
+
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: 'INR',
+        name: 'Fruitikha',
+        description: 'Repayment for Order',
+        order_id: razorpayOrderID, // Existing Razorpay order ID
+        handler: async function (response) {
+          try {
+            // Verify repayment on the backend
+            const verificationResponse = await fetch('/verify-repayment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                paymentId: response.razorpay_payment_id,
+                orderId: razorpayOrderID,
+                signature: response.razorpay_signature,
+                orderID: orderID,
+              }),
+            });
+
+            const verificationData = await verificationResponse.json();
+            if (verificationData.success) {
+                Swal.fire({
+  title: 'Success!',
+  text: 'Repayment successful and verified!',
+  icon: 'success',
+  confirmButtonText: 'View My Orders',
+}).then((result) => {
+  if (result.isConfirmed) {
+    // Redirect to /myOrder
+    window.location.href = '/myOrder';
+  }
+});
+}else {
+              Swal.fire({
+                title: 'Error!',
+                text: 'Repayment verification failed.',
+                icon: 'error',
+                confirmButtonText: 'Retry',
+              });
+            }
+          } catch (error) {
+            console.error('Error in repayment handler:', error);
+            Swal.fire({
+              title: 'Error!',
+              text: 'An error occurred during repayment. Please try again.',
+              icon: 'error',
+              confirmButtonText: 'Retry',
+            });
+          }
+        },
+        prefill: {
+          name: data.userName,
+          email: data.userEmail,
+          contact: data.userPhone,
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
+
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } else {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to fetch repayment details. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'Retry',
+      });
+    }
+  } catch (error) {
+    console.error('Error initiating repayment:', error);
+    Swal.fire({
+      title: 'Error!',
+      text: 'An error occurred while processing your repayment. Please try again.',
+      icon: 'error',
+      confirmButtonText: 'Retry',
+    });
+  }
+}
+
+
+
+
+async function verifyPayment(response) {
+    try {
+        const paymentResponse = await fetch('/verify-repayment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                signature: response.razorpay_signature,
+              
+            })
+        });
+
+        const paymentData = await paymentResponse.json(); // Avoid redeclaring paymentData
+        if (paymentData.success) {
+            alert('Payment successful!');
+            window.location.href = '/orderSuccess';
+        } else {
+            alert('Payment failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error completing Razorpay payment:', error);
+        alert('An error occurred while completing your payment. Please try again.');
+    }
+}
+
+
+
+
+
+
+
+
 </script>
 
 <%- include("../../views/partials/user/footer") %>

@@ -29,6 +29,7 @@
                 <th>Total Amount</th>
                 <th>Status</th> 
                 <th>Actions</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -50,7 +51,7 @@
                     <td>$<%= order.totalCost.toFixed(2) %></td>
 
                     
-                    <td>
+                    
                         <td>
                             <form action="/admin/orders/<%= order._id %>/status?_method=PUT" method="POST">
                                 <select name="status" class="form-select" onchange="this.form.submit()" 
@@ -82,7 +83,7 @@
                         
                         
                         
-                    </td>
+                    
 
                     <!-- Action (Cancel) -->
                     <td>

@@ -94,7 +94,10 @@ const placeOrder = async (req, res) => {
         const totalCost = subtotal + shippingCost - discountAmount;
 
         const paymentMethod = req.body.paymentMethod || 'Cash On Delivery';
+       
         const finalTotal = totalCost; // Total cost includes discount applied
+       
+        
 
         // Generate a unique 6-7 digit orderID
         const orderID = Math.floor(100000 + Math.random() * 900000); // Random 6-digit number
@@ -163,9 +166,10 @@ console.log(req.session.orderDetails)
         orderItems,
         subtotal,
         shippingCost,
-        discountAmount, // Include discount amount for display
-        paymentMethod // Include payment method for display
+        discountAmount, 
+        paymentMethod 
     });
+    req.session.discountAmount = null;
 };
 
 

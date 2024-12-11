@@ -102,10 +102,65 @@
             text-align: right; 
             font-size: 20px;
         }
+     
+  .btn-checkout {
+    background-color: #ff6600; /* Custom color */
+    border: none; /* Remove border if necessary */
+    color: #fff; /* Text color */
+    padding: 10px 20px; /* Adjust padding for button size */
+    border-radius: 5px; /* Match the border radius */
+    text-align: center;
+    text-decoration: none; /* Remove underline */
+    display: inline-block;
+    font-size: 16px; /* Match font size */
+  }
+
+  .btn-checkout:hover {
+    background-color: #e65c00; /* Slightly darker shade for hover effect */
+  }
+
 
         .btn-checkout {
             width: 100%;
         }
+        .pricing-table {
+    border: 1px solid #ddd; /* Optional: To give a border to the pricing table */
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #f9f9f9; /* Optional background */
+}
+
+.pricing-table h3 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px; /* Space between heading and table */
+    text-align: left; /* Align heading to the left */
+}
+
+.pricing-table .table {
+    margin: 0; /* Remove extra margins around the table */
+}
+
+.pricing-table .table td {
+    font-size: 16px;
+    padding: 8px 10px;
+    vertical-align: middle;
+}
+
+.pricing-table .table td:first-child {
+    text-align: left; /* Align labels like "Subtotal" to the left */
+}
+
+.pricing-table .table td:last-child {
+    text-align: right; /* Align values like ₹100.00 to the right */
+}
+
+.btn-checkout {
+    display: block;
+    width: 100%; /* Make the button full-width */
+    margin-top: 15px; /* Add space above the button */
+    text-align: center;
+}
 
        
     </style>
@@ -251,6 +306,7 @@
                         </tbody>
                     </table>
                     <a href="/checkout" class="btn btn-primary btn-checkout">Proceed to Checkout</a>
+
                 </div>
             </div>
         </div>

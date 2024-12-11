@@ -57,7 +57,8 @@ router.put('/update-profile',profileController.updateProfile)
 router.post('/create-razorpay-order', razorpayController.createOrder);
 router.post('/verify-payment', razorpayController.verifyPayment);
 router.post('/payment-failure',razorpayController.paymentFailure)
-
+router.post('/create-razorpay-reorder',razorpayController.createreOrder)
+router.post('/verify-repayment',razorpayController.verifyRepayment)
 
 //wallet
 router.get('/wallet',walletController.getWallet)

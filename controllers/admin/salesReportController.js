@@ -7,7 +7,7 @@ const PDFDocument = require('pdfkit');
 
 
 
-const getSalesReport = async (req, res) => {
+/*const getSalesReport = async (req, res) => {
     try {
         const { filterType: period, startDate, endDate, page = 1 } = req.query;
 
@@ -134,9 +134,140 @@ const getSalesReport = async (req, res) => {
         res.status(500).json({ success: false, message: "Error fetching sales report" });
     }
 };
+*/
 
-
-
+const getSalesReport = async (req, res) => {
+    try {
+        const { filterType: period, startDate, endDate, page = 1 } = req.query;
+    
+        const limit = 4; // Items per page
+        const skip = (page - 1) * limit;
+    
+        const filter = { status: 'Delivered' }; // Only include delivered orders
+    
+        // Date filters
+        if (period === 'daily') {
+            const today = new Date();
+            const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+            filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
+        } else if (period === 'weekly') {
+            const startOfWeek = moment().startOf('week').toDate();
+            const endOfWeek = moment().endOf('week').toDate();
+            filter.createdAt = { $gte: startOfWeek, $lte: endOfWeek };
+        } else if (period === 'monthly') {
+            const startOfMonth = moment().startOf('month').toDate();
+            const endOfMonth = moment().endOf('month').toDate();
+            filter.createdAt = { $gte: startOfMonth, $lte: endOfMonth };
+        } else if (period === 'yearly') {
+            const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+            const endOfYear = new Date(new Date().getFullYear(), 11, 31);
+            filter.createdAt = { $gte: startOfYear, $lte: endOfYear };
+        } else if (period === 'custom' && startDate && endDate) {
+            // Important change: Adjust dates to end of day for more inclusive filtering
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            // Set start date to beginning of day
+            start.setHours(0, 0, 0, 0);
+            
+            // Set end date to end of day
+            end.setHours(23, 59, 59, 999);
+            
+            filter.createdAt = { 
+                $gte: start, 
+                $lte: end 
+            };
+        }
+    
+        // Fetch paginated orders
+        let orders = await Order.find(filter)
+            .populate({
+                path: 'items.productId',
+                model: 'Product',
+                select: 'name price salePrice productOffer',
+            })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+    
+        // Calculate overall metrics
+        const allOrders = await Order.find(filter);
+        const totalSalesCount = allOrders.length;
+    
+        const totalOrderAmount = allOrders.reduce((sum, order) => {
+            const orderAmount = order.totalCost || order.items.reduce((itemSum, item) => {
+                const salePrice = item.productId?.salePrice || item.productId?.price || 0;
+                return itemSum + salePrice * item.quantity;
+            }, 0);
+            return sum + orderAmount;
+        }, 0);
+    
+        const calculateDiscount = (orders) => {
+            let totalDiscount = 0;
+    
+            orders.forEach((order) => {
+                order.items.forEach((item) => {
+                    if (item.productId) {
+                        const originalPrice = item.productId.price || 0;
+                        const salePrice = item.productId.salePrice || originalPrice;
+                        const discount = (originalPrice - salePrice) * item.quantity;
+    
+                        totalDiscount += discount;
+                    }
+                });
+            });
+    
+            return totalDiscount;
+        };
+    
+        const totalDiscount = calculateDiscount(orders);
+    
+        // Map formatted orders
+        const formattedOrders = orders.map((order, index) => ({
+            slNo: skip + index + 1,
+            products: order.items.map(item => {
+                const originalPrice = item.productId?.price || 0;
+                const salePrice = item.productId?.salePrice || originalPrice;
+                const discountAmount = originalPrice - salePrice;
+    
+                return {
+                    name: item.productId?.name || 'Unknown Product',
+                    price: originalPrice,
+                    discountPrice: salePrice,
+                    totalDiscount: discountAmount > 0 ? discountAmount : 0,
+                };
+            }),
+            orderStatus: order.status,
+            paymentMethod: order.paymentMethod,
+            paymentStatus: 'Paid',
+            createdAt: order.createdAt,
+        }));
+    
+        // Pagination details
+        const totalOrders = await Order.countDocuments(filter);
+        const totalPages = Math.ceil(totalOrders / limit);
+    
+        // Render view
+        res.render('salesReport', {
+            orders: formattedOrders,
+            currentPage: parseInt(page),
+            totalPages,
+            totalOrders,
+            period,
+            startDate,
+            endDate,
+            reportData: {
+                totalSalesCount,
+                totalOrderAmount,
+                totalDiscount,
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching sales report:", error.message);
+        res.status(500).json({ success: false, message: "Error fetching sales report" });
+    }
+}
 //Download pdf
 
 const downloadSalesReportPDF = async (req, res) => {

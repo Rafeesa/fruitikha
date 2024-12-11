@@ -1,23 +1,26 @@
 <%- include("../../views/partials/admin/header") %>
-<div class="content-header row">
-    <div class="d-flex justify-content-between align-items-center">
-        <h2 class="content-title card-title">Customers</h2>
-       
-    </div>
-</div>         
+<h2 class="text-center mb-4">Customers</h2>        
         </div>
         
-            <header class="card-header text-center mb-20">
+            <!--<header class="card-header text-center mb-20">
                 <form action="/admin/users/" method="get" class="d-inline">
                     <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px;">
-                        <input type="text" class="form-control border-0 rounded-pill" placeholder="Search customers..." name="search">
+                        &nbsp&nbsp&nbsp&nbsp<input type="text" class="form-control border-0 rounded-pill" placeholder="Search customers..." name="search">
                         <button class="btn  border-0" type="submit">Search</button>
+                    </div>
+                </form>
+            </header>-->
+            <header class="card-header text-center mb-4">
+                <form action="/admin/users/" method="get" class="d-inline">
+                    <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: auto; margin-right: auto;">
+                        <input type="text" class="form-control border-0 rounded-pill" placeholder="Search categories..." name="search">
+                        <button class="btn btn-primary border-0 rounded-pill" type="submit">Search</button>
                     </div>
                 </form>
             </header>
             <div class="right mt-5">
-                <table class="table table-striped">
-                    <thead>
+                <table class="table table-bordered table-hover table-striped text-center">
+                    <thead class="table-dark">
                       <tr>
                         <th scope="col"><b>Name</b></th>
                         <th scope="col"><b>Email</b></th>

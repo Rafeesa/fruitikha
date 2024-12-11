@@ -4,7 +4,7 @@ const User=require('../../models/userSchema');
 const availableCoupon= async (req, res) => {
     try {
         const userId = req.query.userId || req.session.userId || req.session.passport?.user;
-        // Get user ID from the request query
+    
         const orderTotal = parseFloat(req.query.orderTotal); // Get order total to check against minimum purchase amount
         console.log(orderTotal)
 

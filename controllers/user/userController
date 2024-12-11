@@ -10,7 +10,7 @@ const session = require('express-session')
 // Load Homepage
 const loadHomepage = async (req, res) => {
     try {
-        const user = req.user;
+        const user =req.user;
         
 
 
@@ -265,9 +265,9 @@ async function sendVerificationEmail(email, otp) {
 }
 
 // Signup Controller
-/*const signup = async (req, res) => {
+const signup = async (req, res) => {
     try {
-        const { name, email, phone, password, cPassword } = req.body;
+        const { name, email, phone, password, cPassword,referralCode } = req.body;
 
         if (password !== cPassword) {
             return res.render("signup", { message: "Passwords do not match" });
@@ -289,14 +289,14 @@ async function sendVerificationEmail(email, otp) {
         }
 
         req.session.userOtp = otp;
-        req.session.userData = { name, phone, email, password };
+        req.session.userData = { name, phone, email, password,referralCode };
         res.render("verify-otp");
 
     } catch (error) {
         console.error("Signup error", error);
     }
-};*/
-const signup = async (req, res) => {
+};
+/*const signup = async (req, res) => {
     try {
         const { name, email, phone, password, cPassword, referralCode } = req.body;
         if (password !== cPassword) {
@@ -342,7 +342,7 @@ const signup = async (req, res) => {
         console.error("Sign-up error", error);
         res.render("signup", { message: "An error occurred during sign-up." });
     }
-};
+};*/
 
 const checkReferralCode = async (req, res) => {
     try {
@@ -378,13 +378,27 @@ const verifyOtp = async (req, res) => {
         if (otp === req.session.userOtp) {
             const user = req.session.userData;
             console.log(user,"hai")
-            const passwordHash = await securePassword(user.password);
+            const { name, email, phone, password, referralCode } = user;
+            //referel code generating
+        const referralCodeGenerated = `${name}_${Math.random().toString(36).substr(2, 6)}`;
+
+        // Check referral code validity (if provided)
+        let referrer = null;
+        if (referralCode) {
+            referrer = await User.findOne({ referralCode });
+            if (!referrer) {
+                return res.render("signup", { message: "Invalid referral code" });
+            }
+        }
+            const passwordHash = await securePassword(password);
 
             const newUser = new User({
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
+                name,
+                email,
+                phone,
                 password: passwordHash,
+                referralCode: referralCodeGenerated,
+                walletBalance: referralCode ? 100 : 0 // Credit ₹100 if referral code was used
             });
 
             await newUser.save();
