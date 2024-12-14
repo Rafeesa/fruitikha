@@ -118,97 +118,7 @@ const addProducts=async(req,res)=>{
   }
 }
 
-/*const getEditProduct=async(req,res)=>{
-  try {
-    const id=req.query.id
-    const product=await Product.findOne({_id:id})
-    const category=await Category.find({})
-    res.render("edit-product",{
-      product:product,
-      cat:category})
-  } catch (error) {
-    console.error("error")
-  }
-}
 
-const editProduct=async(req,res)=>{
-  try {
-    const id=req.params.id
-    const product=await Product.findOne({_id:id})
-    const data=req.body
-    const existingProduct=await Product.findOne({
-      productName:data.name,
-      _id:{$ne:id}
-    })
-    if(existingProduct){
-      return res.status(400).json({error:"Product with this name alraedy exist.please try with another one"})
-    }
-
-    const images=[];
-    if(req.files&&req.files.length>0){
-      for(let i=0;i<req.files.length;i++)
-      {
-        images.push(req.files[i].filename)
-      }
-    }
-    const updateFields = {
-      name: data.name, 
-      description: data.description,
-      category: product.category,
-      price: data.price,
-      productImage: images.length > 0 ? images : product.productImage // Preserve existing images if no new ones
-    };
-    
-/*if (req.files && req.files.length > 0) {
-    await Product.findByIdAndUpdate(id, {
-       $addToSet: { productImage: { $each: images } }
-     }, { new: true });
-    }*/
-
-   /*  if(req.files.length>0)
-     {
-      updateFields.$push={productImage:{$each:images}}
-     }
-
-    
-    await Product.findByIdAndUpdate(id, updateFields, { new: true });
-    res.redirect("/admin/Product"); // Redirect after successful update 
-    
-  } catch (error) {
-    console.error(error)
-    
-  }
-}
-
-const deleteSingleImage = async (req, res) => {
-  try {
-    const { imageNameToServer, productIdToServer } = req.body;
-    
-    // Find and update the product to remove the image
-    const product = await Product.findByIdAndUpdate(productIdToServer, {
-      $pull: { productImage: imageNameToServer }
-    });
-
-    // Build the full path to the image
-    const imagePath = path.join("public", "uploads", "re-image", imageNameToServer);
-    
-    // Check if the image exists
-    if (fs.existsSync(imagePath)) {
-      // Delete the image asynchronously
-      await fs.unlinkSync(imagePath);
-      console.log(`Image ${imageNameToServer} deleted successfully`);
-      res.send({ status: true, message: "Image deleted successfully" });
-    } else {
-      console.log(`Image ${imageNameToServer} not found`);
-      res.status(404).send({ status: false, message: "Image not found" });
-    }
-    
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ status: false, message: "Error deleting the image" });
-  }
-};
-*/
 // Get product details for editing
 const getEditProduct = async (req, res) => {
   try {
@@ -293,50 +203,7 @@ const editProduct = async (req, res) => {
 
 
 
-// Edit an existing product
-/*const editProduct = async (req, res) => {
-  try {
-      const id = req.params.id;
-      const data = req.body;
-      const product = await Product.findOne({ _id: id });
 
-      const existingProduct = await Product.findOne({
-          name: data.name,
-          _id: { $ne: id }
-      });
-      if (existingProduct) {
-          return res.status(400).json({ error: "Product with this name already exists, please try another name" });
-      }
-      // Update category
-    const categoryId = await Category.findOne({ name: data.category });
-    if (!categoryId) {
-      return res.status(400).json({ error: "Invalid category" });
-    }
-
-      const images = [];
-      if (req.files && req.files.length > 0) {
-          for (let i = 0; i < req.files.length; i++) {
-              images.push(req.files[i].filename);
-          }
-      }
-
-      const updateFields = {
-          name: data.name,
-          description: data.description,
-          category: categoryId._id,
-          price: data.price,
-          stock:data.stock,
-         // productImage: images.length > 0 ? images : product.productImage, // Keep existing images if no new ones
-      };
-if(req.files.length>0){
-  updateFields.$push={productImage:{$each:images}}
-}
-      await Product.findByIdAndUpdate(id, updateFields, { new: true });
-      res.redirect("/admin/Product");
-  } catch (error) {
-      console.error("Error editing product", error);
-  }
-};*/
 
 // Delete a single image from a product
 const deleteSingleImage = async (req, res) => {

@@ -43,9 +43,6 @@ const applyCoupon = async (req, res) => {
         const code = req.body.code;
         const userId = req.session.passport?.user;
         
-        console.log("Code received:", code);
-        console.log("UserId received from session:", userId);
-
         const coupon = await Coupon.findOne({ code: code, isActive: true });
         if (!coupon) {
             return res.status(404).json({ error: "Coupon not found or inactive." });
@@ -68,7 +65,10 @@ const applyCoupon = async (req, res) => {
         // Store discount in session for later use in checkout rendering
         req.session.discountAmount = discountAmount;
 
-        return res.status(200).json({ message: "Coupon applied successfully.", discountAmount: discountAmount });
+        return res.status(200).json({ 
+            message: "Coupon applied successfully.", 
+            discountAmount: discountAmount 
+        });
     } catch (error) {
         console.error('Error applying coupon:', error);
         res.status(500).json({ error: "Internal server error." });

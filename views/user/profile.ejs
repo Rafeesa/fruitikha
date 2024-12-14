@@ -18,7 +18,7 @@
     .sidebar a {
       padding: 10px 15px;
       text-decoration: none;
-      color: #333;
+      color: #075173;
       display: block;
       font-weight: bold;
     }
@@ -284,7 +284,7 @@
             <p><strong>State:</strong> <%= address.state %></p>
             <p><strong>Pincode:</strong> <%= address.pincode %></p>
             <div class="address-actions">
-              <a href="/edit-address/<%= address._id %>" class="btn btn-info btn-sm">Edit</a>
+              <a href="/edit-address/<%= address._id %>" class="btn btn-info btn-sm" style="background-color: #075173;color: white;">Edit</a>
               <form action="/delete-address/<%= address._id %>?_method=DELETE" method="POST" class="delete-form">
                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
             </form>
@@ -296,7 +296,7 @@
         </div>
       <% }); %>
     </div>
-    <a href="/add-new-address" id="addNewAddressBtn" class="btn btn-primary">Add New Address</a>
+    <a href="/add-new-address" id="addNewAddressBtn" class="btn btn-primary" style="background-color: #075173;color: white;">Add New Address</a>
   </div>
 </div>
 
@@ -333,7 +333,7 @@
         <label for="phone" class="form-label">Phone</label>
         <input type="text" class="form-control" id="phone" name="phone" value="<%= user.phone %>" required>
       </div>
-      <button type="submit" class="btn btn-success">Update Account</button>
+      <button type="submit" class="btn btn-success"style="background-color: #075173;color: white;">Update Account</button>
     </form>
   </div>
 </div>
@@ -357,7 +357,7 @@
                 <div id="newPass2Error" class="text-danger position-absolute"></div>
               </div>
               <div class="mb-4">
-                <button type="submit" class="btn btn-warning">Change Password</button>
+                <button type="submit" class="btn btn-warning"style="background-color: #075173;color: white;">Change Password</button>
               </div>
               <% if (locals.message && message.length > 0) { %>
                 <div id="alertMessage" class="alert alert-danger text-center">

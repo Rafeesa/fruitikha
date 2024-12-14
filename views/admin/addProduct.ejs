@@ -23,7 +23,7 @@
  
  
 <h2 class="mt-5">Add Product</h2>
- <form action="/admin/addProducts" method="post" enctype="multipart/form-data" class="form-horizontal" onsubmit="return validateForm()">
+<form action="/admin/addProducts" method="post" enctype="multipart/form-data" class="form-horizontal" onsubmit="return validateAndSubmit(event);">
      <div class="form-group row">
          <label for="name" class="col-sm-2 col-form-label">Product Name:</label>
          <div class="col-sm-10">
@@ -82,34 +82,9 @@
 
 
 
-  <!--  <div class="card mb-4">
-        <div class="card-body">
-            <div class="row gx-2">
-                <div class="col-sm-6 mb-3">
-                    <label class="form-label">Category</label>
-                    <select class="form-select border" style="width: 150px;" name="category">
-                    
-
-                       
-                            <option value="">
-                                
-                            </option>
-                           
-                          
-                            
-                    </select>
-                    <div id="category-error" class="error-message"></div>
-                </div>
-            </div>
-        </div>
-    </div>-->
+  
 <br><br>
-   <!---  <div class="form-group row">
-         <label for="images" class="col-sm-2 col-form-label">Images:</label>
-         <div class="col-sm-10">
-             <input type="file" class="form-control-file" id="images" name="images" multiple required>
-         </div>
-     </div> -->
+  
      <div class="mb-2">
         <h4>Choose images (Maximum 3 images)</h4>
         
@@ -175,10 +150,12 @@
 
 <script>
 
-function validateAndSubmit(){
-if(validateForm()){
-    document.forms[0].submit();
-}
+function validateAndSubmit(event) {
+    event.preventDefault(); // Prevent default form submission
+    
+    if(validateForm()) {
+        document.forms[0].submit();
+    }
 }
 //image view handling
 function viewImage1(event){
@@ -285,65 +262,97 @@ function handleFileSelect(event) {
 
 
 function validateForm() {
+    // Clear previous error messages
     clearErrorMessages();
+    
     let isValid = true;
-
-    const name = document.getElementById('name').value.trim();
-    const description = document.getElementById('description').value.trim();
-    const price = document.getElementById('price').value.trim();
-    const stock = document.getElementById('stock').value.trim();
+    
+    // Validate Product Name
+    const nameInput = document.getElementById('name');
+    const name = nameInput.value.trim();
+    const nameError = document.getElementById('productName-error');
+    
+    if (name === "") {
+        nameError.textContent = 'Please enter a product name.';
+        nameError.style.display = 'block';
+        isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+        nameError.textContent = 'Product name should contain only alphabetic characters.';
+        nameError.style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate Description
+    const descriptionInput = document.getElementById('description');
+    const description = descriptionInput.value.trim();
+    const descriptionError = document.getElementById('description-error');
+    
+    if (description === "") {
+        descriptionError.textContent = 'Please enter a product description.';
+        descriptionError.style.display = 'block';
+        isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(description)) {
+        descriptionError.textContent = 'Product description should contain only alphabetic characters.';
+        descriptionError.style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate Stock
+    const stockInput = document.getElementById('stock');
+    const stock = stockInput.value.trim();
+    const stockError = document.getElementById('stock-error');
+    
+    if (!/^\d+$/.test(stock) || parseInt(stock) <= 0) {
+        stockError.textContent = 'Please enter a valid stock (positive integer).';
+        stockError.style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate Price
+    const priceInput = document.getElementById('price');
+    const price = priceInput.value.trim();
+    const priceError = document.getElementById('price-error');
+    
+    if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
+        priceError.textContent = 'Please enter a valid non-negative price.';
+        priceError.style.display = 'block';
+        isValid = false;
+    }
+    
+    // Validate Images
     const images1 = document.getElementById('input1').files.length;
     const images2 = document.getElementById('input2').files.length;
     const images3 = document.getElementById('input3').files.length;
-
-    if (name === "") {
-        displayErrorMessage('productName-error', 'Please enter a product name.');
-        isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
-        displayErrorMessage('productName-error', 'Product name should contain only alphabetic characters.');
-        isValid = false;
-    }
-
-    if (description === "") {
-        displayErrorMessage('description-error', 'Please enter a product description.');
-        isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(description)) {
-        displayErrorMessage('description-error', 'Product description should contain only alphabetic characters.');
-        isValid = false;
-    }
+    const imagesError = document.getElementById('images-error-1');
     
-
-    
-    if (!/^\d+$/.test(stock) || parseInt(stock) <= 0) {
-        displayErrorMessage('stock-error', 'Please enter a valid stock (positive integer).');
-        isValid = false;
-    }
-    if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
-        displayErrorMessage('price-error', 'Please enter a valid non-negative price.');
-        isValid = false;
-    }
-
     if (images1 === 0 && images2 === 0 && images3 === 0) {
-        displayErrorMessage('images-error-1', 'Please select at least one image.');
+        imagesError.textContent = 'Please select at least one image.';
+        imagesError.style.display = 'block';
         isValid = false;
     }
-
+    
     return isValid;
 }
 
 function displayErrorMessage(elementId, message) {
-    var errorElement = document.getElementById(elementId);
-    errorElement.innerText = message;
-    errorElement.style.display = "block";
+    const errorElement = document.getElementById(elementId);
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
 }
 
 function clearErrorMessages() {
     const errorElements = document.getElementsByClassName('error-message');
     Array.from(errorElements).forEach(element => {
-        element.style.display = "none";
-        element.innerText = '';
+        element.style.display = 'none';
+        element.textContent = '';
     });
 }
+
+// Add event listener to the form
+/*document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    form.addEventListener('submit', validateAndSubmit);
+});*/
 </script>
 <script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
 <%- include("../../views/partials/admin/footer") %>

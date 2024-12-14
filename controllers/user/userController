@@ -40,7 +40,7 @@ const getShop = async (req, res) => {
     const user = req.user;
     try {
         const search = req.query.search || ""; 
-        const sort = req.query.sort || "popularity"; 
+        const sort = req.query.sort || ""; 
         const category = req.query.category || ""; 
         const page = parseInt(req.query.page) || 1; 
         const limit = 6;
@@ -50,7 +50,7 @@ const getShop = async (req, res) => {
             name: { $regex: new RegExp(search, "i") }, 
         };
 
-        let sortOption;
+        let sortOption={};
         switch (sort) {
             case "price-low-high":
                 sortOption = { price: 1 }; 
@@ -74,7 +74,7 @@ const getShop = async (req, res) => {
                 sortOption = { name: -1 }; 
                 break;
             default:
-                sortOption = { popularity: -1 }; 
+                sortOption = {}; 
         }
 
         // Fetch products with query, sorting, and pagination
@@ -119,53 +119,6 @@ const getShop = async (req, res) => {
 };
 
 
-/*const getProductDetails = async (req, res) => {
-    try {
-        const productId = req.params.id;
-        const userId = req.session._id; 
-        
-        // Fetch the product details
-        const product = await Product.findById(productId).populate('category').exec();
-
-        // Calculate salePrice with consistent logic
-        const categoryOffer = product.category ? product.category.categoryOffer : 0;
-        const productOffer = product.productOffer || 0;
-
-        const categoryDiscount = (product.price * categoryOffer) / 100;
-        const productDiscount = (product.price * productOffer) / 100;
-
-        const maxDiscount = Math.max(categoryDiscount, productDiscount);
-        product.salePrice = Math.round(product.salePrice - maxDiscount); // Rounded price
-
-        // Fetch related products
-        const relatedProducts = await Product.find({
-            _id: { $ne: productId },
-            category: product.category
-        }).limit(3).exec();
-
-        // Check if the product is in the user's wishlist
-        let isInWishlist = false;
-        if (userId) {
-            const user = await User.findById(userId).select('wishlist').exec(); 
-            isInWishlist = user && user.wishlist.includes(productId);
-        }
-
-        const errorMessage = req.query.error || null; 
-        console.log('Error message:', errorMessage); 
-
-        // Render the product details page
-        res.render('product-details', {
-            product,
-            relatedProducts,
-            isInWishlist,
-            errorMessage 
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-    }
-};
-*/
 const calculateSalePrice = (product) => {
     const categoryOffer = product.category?.categoryOffer || 0;
     const productOffer = product.productOffer || 0;

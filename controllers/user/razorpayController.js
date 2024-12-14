@@ -185,12 +185,12 @@ const verifyPayment = async (req, res) => {
 
     if (generatedSignature === signature) {
       // Calculate discount amount based on subtotal
-let discountAmount = 0;
-if (subtotal > 150 && subtotal < 500) {
+      const discountAmount = req.session.discountAmount || 0;
+/*if (subtotal > 150 && subtotal < 500) {
     discountAmount = 50;
 } else if (subtotal > 500) {
     discountAmount = 100;
-}
+}*/
 
 // Apply discount to totalCost
 const finalTotal = totalCost - discountAmount;
@@ -229,7 +229,7 @@ const orderID = Math.floor(100000 + Math.random() * 900000); // Random 6-digit n
         discountAmount, // Add discountAmount to session
         paymentMethod: newOrder.paymentMethod
     };
-    
+    delete req.session.discountAmount;
       return res.status(200).json({ success: true, message: 'Payment verified and order created successfully' });
     } else {
       res.status(400).json({ success: false, message: 'Payment verification failed' });

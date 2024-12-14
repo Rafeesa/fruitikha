@@ -288,12 +288,22 @@ const downloadSalesReportPDF = async (req, res) => {
             select: 'name price salePrice productOffer',
         });
 
+        // Total Sales Calculations
+        const totalSalesCount = orders.length;
+        let totalOrderAmount = 0;
+        let totalDiscount = 0;
+
         const formattedOrders = orders.map((order, index) => ({
             slNo: index + 1,
             products: order.items.map(item => {
                 const originalPrice = item.productId?.price || 0;
                 const salePrice = item.productId?.salePrice || 0;
-                const discountAmount = originalPrice - salePrice;
+                const quantity = item.quantity || 1;
+                const discountAmount = (originalPrice - salePrice) * quantity;
+
+                // Calculate totals
+                totalOrderAmount += salePrice * quantity;
+                totalDiscount += discountAmount > 0 ? discountAmount : 0;
 
                 return {
                     name: item.productId?.name || 'Unknown Product',
@@ -309,82 +319,113 @@ const downloadSalesReportPDF = async (req, res) => {
         }));
 
         const doc = new PDFDocument({ margin: 5 });
-res.setHeader('Content-Type', 'application/pdf');
-res.setHeader('Content-Disposition', 'attachment; filename=sales_report.pdf');
-doc.pipe(res);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=sales_report.pdf');
+        doc.pipe(res);
 
-// Title
-doc.fontSize(18).text('Sales Report', { align: 'center' }).moveDown(1.5);
+        // Title
+        doc.fontSize(18).text('Sales Report', { align: 'center' }).moveDown(1.5);
 
-// Table Headers (displayed once)
-const tableHeaders = [
-    'Order No', 'Product Name','Date', 'Order Status',
-    'Price', 'Discount Price', 'Total Discount' ,'Payment Method'
-];
-const columnWidths = [50,80,70, 70, 60, 60, 60, 90];
-const startX = 30;
-let tableY = doc.y;
-
-// Render the Table Headers
-doc.fontSize(10).font('Helvetica-Bold');
-tableHeaders.forEach((header, index) => {
-    doc.text(header, startX + columnWidths.slice(0, index).reduce((a, b) => a + b, 0), tableY, {
-        width: columnWidths[index],
-        align: 'center',
-    });
-});
-
-// Add the line below the headers
-doc.moveTo(startX, tableY + 20)
-    .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), tableY + 20)
-    .stroke();
-
-// Adjust the Y position after headers
-doc.y = tableY + 25;
-
-// Function to render a single row
-const renderRow = (row, startX, columnWidths, doc) => {
-    let rowY = doc.y; // Save current Y position for consistent alignment
-
-    row.forEach((value, index) => {
-        doc.text(value, startX + columnWidths.slice(0, index).reduce((a, b) => a + b, 0), rowY, {
-            width: columnWidths[index],
-            align: 'center',
-        });
-    });
-
-    // Draw a line below the row
-    doc.moveTo(startX, rowY + 15)
-       .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), rowY + 15)
-       .stroke();
-
-    // Update Y position for the next row
-    doc.y = rowY + 20;
-};
-
-formattedOrders.forEach(order => {
-    order.products.forEach(product => {
-        const row = [
-            order.slNo,
-            product.name,
-            new Date(order.createdAt).toLocaleDateString(),
-            order.orderStatus,
-          
-           
-            product.price,
-            product.discountPrice,
-            product.totalDiscount,
-            order.paymentMethod,
+        // Table Headers (updated to match Excel)
+        const tableHeaders = [
+            'Order No', 'Product Name', 'Date', 'Order Status',
+            'Price', 'Discount Price', 'Total Discount', 'Payment Method'
         ];
+        const columnWidths = [50, 80, 70, 70, 60, 60, 60, 90];
+        const startX = 30;
+        let tableY = doc.y;
 
-        // Render the row
-        renderRow(row, startX, columnWidths, doc);
-    });
+        // Render the Table Headers
+        doc.fontSize(10).font('Helvetica-Bold');
+        tableHeaders.forEach((header, index) => {
+            doc.text(header, startX + columnWidths.slice(0, index).reduce((a, b) => a + b, 0), tableY, {
+                width: columnWidths[index],
+                align: 'center',
+            });
+        });
+
+        // Add the line below the headers
+        doc.moveTo(startX, tableY + 20)
+            .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), tableY + 20)
+            .stroke();
+
+        // Adjust the Y position after headers
+        doc.y = tableY + 25;
+
+        // Function to render a single row
+        const renderRow = (row, startX, columnWidths, doc) => {
+            let rowY = doc.y; // Save current Y position for consistent alignment
+
+            row.forEach((value, index) => {
+                doc.text(value, startX + columnWidths.slice(0, index).reduce((a, b) => a + b, 0), rowY, {
+                    width: columnWidths[index],
+                    align: 'center',
+                });
+            });
+
+            // Draw a line below the row
+            doc.moveTo(startX, rowY + 15)
+               .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), rowY + 15)
+               .stroke();
+
+            // Update Y position for the next row
+            doc.y = rowY + 20;
+        };
+
+        // Render data rows
+        formattedOrders.forEach(order => {
+            order.products.forEach(product => {
+                const row = [
+                    order.slNo,
+                    product.name,
+                    new Date(order.createdAt).toLocaleDateString(),
+                    order.orderStatus,
+                    product.price,
+                    product.discountPrice,
+                    product.totalDiscount,
+                    order.paymentMethod,
+                ];
+
+                // Render the row
+                renderRow(row, startX, columnWidths, doc);
+            });
+        });
+
+       
+// Move down
+doc.moveDown(1);
+doc.x = doc.page.margins.left;
+// Add header
+doc.fontSize(12)
+   .font('Helvetica-Bold')
+   .text('Summary', {
+       align: 'left', 
+       continued: false  // Ensure it's not continuing from previous text
+   });
+
+// Move down a bit
+doc.moveDown(0.5);
+
+// Set font back to normal
+doc.font('Helvetica').fontSize(10);
+
+// Explicitly set x to left margin if needed
+doc.x = doc.page.margins.left;
+
+// Render Summary Items
+doc.text(`Total Sales Count: ${totalSalesCount}`, {
+    align: 'left',
+    continued: false
 });
-
-doc.end();
-
-        
+doc.text(`Total Order Amount: ₹${totalOrderAmount.toFixed(2)}`, {
+    align: 'left',
+    continued: false
+});
+doc.text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, {
+    align: 'left',
+    continued: false
+});
+        doc.end();
         
     } catch (error) {
         console.error('Error generating PDF:', error);

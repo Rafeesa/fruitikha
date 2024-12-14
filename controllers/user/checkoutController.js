@@ -21,18 +21,18 @@ const calculateSalePrice = (product) => {
     return Math.round(product.price - maxDiscount);
 };
 
-const getCheckoutPage = async (req, res) => { 
+const getCheckoutPage = async (req, res) => {      
     try {
         const addresses = await Address.find({ userId: req.user.id });
         let userAddresses = addresses.length > 0 ? addresses[0].address : [];
-
+        
         const cart = await Cart.findOne({ userId: req.user.id }).populate('items.productId');
         if (!cart) {
             return res.status(404).send('Cart not found');
         }
-
+        
         let subtotal = 0;
-
+        
         // Calculate subtotal using the rounded sale price
         cart.items.forEach(item => {
             if (item.productId) {
@@ -41,31 +41,33 @@ const getCheckoutPage = async (req, res) => {
                 subtotal += salePrice * item.quantity;
             }
         });
-
+        
         const shippingCost = 45;
-        const totalCost = subtotal + shippingCost;
-
+        
+        // Retrieve discountAmount from session, default to 0 if not exists
+        const discountAmount = req.session.discountAmount || 0;
+        
+        const totalCost = subtotal + shippingCost - discountAmount;
+        
         // Store values in session for further use after coupon application
         req.session.subtotal = subtotal;
         req.session.shippingCost = shippingCost;
-
+        
         res.render('checkout', {
             user: req.user,
-            addresses: userAddresses,  
-            cartItems: cart.items, 
+            addresses: userAddresses,
+            cartItems: cart.items,
             subtotal: subtotal,
             shippingCost: shippingCost,
-            discountAmount: 0, // No discount initially
+            discountAmount: discountAmount, // Use the session-stored discount amount
             totalCost: totalCost,
-            finalTotal: totalCost // Initial total without any discount
+            finalTotal: totalCost // Total after potential discount
         });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
-    }
+    } 
 };
-
-
 const placeOrder = async (req, res) => {
     try {
         const userId = req.user._id;

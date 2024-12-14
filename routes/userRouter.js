@@ -19,7 +19,7 @@ const { userAuth } = require("../middlewares/auth")
 
 //homepage
 router.get("/",userController.loadHomepage)
-router.get('/user/product-details/:id',userController.getProductDetails);
+router.get('/user/product-details/:id',userAuth,userController.getProductDetails);
 router.get('/shop',userController.getShop)
 
 //sign up management
