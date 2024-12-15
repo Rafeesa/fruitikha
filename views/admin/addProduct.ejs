@@ -299,13 +299,15 @@ function validateForm() {
     
     // Validate Stock
     const stockInput = document.getElementById('stock');
-    const stock = stockInput.value.trim();
     const stockError = document.getElementById('stock-error');
     
-    if (!/^\d+$/.test(stock) || parseInt(stock) <= 0) {
-        stockError.textContent = 'Please enter a valid stock (positive integer).';
-        stockError.style.display = 'block';
-        isValid = false;
+    if (stockInput) {
+        const stock = stockInput.value.trim();
+        if (!/^\d+$/.test(stock) || parseInt(stock) <= 0) {
+            stockError.textContent = 'Please enter a valid stock (positive integer).';
+            stockError.style.display = 'block';
+            isValid = false;
+        }
     }
     
     // Validate Price
@@ -333,7 +335,6 @@ function validateForm() {
     
     return isValid;
 }
-
 function displayErrorMessage(elementId, message) {
     const errorElement = document.getElementById(elementId);
     errorElement.textContent = message;

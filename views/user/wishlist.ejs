@@ -172,13 +172,7 @@
                 <button class="btn btn-success btn-sm">Add to Cart</button>
               </form>
             </td>
-         <!---   <td>
-              <form action="/removeWishlist/<%= item._id %>" method="POST" class="d-inline">
-                <button class="btn btn-danger btn-sm">
-                  <i class="fas fa-trash-alt"></i> 
-                </button>
-              </form>
-            </td>-->
+        
             <td>
                 <button 
                   class="btn btn-danger btn-sm" 
@@ -204,23 +198,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
-<!--<script>
-    function removeWishlist(productId) {
-  fetch(`/removeWishlist/${productId}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' }
-  })
-  .then(response => {
-    if (response.ok) {
-      window.location.reload(); // Reload the page after successful deletion
-    } else {
-      alert('Failed to remove item from wishlist');
-    }
-  })
-  .catch(error => console.error('Error:', error));
-}
 
-</script>-->
 <script>
 function removeWishlist(productId) {
     fetch(`/removeWishlist/${productId}`, {

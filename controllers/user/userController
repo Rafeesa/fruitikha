@@ -36,6 +36,7 @@ const loadHomepage = async (req, res) => {
     }
 };
 
+//getshop
 const getShop = async (req, res) => {
     const user = req.user;
     try {
@@ -130,35 +131,30 @@ const calculateSalePrice = (product) => {
     return Math.round(product.price - maxDiscount); // Consistently subtract from product.price
 };
 
-// Update in both getProductDetails and getShopPage
+
 const getProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
         const userId = req.session._id;
 
-        // Fetch the product details
         const product = await Product.findById(productId).populate('category').exec();
-
-        // Calculate sale price
         product.salePrice = calculateSalePrice(product);
 
-        // Fetch related products
         const relatedProducts = await Product.find({
             _id: { $ne: productId },
             category: product.category
         }).limit(3).exec();
 
-        // Check if the product is in the user's wishlist
+
         let isInWishlist = false;
         if (userId) {
             const user = await User.findById(userId).select('wishlist').exec();
             isInWishlist = user?.wishlist.includes(productId);
         }
 
-        // Define errorMessage as null by default
         const errorMessage = req.query.error || null;
 
-        // Render the product details page
+
         res.render('product-details', {
             product,
             relatedProducts,
@@ -249,53 +245,7 @@ const signup = async (req, res) => {
         console.error("Signup error", error);
     }
 };
-/*const signup = async (req, res) => {
-    try {
-        const { name, email, phone, password, cPassword, referralCode } = req.body;
-        if (password !== cPassword) {
-            return res.render("signup", { message: "Passwords do not match" });
-        }
 
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.render("signup", { message: "User with this email already exists" });
-        }
-
-        //referel code generating
-        const referralCodeGenerated = `${name}_${Math.random().toString(36).substr(2, 6)}`;
-
-        // Check referral code validity (if provided)
-        let referrer = null;
-        if (referralCode) {
-            referrer = await User.findOne({ referralCode });
-            if (!referrer) {
-                return res.render("signup", { message: "Invalid referral code" });
-            }
-        }
-
-        // Create the new user
-        const newUser = await User.create({
-            name,
-            email,
-            phone,
-            password,
-            referralCode: referralCodeGenerated,
-            walletBalance: referralCode ? 100 : 0 // Credit ₹100 if referral code was used
-        });
-
-        // Update referrer's wallet and referrals list (if applicable)
-        if (referrer) {
-            referrer.walletBalance += 100;
-            referrer.referrals.push(newUser._id);
-            await referrer.save();
-        }
-
-        res.render("login", { message: "Sign-up successful! You can now log in." });
-    } catch (error) {
-        console.error("Sign-up error", error);
-        res.render("signup", { message: "An error occurred during sign-up." });
-    }
-};*/
 
 const checkReferralCode = async (req, res) => {
     try {
@@ -417,23 +367,7 @@ const loadLogin = async (req, res) => {
     }
 };
 
-/*const loadLogin = async (req, res) => {
-    try {
-        if (!req.user) {
-            // Pass success and error flash messages
-            const messages = {
-                success: req.flash('success'),
-                error: req.flash('error')
-            };
-            return res.render("login", { messages });
-        } else {
-            res.redirect("/");
-        }
-    } catch (error) {
-        console.error("Load login page error:", error);
-        res.status(500).send('Server Error');
-    }
-};*/
+
 
 // In your login route
 const login = (req, res, next) => {
@@ -455,36 +389,7 @@ const login = (req, res, next) => {
 
 
 
-// Login Controller
-/*const login = passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true // Optional: to show error messages
-});*/
-/*const login = (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-        if (err) {
-            console.error("Login error:", err);
-            return res.render("login", { message: "Login failed. Please try again later." });
-        }
 
-        if (!user) {
-            // If authentication fails, Passport will not pass the user, but will pass the 'info' object which contains error messages
-            return res.render("login", { message: info.message }); // Display message like 'User not found' or 'Incorrect password'
-        }
-
-        req.logIn(user, (err) => {
-            if (err) {
-                console.error("Login error:", err);
-                return res.render("login", { message: "Login failed. Please try again later." });
-            }
-            // Successful login, redirect user
-            req.session.user = user._id;
-            res.redirect("/");
-        });
-    })(req, res, next);
-};
-*/
 const addNewAddress = async (req, res) => {
     try {
         const userId = req.params.id; 
@@ -544,13 +449,12 @@ const logout = async (req, res) => {
 
 const getProfile = async (req, res) => {
     try {
-        // Ensure the user is logged in and session exists
-        const userId = req.session.passport?.user; // Adjust based on how session stores user ID
+
+        const userId = req.session.passport?.user; 
         if (!userId) {
-            return res.redirect('/login'); // Redirect if not logged in
+            return res.redirect('/login'); 
         }
 
-        // Find the user by ID
         const user = await User.findById(userId).exec();
         
         if (!user) {

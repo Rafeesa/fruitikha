@@ -265,7 +265,7 @@
                             <tr>
                                 <td><strong>Total amount to pay</strong></td>
                                 <th id="finalTotal"> ₹<%= Math.round(subtotal + shippingCost - (discountAmount || 0)) %></th>
-                            </tr>
+                                  </tr>
                              <!-- Hidden fields for JavaScript access -->
                              <input type="hidden" id="subtotalHidden" value="<%= subtotal.toFixed(2) %>">
                              <input type="hidden" id="shippingCostHidden" value="<%= shippingCost.toFixed(2) %>">

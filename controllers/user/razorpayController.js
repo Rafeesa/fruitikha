@@ -239,52 +239,7 @@ const orderID = Math.floor(100000 + Math.random() * 900000); // Random 6-digit n
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-/*const verifyRepayment = async (req, res) => {
-  try {
-      const { paymentId, orderId, signature } = req.body;
-      console.log('Repayment Details:', { paymentId, orderId, signature });
-
-      // Fetch the order from the database using Razorpay orderId
-      const existingOrder = await Order.findOne({ razorpayOrderID: orderId });
-
-      if (!existingOrder) {
-          return res.status(404).json({
-              success: false,
-              message: 'Order not found. Cannot verify repayment.',
-          });
-      }
-
-      // Verify the payment signature
-      const generatedSignature = crypto
-          .createHmac('sha256', process.env.RAZORPAY_SECRET)
-          .update(`${orderId}|${paymentId}`)
-          .digest('hex');
-
-      if (generatedSignature === signature) {
-          // Update order details
-          existingOrder.paymentId = paymentId;
-          existingOrder.paymentStatus = 'success';
-          existingOrder.status = 'order placed'; // Update status if necessary
-          await existingOrder.save();
-
-          return res.status(200).json({
-              success: true,
-              message: 'Repayment verified and order updated successfully',
-          });
-      } else {
-          return res.status(400).json({
-              success: false,
-              message: 'Payment verification failed. Signature mismatch.',
-          });
-      }
-  } catch (error) {
-      console.error('Error in verifyRepayment:', error);
-      return res.status(500).json({
-          success: false,
-          message: 'Internal server error while verifying repayment',
-      });
-  }
-};*/const verifyRepayment = async (req, res) => {
+const verifyRepayment = async (req, res) => {
   try {
     const { paymentId, orderId, signature,orderID } = req.body; // Use orderId here
     console.log('Repayment Details:', { paymentId, orderId, signature ,orderID});

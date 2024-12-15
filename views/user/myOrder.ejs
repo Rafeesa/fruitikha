@@ -432,68 +432,7 @@
         });
     }
 
-   /* async function handleRepay(orderID, amount) {
-    try {
-        console.log("Handling repayment for order:", orderID);
-
-        // Fetch repayment details from the backend
-        const response = await fetch('/create-razorpay-reorder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                orderID,
-                amount,
-            }),
-        });
-
-        const data = await response.json();
-        console.log('Repayment Response:', data);
-
-        if (data.success) {
-            const { paymentDetails, key_id } = data;
-            const razorpayOrderID = paymentDetails.id; // Razorpay order ID
-            const amount = paymentDetails.amount; // Amount in paise
-console.log(paymentDetails)
-            console.log('Razorpay Order ID:', razorpayOrderID);
-
-            const options = {
-                key: key_id,
-                amount: amount,
-                currency: 'INR',
-                name: 'Fruitikha',
-                description: 'Repayment for Order',
-                order_id: razorpayOrderID, // Existing Razorpay order ID
-                handler: async function (response) {
-                    try {
-                        // Verify repayment
-                        await verifyPayment(response);
-                    } catch (error) {
-                        console.error('Error in repayment handler:', error);
-                        alert('An error occurred during repayment. Please try again.');
-                    }
-                },
-                prefill: {
-                    name: data.userName,
-                    email: data.userEmail,
-                    contact: data.userPhone,
-                },
-                theme: {
-                    color: '#3399cc',
-                },
-            };
-
-            const rzp = new Razorpay(options);
-            rzp.open();
-        } else {
-            alert('Failed to fetch repayment details. Please try again.');
-        }
-    } catch (error) {
-        console.error('Error initiating repayment:', error);
-        alert('An error occurred while processing your repayment. Please try again.');
-    }
-}*/
+   
 async function handleRepay(orderID, amount) {
   try {
     console.log("Handling repayment for order:", orderID);
