@@ -1,9 +1,9 @@
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const LocalStrategy = require("passport-local").Strategy;
-const User = require("../models/userSchema");
-const bcrypt = require("bcrypt");
-const env = require("dotenv").config();
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const LocalStrategy = require('passport-local').Strategy;
+const User = require('../models/userSchema');
+const bcrypt = require('bcrypt');
+const env = require('dotenv').config();
 
 // Google OAuth Strategy
 passport.use(
@@ -11,7 +11,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
+      callbackURL: '/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -72,7 +72,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((id, done) => {
   User.findById(id)
     .then((user) => {
-     // console.log('Deserializing user:', user); 
+      // console.log('Deserializing user:', user);
       done(null, user);
     })
     .catch((err) => {

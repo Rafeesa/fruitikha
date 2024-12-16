@@ -33,7 +33,7 @@ h2.widget-title {
     width: 20px;
     height: 2px;
     background-color: $primary-color;
-    content: "";
+    content: '';
   }
 }
 
@@ -61,7 +61,7 @@ h2.widget-title {
   }
 
   &.subscribe form {
-    input[type=email] {
+    input[type='email'] {
       border: none;
       background-color: #012738;
       width: 78%;
@@ -92,7 +92,7 @@ h2.widget-title {
   background-color: $text-color;
   border-top: 1px solid #232a35;
 
-  p{
+  p {
     margin: 0;
     color: #fff;
     opacity: 0.7;
@@ -139,8 +139,8 @@ h2.widget-title {
       position: absolute;
       left: 0;
       top: 0;
-      content: "\f105";
-      font-family: "Font Awesome 5 Free";
+      content: '\f105';
+      font-family: 'Font Awesome 5 Free';
       font-weight: 900;
       color: $primary-color;
     }

@@ -197,15 +197,15 @@
 /* Related Product Image Styling */
 .single-product-item .product-image img {
     max-width: 100%;
-    height: 200px !important; /* Forcefully reduce the height */
-    object-fit: cover; /* Ensure image fits nicely within the container */
-    border-radius: 10px; /* Optional: Rounded corners */
+    height: 200px !important; 
+    object-fit: cover; 
+    border-radius: 10px; 
 }
 
 /* Related Product Image Zoom Effect on Hover */
 .single-product-item .product-image img:hover {
-    transform: scale(1.05); /* Zoom effect on hover */
-    transition: transform 0.3s ease; /* Smooth transition */
+    transform: scale(1.05); 
+    transition: transform 0.3s ease; 
 }
 
 
@@ -314,20 +314,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/cart">Cart</a>
                 </li>
-              <!---  <li class="nav-item dropdown ">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" 
-                       data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> Account
-                    </a>
-                    <ul class="dropdown-menu ">
-                        <% if (user) { %>
-                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
-                        <% } else { %>
-                            <li><a class="dropdown-item" href="/login">Login</a></li>
-                            <li><a class="dropdown-item" href="/signup">Sign Up</a></li>
-                        <% } %>
-                    </ul>
-                </li>-->
+             
             </ul>
         </div>
          <!-- Left Side: Account Menu -->
@@ -452,8 +439,8 @@
                 <div class="reviews mt-4">
                     <h4>Customer Reviews</h4>
                     <ul>
-                        <li><strong>John Doe:</strong> Great product! Loved the quality.</li>
-                        <li><strong>Jane Smith:</strong> Really fresh and delivered on time.</li>
+                        <li><strong>Ezzah:</strong> Great product! Loved the quality.</li>
+                        <li><strong>Rahul:</strong> Really fresh and delivered on time.</li>
                     </ul>
                 </div>
             </div>
@@ -575,65 +562,7 @@
     }, 0);
 }
         </script>
-  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/magic-zoom/magiczoom.js"></script>
-    -->  
-  <!-- <script>
-        // Initialize Magic Zoom after DOM Content is Loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Ensure the library is loaded before calling
-            if (window.MagicZoomPlus) {
-                MagicZoomPlus.refresh();
-            }
-        });
-    </script>--> 
  
-   <!---<script>
-        document.getElementById('addToCartForm').addEventListener('submit', async function(event) {
-         // event.preventDefault(); // Prevent the form's default submission
-      
-          const formData = new FormData(this); // Get form data
-          const productId = formData.get('productId');
-          const quantity = formData.get('quantity');
-      
-          // Check if productId and quantity are valid
-          if (!productId || !quantity) {
-            document.getElementById('message').innerText = 'Invalid product or quantity';
-            document.getElementById('message').style.color = 'red';
-            return;
-          }
-      
-          // AJAX request to add the product to the cart
-          try {
-            const response = await fetch('/cart/add', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                productId: productId,
-                quantity: quantity
-              }),
-            });
-      
-            const result = await response.text(); // Get the server response as text
-      
-            if (response.ok) {
-              // If the product was successfully added to the cart
-              document.getElementById('message').innerText = 'Product added to cart successfully!';
-              document.getElementById('message').style.color = 'green';
-            } else {
-              // If there was an error (e.g., not enough stock)
-              document.getElementById('message').innerText = result;
-              document.getElementById('message').style.color = 'red';
-            }
-          } catch (error) {
-            // Handle any network or server errors
-            document.getElementById('message').innerText = 'Server error. Please try again later.';
-            document.getElementById('message').style.color = 'red';
-            console.error('Error:', error);
-          }
-        });
-      </script>-->
       
       
 </body>

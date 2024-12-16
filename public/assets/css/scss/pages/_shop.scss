@@ -111,7 +111,7 @@ p.single-product-pricing span {
   line-height: 1.8;
 }
 
-input[type="number"] {
+input[type='number'] {
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 10px;
@@ -193,7 +193,8 @@ td.product-quantity input {
   margin-bottom: 0;
 }
 
-tr.table-body-row {}
+tr.table-body-row {
+}
 
 td.product-remove a {
   color: $text-color;
@@ -240,7 +241,7 @@ tr.total-data td strong {
   }
 }
 
-.coupon-form-wrap form p input[type=text] {
+.coupon-form-wrap form p input[type='text'] {
   border: 1px solid #ddd;
   color: $text-color;
   padding: 15px;
@@ -262,7 +263,7 @@ tr.total-data td strong {
     margin-bottom: 0;
   }
 
-  border-bottom: 1px solid #EFEFEF !important;
+  border-bottom: 1px solid #efefef !important;
 
   .card-header h5 button {
     color: $text-color;
@@ -273,17 +274,18 @@ tr.total-data td strong {
     padding: 20px;
     text-decoration: none;
     border: none;
-    background-color: #EFEFEF;
+    background-color: #efefef;
     position: relative;
     padding-left: 50px;
     font-weight: 600;
   }
 }
 
-.card-header h5 {}
+.card-header h5 {
+}
 
 .card.single-accordion {
-  border: 1px solid #F9F9F9;
+  border: 1px solid #f9f9f9;
 }
 
 .billing-address-form {
@@ -308,7 +310,8 @@ tr.total-data td strong {
   padding: 20px;
 }
 
-.shipping-address-form p, .card-details p {
+.shipping-address-form p,
+.card-details p {
   margin: 0;
 }
 
@@ -316,8 +319,8 @@ tr.total-data td strong {
   position: absolute;
   left: 20px;
   top: 50%;
-  content: "\f058";
-  font-family: "Font Awesome 5 Free";
+  content: '\f058';
+  font-family: 'Font Awesome 5 Free';
   font-weight: 900;
   line-height: 22px;
   margin-top: -11px;

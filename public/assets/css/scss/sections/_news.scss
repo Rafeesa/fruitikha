@@ -220,7 +220,7 @@ span.comment-date {
 
   form p {
     input {
-      &[type=text] {
+      &[type='text'] {
         border: 1px solid #ddd;
         width: 49%;
         padding: 15px;
@@ -229,7 +229,7 @@ span.comment-date {
         color: $text-color;
       }
 
-      &[type=email] {
+      &[type='email'] {
         border: 1px solid #ddd;
         width: 49%;
         padding: 15px;
@@ -286,18 +286,20 @@ span.comment-date {
   margin-left: 30px;
 }
 
-.recent-posts ul li, .archive-posts ul li {
+.recent-posts ul li,
+.archive-posts ul li {
   position: relative;
   padding-left: 17px;
   margin-bottom: 10px;
 }
 
-.recent-posts ul li:before, .archive-posts ul li:before {
+.recent-posts ul li:before,
+.archive-posts ul li:before {
   position: absolute;
   left: 0;
   top: 2px;
-  content: "\f105";
-  font-family: "Font Awesome 5 Free";
+  content: '\f105';
+  font-family: 'Font Awesome 5 Free';
   font-weight: 900;
 }
 

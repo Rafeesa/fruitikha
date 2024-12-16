@@ -148,7 +148,7 @@ ul.social-link-team li a {
   }
 }
 
-input[type="submit"] {
+input[type='submit'] {
   transition: 0.3s;
   border-radius: 50px !important;
 
@@ -158,7 +158,8 @@ input[type="submit"] {
   }
 }
 
-div.owl-controls, .owl-controls div {
+div.owl-controls,
+.owl-controls div {
   transition: 0.3s;
 }
 
@@ -281,7 +282,7 @@ ul.product-share li {
   transition: 0.3s;
 }
 
-.search-bar-tablecell button[type=submit] {
+.search-bar-tablecell button[type='submit'] {
   transition: 0.3s;
 
   &:hover {
