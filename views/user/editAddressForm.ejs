@@ -37,13 +37,13 @@
       width: 100px;
       height: auto;
     }
-    /* Navbar background */
+   
 .custom-navbar {
     background-color: #051922;
     padding: 10px 15px;
 }
 
-/* Account menu styling */
+
 .account-menu {
     color:white;
     position: relative;
@@ -52,8 +52,8 @@
 /* Dropdown menu */
 .account-menu .dropdown-menu {
     position: absolute;
-    top: 100%;  /* Right below the Account button */
-    left: 0;  /* Align to the left of the parent div */
+    top: 100%;  
+    left: 0;  
     background-color: #051922;
     border: none;
     min-width: 150px;
@@ -118,21 +118,7 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/cart">Cart</a>
                 </li>
-              <!---  <li class="nav-item dropdown ">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" 
-                       data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> Account
-                    </a>
-                    <ul class="dropdown-menu ">
-                        <% if (user) { %>
-                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
-                        <% } else { %>
-                            <li><a class="dropdown-item" href="/login">Login</a></li>
-                            <li><a class="dropdown-item" href="/signup">Sign Up</a></li>
-                        <% } %>
-                    </ul>
-                </li>-->
-            </ul>
+              </ul>
         </div>
          <!-- Left Side: Account Menu -->
          <div class="account-menu">
@@ -174,7 +160,7 @@
           <div class="card-body">
             <h4>Edit Address Form</h4>
             <form id="addressForm" action="/edit-address/<%= address._id %>?_method=PUT" method="POST">
-           <!---   <input type="hidden" name="_method" value="PUT">-->
+          
 
               <div class="mb-3">
                 <label for="name" class="form-label">Name</label>

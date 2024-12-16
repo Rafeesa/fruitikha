@@ -63,9 +63,6 @@ const addProducts = async (req, res) => {
     const productExist = await Product.findOne({
       productName: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
     });
-    //   productName:products.productName,
-
-    //})
 
     if (!productExist) {
       const images = [];
@@ -138,12 +135,9 @@ const editProduct = async (req, res) => {
       _id: { $ne: id },
     });
     if (existingProduct) {
-      return res
-        .status(400)
-        .json({
-          error:
-            'Product with this name already exists, please try another name',
-        });
+      return res.status(400).json({
+        error: 'Product with this name already exists, please try another name',
+      });
     }
 
     const categoryId = await Category.findById(data.category);
@@ -314,7 +308,6 @@ const addProductOffer = async (req, res) => {
     res.status(500).json({ status: false, message: 'Internal server error' });
   }
 };
-
 
 const removeProductOffer = async (req, res) => {
   try {

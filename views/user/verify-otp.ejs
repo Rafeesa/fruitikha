@@ -15,8 +15,8 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            min-height: 100vh; /* Prevent layout shrinking */
-            overflow: hidden; /* Prevent vertical scroll when SweetAlert shows */
+            min-height: 100vh; 
+            overflow: hidden; 
         }
         .verify-container {
             background-color: white;
@@ -39,14 +39,14 @@
             gap: 20px;
         }
         .btn-primary {
-            background-color: #28a745; /* Fresh fruit theme green */
+            background-color: #28a745; 
             border: none;
         }
         .btn-primary:hover {
             background-color: #218838;
         }
         .btn-resend {
-            background-color: #ffc107; /* Orange for Resend */
+            background-color: #ffc107; 
             color: black;
             border: none;
         }
@@ -124,7 +124,7 @@
         startTimer();
 
         function validateOTPForm(event) {
-            event.preventDefault(); // Prevent page reload
+            event.preventDefault(); 
             const otpInput = document.getElementById("otp").value;
 
             $.ajax({

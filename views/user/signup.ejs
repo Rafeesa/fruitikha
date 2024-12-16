@@ -231,11 +231,11 @@
         function checkReferral() {
             const code = document.getElementById('referralCodeInput').value;
     
-            // Call the backend route to validate the referral code
+            
             fetch(`/checkReferral?code=${code}`)
                 .then(response => response.json())
                 .then(data => {
-                    // Update the referral code validation message in the UI
+                    
                     document.getElementById('referralMessage').innerHTML = data.message;
                 })
                 .catch(error => {

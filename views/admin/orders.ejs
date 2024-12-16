@@ -2,22 +2,7 @@
 <br><br><br>
 <h1 class="text-center mb-4">Order Management</h1>
 
-<!--<header class="card-header text-center mb-4">
-    <form action="/admin/orders" method="get" class="d-inline">
-        <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: auto; margin-right: auto;">
-            <input type="text" class="form-control border-0 rounded-pill" placeholder="Search orders..." name="search">
-            <button class="btn btn-primary border-0 rounded-pill" type="submit">Search</button>
-        </div>
-    </form>
-</header>-->
 
-<!-- Flash Messages Section 
-<% if (success_msg) { %>
-    <div class="alert alert-success"><%= success_msg %></div>
-<% } %>
-<% if (error_msg) { %>
-    <div class="alert alert-danger"><%= error_msg %></div>
-<% } %>-->
 <br><br>
 <div class="table-responsive">
     <table class="table table-bordered table-hover table-striped text-center">
@@ -36,7 +21,7 @@
             <% orders.forEach(order => { %>
                 <tr>
                     <td><%= order.orderID %></td>
-                    <td><%= order.userId?.name || "Unknown User" %></td> <!-- Optional chaining for userId -->
+                    <td><%= order.userId?.name || "Unknown User" %></td> 
                     <td>
                         <ul>
                             <% if (order.items && order.items.length > 0) { %>
@@ -81,11 +66,7 @@
                             </form>
                         </td>
                         
-                        
-                        
-                    
-
-                    <!-- Action (Cancel) -->
+                                        
                     <td>
                         <form action="/admin/orders/<%= order._id %>/delete?_method=DELETE" method="POST" style="display: inline;">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>

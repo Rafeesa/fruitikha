@@ -11,8 +11,6 @@ const session = require('express-session')
 const loadHomepage = async (req, res) => {
     try {
         const user =req.user;
-        
-
 
         const itemsPerPage = 6;
         const currentPage = parseInt(req.query.page) || 1;
@@ -229,7 +227,7 @@ const signup = async (req, res) => {
         }
 
         const otp = generateOtp();
-        console.log(" OTP:", otp); // To check if OTP is being generated
+        console.log(" OTP:", otp); 
 
         const emailSent = await sendVerificationEmail(email, otp);
 
@@ -276,13 +274,13 @@ const securePassword = async (password) => {
 const verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body;
-        console.log(req.body)
+       
 
         if (otp === req.session.userOtp) {
             const user = req.session.userData;
-            console.log(user,"hai")
+           
             const { name, email, phone, password, referralCode } = user;
-            //referel code generating
+            
         const referralCodeGenerated = `${name}_${Math.random().toString(36).substr(2, 6)}`;
 
         // Check referral code validity (if provided)
@@ -301,17 +299,11 @@ const verifyOtp = async (req, res) => {
                 phone,
                 password: passwordHash,
                 referralCode: referralCodeGenerated,
-                walletBalance: referralCode ? 100 : 0 // Credit ₹100 if referral code was used
+                walletBalance: referralCode ? 100 : 0 
             });
 
             await newUser.save();
-        /*   req.session.user = newUser._id;
-            console.log(req.session.user)
-            req.login(newUser, (err) => {
-                if (err) return res.status(500).json({ success: false, message: "Login failed" });
-                res.json({ success: true, redirectUrl: "/" });
-            });*/ 
-            // Do not set req.session.user here. Instead, redirect to login page.
+       
             res.json({ success: true, redirectUrl: "/login" });
 
         } else {
@@ -436,7 +428,7 @@ const logout = async (req, res) => {
              console.log("Session destruction error:", err.message);
                 }
 
-//req.flash("success_msg", "You are logged out");
+
                 res.redirect("/login");
             });
         });

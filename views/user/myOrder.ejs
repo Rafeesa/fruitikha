@@ -563,7 +563,7 @@ async function verifyPayment(response) {
             })
         });
 
-        const paymentData = await paymentResponse.json(); // Avoid redeclaring paymentData
+        const paymentData = await paymentResponse.json(); 
         if (paymentData.success) {
             alert('Payment successful!');
             window.location.href = '/orderSuccess';
@@ -575,13 +575,6 @@ async function verifyPayment(response) {
         alert('An error occurred while completing your payment. Please try again.');
     }
 }
-
-
-
-
-
-
-
 
 </script>
 

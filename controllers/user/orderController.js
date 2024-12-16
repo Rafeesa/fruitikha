@@ -30,7 +30,7 @@ const getOrders = async (req, res) => {
       .limit(limit)
       .lean();
 
-    console.log('Fetched Orders:', orders);
+   // console.log('Fetched Orders:', orders);
 
     const totalOrders = await Order.find({ userId }).countDocuments();
     const totalPages = Math.ceil(totalOrders / limit);
@@ -63,12 +63,10 @@ const requestReturn = async (req, res) => {
         message: 'Return request submitted successfully.',
       });
     } else {
-      res
-        .status(400)
-        .json({
-          success: false,
-          message: 'Return is only available for delivered orders.',
-        });
+      res.status(400).json({
+        success: false,
+        message: 'Return is only available for delivered orders.',
+      });
     }
   } catch (error) {
     console.error(error);

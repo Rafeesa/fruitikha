@@ -6,7 +6,7 @@
     .error-message {
     color: red;
     margin-top: 5px;
-    display: none; /* Hidden by default */
+    display: none; 
 }
  
         .thumbnails-container {
@@ -154,7 +154,7 @@
 <script>
 
 function validateAndSubmit(event) {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault(); 
     
     if(validateForm()) {
         document.forms[0].submit();
@@ -348,11 +348,7 @@ function clearErrorMessages() {
     });
 }
 
-// Add event listener to the form
-/*document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
-    form.addEventListener('submit', validateAndSubmit);
-});*/
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
 <%- include("../../views/partials/admin/footer") %>

@@ -207,7 +207,7 @@ function removeWishlist(productId) {
     })
     .then(response => {
       if (response.ok) {
-        window.location.reload(); // Reload the page on success
+        window.location.reload(); 
       } else {
         alert('Failed to remove item from wishlist');
       }

@@ -59,7 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(checkBlocked); // Middleware to check blocked users
+app.use(checkBlocked);
 
 // Set view engine and views directory
 app.set('view engine', 'ejs');

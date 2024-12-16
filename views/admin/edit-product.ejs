@@ -111,18 +111,7 @@
     <div id="addedImagesContainer">
         
     </div>
-   <!-- <div id="addedImagesContainer">
-
-
-<% if (product.images && product.images.length > 0) { %>
-    <% product.images.forEach(function(image, index) { %>
-        <div class="thumbnail">
-            <img src="<%= image.url %>" alt="thumbnail" style="width: 50px; height: auto;">
-            <span class="remove-icon" onclick="deleteSingleImage('<%= image.id %>', '<%= product._id %>')">Delete</span>
-        </div>
-    <% }) %>
-<% } %>
-</div>-->
+  
 <div class="card mb-2">
     <div class="card-header">
         <br>
@@ -184,7 +173,7 @@
 
         // Add the selected images to the FormData object
         selectedImages.forEach((file, index) => {
-            formData.append(`image-${index}`, file); // Append each file with a unique key
+            formData.append(`image-${index}`, file); 
         });
 
         // Send the FormData using AJAX or through a standard form submission
@@ -200,7 +189,7 @@
             }
         }).catch(error => console.error('Form submission failed:', error));
 
-        return false; // Prevent the default form submission
+        return false; 
     }
     return false;
 }

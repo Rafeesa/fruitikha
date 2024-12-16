@@ -5,7 +5,6 @@ const ExcelJS = require('exceljs');
 const moment = require('moment');
 const PDFDocument = require('pdfkit');
 
-
 const getSalesReport = async (req, res) => {
   try {
     const { filterType: period, startDate, endDate, page = 1 } = req.query;
@@ -325,7 +324,6 @@ const downloadSalesReportPDF = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error generating PDF' });
   }
 };
-
 
 const downloadSalesReportExcel = async (req, res) => {
   try {

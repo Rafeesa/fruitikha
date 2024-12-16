@@ -5,7 +5,7 @@
 <!-- Report Options -->
 <div class="row my-4">
     <div class="col-12 d-flex justify-content-between align-items-center">
-        <!-- Download Buttons (Left) -->
+        
         <div>
             <a href="/admin/download-sales-report-pdf?startDate=2024-01-01&endDate=2024-12-31" class="btn btn-primary">Download PDF</a>
             <a href="/admin/download-sales-report-excel?startDate=2024-01-01&endDate=2024-12-31" class="btn btn-secondary">Download Excel</a>
@@ -137,11 +137,11 @@
     // Add event listener for form submission
     generateReportBtn.addEventListener('click', function(event) {
         if (!validateDateRange()) {
-            event.preventDefault(); // Prevent form submission if validation fails
+            event.preventDefault(); 
         }
     });
 
-    // Event listener for filter type change
+    
     filterType.addEventListener('change', function() {
         const isCustom = filterType.value === 'custom';
         customDateRange.classList.toggle('d-none', !isCustom);

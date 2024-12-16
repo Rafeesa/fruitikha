@@ -44,8 +44,6 @@ const createOrder = async (req, res) => {
 
   try {
     const { amount, paymentMethod } = req.body;
-    console.log('hai', req.body);
-    console.log('amount passing', amount);
 
     if (paymentMethod === 'cashOnDelivery') {
       return res.json({
@@ -62,7 +60,6 @@ const createOrder = async (req, res) => {
     };
 
     const order = await razorpay.orders.create(options);
-    console.log('Order Created:', order);
 
     res.json({
       success: true,
@@ -82,9 +79,6 @@ const createOrder = async (req, res) => {
 const createreOrder = async (req, res) => {
   try {
     const { orderID, amount } = req.body;
-
-    console.log('Received orderID:', orderID);
-    console.log('Received amount:', amount);
 
     if (!orderID || !amount) {
       throw new Error('Missing orderID or amount in the request body');
@@ -109,11 +103,6 @@ const createreOrder = async (req, res) => {
         key_id: process.env.RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_SECRET,
       });
-
-      console.log(
-        'Amount sent to Razorpay (in paise):',
-        existingOrder.totalCost * 100
-      );
 
       const razorpayOrder = await razorpayInstance.orders.create({
         amount: existingOrder.totalCost * 100, // Amount in paise
@@ -150,11 +139,7 @@ const createreOrder = async (req, res) => {
 const verifyPayment = async (req, res) => {
   try {
     const { paymentId, orderId, signature, paymentMethod } = req.body; // Include paymentMethod in request
-    console.log(paymentId);
-    console.log(orderId);
-    console.log(signature);
-    console.log(paymentMethod);
-    console.log('hai', req.body);
+
     const userId = req.user._id;
 
     // Fetch the user's cart with the items populated
@@ -190,11 +175,6 @@ const verifyPayment = async (req, res) => {
     if (generatedSignature === signature) {
       // Calculate discount amount based on subtotal
       const discountAmount = req.session.discountAmount || 0;
-      /*if (subtotal > 150 && subtotal < 500) {
-    discountAmount = 50;
-} else if (subtotal > 500) {
-    discountAmount = 100;
-}*/
 
       // Apply discount to totalCost
       const finalTotal = totalCost - discountAmount;
@@ -233,12 +213,10 @@ const verifyPayment = async (req, res) => {
         paymentMethod: newOrder.paymentMethod,
       };
       delete req.session.discountAmount;
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: 'Payment verified and order created successfully',
-        });
+      return res.status(200).json({
+        success: true,
+        message: 'Payment verified and order created successfully',
+      });
     } else {
       res
         .status(400)
@@ -252,12 +230,6 @@ const verifyPayment = async (req, res) => {
 const verifyRepayment = async (req, res) => {
   try {
     const { paymentId, orderId, signature, orderID } = req.body; // Use orderId here
-    console.log('Repayment Details:', {
-      paymentId,
-      orderId,
-      signature,
-      orderID,
-    });
 
     if (!paymentId || !orderId || !signature) {
       return res.status(400).json({
@@ -267,10 +239,6 @@ const verifyRepayment = async (req, res) => {
     }
 
     const existingOrder = await Order.findOne({ orderID }); // Match with orderId
-    console.log(
-      'existingOrder with id razorpayOrderID: orderId....',
-      existingOrder
-    );
 
     if (!existingOrder) {
       return res.status(404).json({
@@ -283,7 +251,7 @@ const verifyRepayment = async (req, res) => {
       .createHmac('sha256', process.env.RAZORPAY_SECRET)
       .update(`${orderId}|${paymentId}`)
       .digest('hex');
-    console.log('generatedSignature....', generatedSignature);
+
     if (generatedSignature === signature) {
       existingOrder.paymentId = paymentId;
       existingOrder.paymentStatus = 'success';
@@ -311,8 +279,7 @@ const verifyRepayment = async (req, res) => {
 
 const paymentFailure = async (req, res) => {
   const { error, orderId } = req.body;
-  console.log(req.body);
-  console.log('payment failiure starting here');
+
   const userId = req.user._id;
 
   try {

@@ -74,8 +74,8 @@
 /* Dropdown menu */
 .account-menu .dropdown-menu {
     position: absolute;
-    top: 100%;  /* Right below the Account button */
-    left: 0;  /* Align to the left of the parent div */
+    top: 100%;  
+    left: 0;  
     background-color: #051922;
     border: none;
     min-width: 150px;
@@ -103,24 +103,24 @@
       margin-bottom: 20px;
     }
     .address-actions {
-    display: flex; /* Align buttons in the same line */
-    gap: 10px; /* Space between the buttons */
+    display: flex; 
+    gap: 10px; 
 }
 
 .address-actions a, 
 .address-actions form {
-    display: inline-block; /* Ensure both the anchor and form take up the same space */
-    margin: 0; /* Remove any default margins */
+    display: inline-block; 
+    margin: 0; 
 }
 
 .address-actions a .btn, 
 .address-actions form .btn {
-    min-width: 80px; /* Set a minimum width for consistency */
-    text-align: center; /* Center text in buttons */
+    min-width: 80px; 
+    text-align: center; 
 }
 
 .delete-form {
-    display: inline-block; /* To keep the button in line with the Edit link */
+    display: inline-block; 
 }
 
   </style>
@@ -153,23 +153,10 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/cart">Cart</a>
                 </li>
-              <!---  <li class="nav-item dropdown ">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" 
-                       data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> Account
-                    </a>
-                    <ul class="dropdown-menu ">
-                        <% if (user) { %>
-                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
-                        <% } else { %>
-                            <li><a class="dropdown-item" href="/login">Login</a></li>
-                            <li><a class="dropdown-item" href="/signup">Sign Up</a></li>
-                        <% } %>
-                    </ul>
-                </li>-->
+             
             </ul>
         </div>
-         <!-- Left Side: Account Menu -->
+        
          <div class="account-menu">
             <a class="nav-link dropdown-toggle" href="#" role="button" 
                data-bs-toggle="dropdown" aria-expanded="false">
@@ -221,52 +208,7 @@
           </div>
         </div>
 
-        <!-- My Orders Section 
-        <div class="card mb-4">
-          <div class="card-body">
-            <h4>My Orders</h4>
-            <table class="table table-bordered table-responsive">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                  <th>Payment Method</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (orders && orders.length > 0) { %>
-                    <% orders.forEach(order => { %>
-                        <tr>
-                          <td>  <a href="/orderSuccess" ><%= order._id %></a></td>
-                            <td><%= order.createdAt %></td>
-                            <td><%= order.status %></td>
-                            <td><%= order.totalCost %></td>
-                            <td><%= order.paymentMethod %></td>
-                            <td>
-                                <% if (order.status === 'Pending') { %>
-                                    <form action="/order/cancel/<%= order._id %>" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this order?');">Cancel Order</button>
-                                    </form>
-                                <% } else { %>
-                                    <span>N/A</span>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }); %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="6" class="text-center">No orders found.</td>
-                    </tr>
-                <% } %>
-            </tbody>
-            
-            </table>
-          </div>
-        </div>-->
-
+      
        <!-- Address Management Section -->
 <div class="card mb-4">
   <div class="card-body">
@@ -300,23 +242,6 @@
   </div>
 </div>
 
-
-        <!-- Edit Account Section 
-        <div class="card mb-4">
-          <div class="card-body">
-            <h4>Edit Account Details</h4>
-            <form action="#" method="POST">
-              <div class="mb-3">
-                <input type="text" class="form-control" placeholder="Update Name" required>
-              </div>
-              <div class="mb-3">
-                <input type="email" class="form-control" placeholder="Update Email" required>
-              </div>
-              <button type="submit" class="btn btn-success">Update Account</button>
-            </form>
-          </div>
-        </div>-->
-        <!-- Edit Account Section -->
 <div class="card mb-4">
   <div class="card-body" id="editAccount">
     <h4>Edit Account Details</h4>

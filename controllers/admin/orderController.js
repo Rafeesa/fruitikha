@@ -85,12 +85,10 @@ const updateOrderStatus = async (req, res) => {
             }
           }
         } else {
-          return res
-            .status(400)
-            .json({
-              error:
-                "Return can only be processed for orders with 'Return Requested' status.",
-            });
+          return res.status(400).json({
+            error:
+              "Return can only be processed for orders with 'Return Requested' status.",
+          });
         }
       }
 

@@ -307,10 +307,7 @@
             </div>
         </div>
     </div>
-    <!-- Footer 
-    <footer class="bg-dark text-white text-center py-3 footer">
-        <p class="m-0">© 2024 Fruitikha. All Rights Reserved.</p>
-    </footer>-->
+    
 
     <!-- JavaScript to handle address selection -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -336,7 +333,7 @@
 
   <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Add event listeners to payment method radio buttons
+    
     document.querySelectorAll('input[name="paymentMethod"]').forEach(input => {
         input.addEventListener('change', function () {
             if (this.value === 'razorpay') {
@@ -431,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            console.log("Razorpay Order Response:", data); 
+           
 
             const { orderId, key_id } = data;
             
@@ -496,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmButtonText: 'Go to My Orders',
     }).then(() => {
         console.log('Redirecting to My Orders...');
-        window.location.href = '/myOrder'; // Redirect after alert confirmation
+        window.location.href = '/myOrder'; 
     });
 
     // Log failure details
@@ -507,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: JSON.stringify({
             error: response.error,
-            orderId: response.error.metadata?.order_id || 'unknown_order', // Handle undefined order_id
+            orderId: response.error.metadata?.order_id || 'unknown_order', 
         }),
     })
     .then(res => res.json())
@@ -537,7 +534,7 @@ async function verifyPayment(response) {
                 paymentId: response.razorpay_payment_id,
                 orderId: response.razorpay_order_id,
                 signature: response.razorpay_signature,
-                addressId: selectedAddressId, // Assuming selectedAddressId is available here
+                addressId: selectedAddressId, 
             })
         });
 
@@ -557,8 +554,7 @@ async function verifyPayment(response) {
 
 document.getElementById('walletPayBtn').addEventListener('click', async function () {
     const selectedAddressId = document.getElementById('selectedAddressId').value;
-    console.log("Selected Address ID:", selectedAddressId);
-
+   
     if (!selectedAddressId) {
         alert('Please select a shipping address.');
         return;
@@ -582,7 +578,7 @@ document.getElementById('walletPayBtn').addEventListener('click', async function
 
         // Enhanced error handling
         if (!data.success) {
-            // This will now show specific error messages like "Insufficient wallet balance"
+            
             alert(data.message || 'Payment failed');
             return;
         }

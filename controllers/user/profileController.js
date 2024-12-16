@@ -145,36 +145,6 @@ const postNewPassword = async (req, res) => {
   }
 };
 
-//load profile
-
-/*const getProfile = async (req, res) => {
-    try {
-        // Ensure the user is logged in and session exists
-        const userId = req.session.passport?.user; // Adjust based on how session stores user ID
-        if (!userId) {
-            return res.redirect('/login'); // Redirect if not logged in
-        }
-
-        // Find the user by ID
-        const user = await User.findById(userId).exec();
-        
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
-
-        // Render the profile page with the user's data
-        res.render('profile', {
-            user :{
-                name:user.name,
-                email:user.email,
-                mobile:user.mobile
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching user profile:', error);
-        res.status(500).send('Internal Server Error');
-    }
-};*/
 const getProfile = async (req, res) => {
   try {
     const userId = req.session.passport?.user;
@@ -381,7 +351,6 @@ const cancelOrder = async (req, res) => {
 
     await user.save(); // Save updated user details
 
-    // Flash a success message and redirect to the profile page
     req.flash(
       'success_msg',
       `Order canceled successfully. ₹${refundAmount} has been credited to your wallet.`

@@ -6,17 +6,17 @@
         <div class="mb-3">
             <label for="name" class="form-label">Category Name:</label>
             <input type="text" class="form-control" id="name" name="name" value="<%= category.name %>" required>
-            <small id="name-error" class="text-danger"></small> <!-- Error message -->
+            <small id="name-error" class="text-danger"></small> 
         </div>
         <div class="mb-3">
             <label for="description" class="form-label">Description:</label>
             <input type="text" class="form-control" id="description" name="description" value="<%= category.description %>" required>
-            <small id="description-error" class="text-danger"></small> <!-- Error message -->
+            <small id="description-error" class="text-danger"></small> 
         </div>
         <div class="mb-3">
             <label for="code" class="form-label">Code:</label>
             <input type="text" class="form-control" id="code" name="code" value="<%= category.code %>" required>
-            <small id="code-error" class="text-danger"></small> <!-- Error message -->
+            <small id="code-error" class="text-danger"></small> 
         </div>
        
         <button type="submit" class="btn btn-success">Update Category</button>
@@ -26,7 +26,7 @@
 
 <script>
     function validateForm() {
-        clearErrorMessages(); // Clear previous error messages
+        clearErrorMessages(); 
         const name = document.getElementsByName("name")[0].value.trim();
         const description = document.getElementById("description").value.trim();
         const code = document.getElementById("code").value.trim();
@@ -56,7 +56,7 @@
         return isValid;
     }
 
-    // Helper function to display error messages
+    
     function displayErrorMessage(id, message) {
         const errorElement = document.getElementById(id);
         if (errorElement) {

@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= product.name %> | Fruitikha</title>
     <link rel="stylesheet" href="/css/main.css">
-    <!-- Bootstrap CSS (Optional but recommended for styling) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-   <!--- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magic-zoom/magiczoom.css">-->
    <link rel="stylesheet" href="/assets/js/magiczoom.css">
    <script src="/assets/js/magiczoom.js"></script>
     <style>
@@ -17,12 +15,10 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
         }
-        /* Custom Navbar Background and Centering Styles */
-/* Navbar background */
-.custom-navbar {
+    .custom-navbar {
     background-color: #051922;
     padding: 10px 15px;
-}
+   }
 
 /* Account menu styling */
 .account-menu {
@@ -33,8 +29,8 @@
 /* Dropdown menu */
 .account-menu .dropdown-menu {
     position: absolute;
-    top: 100%;  /* Right below the Account button */
-    left: 0;  /* Align to the left of the parent div */
+    top: 100%;  
+    left: 0;  
     background-color: #051922;
     border: none;
     min-width: 150px;
@@ -174,11 +170,10 @@
     transition: transform 0.3s ease; /* Smooth zoom transition */
 }
 
-/* Main Product Image Zoom Effect on Hover */
-.product-image img:hover {
-    transform: scale(1.1); /* Zooms in the image to 110% */
-}
 
+.product-image img:hover {
+    transform: scale(1.1); 
+}
 /* Related Product Item Card */
 .single-product-item {
     background: #f9f9f9;
@@ -229,13 +224,13 @@
     background-color: #ff6600; /* Orange color */
     color: white;
     border: none;
-    padding: 6px 12px; /* Smaller padding */
-    border-radius: 4px; /* Slightly smaller border radius */
+    padding: 6px 12px; 
+    border-radius: 4px; 
     cursor: pointer;
-    font-size: 14px; /* Smaller font size */
-    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition */
+    font-size: 14px; 
+    transition: background-color 0.3s ease, transform 0.3s ease; 
 }
-/* Light Orange Add to Cart Button */
+
 .cart-btn {
     background-color:#ff6600; /* Light orange button */
     color: #fff;
@@ -334,14 +329,6 @@
         </div>
     </div>
 </nav>
-
-
-    <!-- Breadcrumbs 
-    <nav class="breadcrumbs mt-3 mb-3 container">
-        <a href="/">Home</a> &gt;
-        <a href="/shop">Products</a> &gt;
-        <span><%= product.name %></span>
-    </nav>-->
 <br><br>
     <!-- Product Page Layout -->
     <div class="container product-page">
@@ -426,9 +413,7 @@
                     </div>
                 <% } %>
                 
-                  <!-- Display the error message here 
-                  <div id="error-message" style="color: red;"></div>-->
-            
+                 
                 <!-- Description -->
                 <div class="description mt-4">
                     <h4>Description:</h4>
