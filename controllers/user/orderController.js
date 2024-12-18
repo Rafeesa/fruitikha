@@ -19,7 +19,7 @@ const getOrders = async (req, res) => {
 
     // Fetch user addresses
     const addresses = await Address.find({ userId }).lean();
-    console.log('Fetched Addresses:', addresses);
+    //console.log('Fetched Addresses:', addresses);
     let userAddresses = addresses.length > 0 ? addresses[0].address : [];
 
     // Fetch orders with pagination

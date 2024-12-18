@@ -160,7 +160,7 @@ const getProfile = async (req, res) => {
 
     const userAddress = await Address.findOne({ userId: userId }).exec();
     const orders = await Order.find({ userId: userId }).exec();
-    console.log('Fetched Orders:', orders);
+   // console.log('Fetched Orders:', orders);
 
     const addresses = userAddress ? userAddress.address : [];
 
@@ -188,7 +188,7 @@ const addNewAddress = async (req, res) => {
   try {
     const { address = {} } = req.body;
 
-    console.log('Incoming data:', req.body);
+   // console.log('Incoming data:', req.body);
 
     const requiredFields = [
       'name',
@@ -209,7 +209,7 @@ const addNewAddress = async (req, res) => {
 
     const newAddress = { ...address };
 
-    console.log('New address:', newAddress);
+   // console.log('New address:', newAddress);
 
     let userAddress = await Address.findOne({ userId: req.user._id });
 
