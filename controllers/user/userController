@@ -276,7 +276,7 @@ const verifyOtp = async (req, res) => {
         const { otp } = req.body;
        
 
-        if (otp === req.session.userOtp) {
+        if (otp.toString() === req.session.userOtp.toString()) {
             const user = req.session.userData;
            
             const { name, email, phone, password, referralCode } = user;
@@ -490,5 +490,7 @@ module.exports = {
     getProfile,
     getAddNewAddress,
     getShop,
-    checkReferralCode
+    checkReferralCode,
+    addNewAddress
+
 };
