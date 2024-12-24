@@ -238,8 +238,8 @@ const signup = async (req, res) => {
         req.session.userOtp = otp;
         console.log("session otp",req.session.userOtp)
         req.session.userData = { name, phone, email, password,referralCode };
-        res.render("verify-otp");
-
+       // res.render("verify-otp");
+       res.render("verify-otp", { email })
     } catch (error) {
         console.error("Signup error", error);
     }
@@ -305,6 +305,15 @@ const verifyOtp = async (req, res) => {
             });
 
             await newUser.save();
+            req.session.user = {
+                id: saveUserdata._id,
+                name: saveUserdata.name,
+                email: saveUserdata.email
+              }
+        
+              req.session.userOtp = null
+              req.session.userData = null
+        
        
             res.json({ success: true, redirectUrl: "/login" });
 

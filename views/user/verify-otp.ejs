@@ -130,7 +130,10 @@
             $.ajax({
                 type: "POST",
                 url: "/verify-otp",
-                data: { otp: otpInput.trim() },
+                //data: { otp: otpInput.trim() },
+                contentType: "application/json",
+data: JSON.stringify({ otp: otpInput.trim() }),
+
                 success: function (response) {
                     if (response.success) {
                         Swal.fire({
