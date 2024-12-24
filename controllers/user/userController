@@ -275,9 +275,6 @@ const securePassword = async (password) => {
 const verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body;
-       
-          console.log("reqbody otp:",otp)
-          console.log("req.session.otp:",req.session.userOtp)
         if (otp.toString() === req.session.userOtp.toString()) {
             const user = req.session.userData;
            
@@ -305,7 +302,7 @@ const verifyOtp = async (req, res) => {
             });
 
             await newUser.save();
-            req.session.user = {
+           req.session.user = {
                 id: newUser._id,
                 name: newUser.name,
                 email: newUser.email
@@ -326,7 +323,6 @@ const verifyOtp = async (req, res) => {
         res.status(500).json({ success: false, message: "An error occurred" });
     }
 };
-
 // Resend OTP
 const resendOtp = async (req, res) => {
     try {

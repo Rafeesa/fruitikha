@@ -64,7 +64,7 @@ const updateOrderStatus = async (req, res) => {
             user.walletTransactions.push({
               amount: refundAmount,
               date: new Date(),
-              description: `Refund for returned order #${orderID}`,
+              description: `Refund for returned order #${order._id}`,
             });
 
             await user.save();
