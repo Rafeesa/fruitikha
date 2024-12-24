@@ -88,7 +88,7 @@ const updateOrderStatus = async (req, res) => {
         }
       }
 
-      order.status = 'Return';
+      order.status = status;
       await order.save();
       req.flash(
         'success_msg',
