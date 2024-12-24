@@ -52,6 +52,7 @@ const getAllOrders = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    console.log(status)
     const order = await Order.findById(req.params.id)
     if (order) {
       if (status === 'Return') {

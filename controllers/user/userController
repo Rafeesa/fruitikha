@@ -306,9 +306,9 @@ const verifyOtp = async (req, res) => {
 
             await newUser.save();
             req.session.user = {
-                id: saveUserdata._id,
-                name: saveUserdata.name,
-                email: saveUserdata.email
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email
               }
         
               req.session.userOtp = null
