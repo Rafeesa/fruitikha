@@ -36,16 +36,9 @@ router.get(
 router.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/signup' }),
-  (req, res) => {
-    if (req.user) {
-      req.session.user = {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email
-      }
+  (req, res) => { 
     res.redirect('/');
     }
-  }
 );
 
 router.get('/login', userController.loadLogin);
