@@ -70,7 +70,7 @@ const getOrderDetails = async (req, res) => {
 
     order.items = order.items.slice(skip, skip + limit);
 
-    res.render('orderDetails', {
+    res.render('OrderDetails', {
       order,
       user: order.userId,
       addresses: userAddresses,
