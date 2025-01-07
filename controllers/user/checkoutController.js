@@ -31,23 +31,20 @@ const getCheckoutPage = async (req, res) => {
 
     let subtotal = 0;
 
-    // Calculate subtotal using the rounded sale price
     cart.items.forEach((item) => {
       if (item.productId) {
         const salePrice = calculateSalePrice(item.productId);
-        item.productId.salePrice = salePrice; // Update salePrice for use in the template
+        item.productId.salePrice = salePrice;
         subtotal += salePrice * item.quantity;
       }
     });
 
     const shippingCost = 45;
 
-    // Retrieve discountAmount from session, default to 0 if not exists
     const discountAmount = req.session.discountAmount || 0;
 
     const totalCost = subtotal + shippingCost - discountAmount;
 
-    // Store values in session for further use after coupon application
     req.session.subtotal = subtotal;
     req.session.shippingCost = shippingCost;
 
@@ -57,9 +54,9 @@ const getCheckoutPage = async (req, res) => {
       cartItems: cart.items,
       subtotal: subtotal,
       shippingCost: shippingCost,
-      discountAmount: discountAmount, // Use the session-stored discount amount
+      discountAmount: discountAmount,
       totalCost: totalCost,
-      finalTotal: totalCost, // Total after potential discount
+      finalTotal: totalCost,
     });
   } catch (err) {
     console.error(err);
@@ -81,99 +78,115 @@ const placeOrder = async (req, res) => {
     }
 
     let subtotal = 0;
-    cart.items.forEach((item) => {
-      if (item.productId) {
+    // Transform cart items to include individual item status and prices
+    const orderItems = cart.items
+      .map((item) => {
+        if (!item.productId) return null;
+
         const salePrice = calculateSalePrice(item.productId);
-        item.productId.salePrice = salePrice; // Update salePrice for use in the template
         subtotal += salePrice * item.quantity;
-      }
-    });
+
+        return {
+          productId: item.productId._id,
+          quantity: item.quantity,
+          price: item.productId.price,
+          salePrice: salePrice,
+          status: 'OrderPlaced',
+        };
+      })
+      .filter((item) => item !== null);
 
     const shippingCost = 45;
     const discountAmount = req.session.discountAmount || 0;
     const totalCost = subtotal + shippingCost - discountAmount;
-
-    const paymentMethod = req.body.paymentMethod || 'Cash On Delivery';
-
-    const finalTotal = totalCost; // Total cost includes discount applied
-
-    // Generate a unique 6-7 digit orderID
-    const orderID = Math.floor(100000 + Math.random() * 900000); // Random 6-digit number
+    const orderID = Math.floor(100000 + Math.random() * 900000);
 
     const newOrder = new Order({
       userId,
-      orderID, // Save the generated orderID
-      items: cart.items,
+      orderID,
+      items: orderItems,
       address: address.address[0],
       subtotal,
       shippingCost,
       discountAmount,
-      totalCost: finalTotal,
-      paymentMethod,
-      status: 'order placed',
+      totalCost,
+      paymentMethod: req.body.paymentMethod || 'Cash On Delivery',
+      status: 'OrderPlaced',
     });
 
     const savedOrder = await newOrder.save();
 
-    // Update product stock safely
-    for (let item of cart.items) {
+    // Update product stock
+    for (let item of orderItems) {
       await Product.updateOne(
-        { _id: item.productId._id, stock: { $gte: item.quantity } },
+        { _id: item.productId, stock: { $gte: item.quantity } },
         { $inc: { stock: -item.quantity } }
       );
     }
 
-    // Clear the cart
     await Cart.deleteOne({ userId });
 
-    // Store order details in the session
     req.session.orderDetails = {
-      orderId: savedOrder.orderID, // Use orderID for display
-      totalCost: finalTotal,
-      orderItems: cart.items,
+      orderId: savedOrder.orderID,
+      totalCost,
+      orderItems,
       shippingCost,
       subtotal,
       discountAmount,
-      paymentMethod,
+      paymentMethod: newOrder.paymentMethod,
     };
 
-    // Clear discount session data
     delete req.session.discountAmount;
-
-    // Redirect to the success page
     res.redirect('/orderSuccess');
   } catch (err) {
     console.error(err);
-    res.redirect('/errorPage'); // Redirect to an error page
+    res.redirect('/errorPage');
   }
 };
 
-const getOrderSuccessPage = (req, res) => {
-  if (!req.session.orderDetails) {
-    return res.redirect('/');
-  }
+const getOrderSuccessPage = async (req, res) => {
+  try {
+    if (!req.session.orderDetails) {
+      return res.redirect('/');
+    }
 
-  const {
-    orderId,
-    totalCost,
-    orderItems,
-    subtotal,
-    shippingCost,
-    discountAmount,
-    paymentMethod,
-  } = req.session.orderDetails;
-  console.log(req.session.orderDetails);
-  res.render('orderSuccess', {
-    title: 'Order Success',
-    orderId,
-    totalCost,
-    orderItems,
-    subtotal,
-    shippingCost,
-    discountAmount,
-    paymentMethod,
-  });
-  req.session.discountAmount = null;
+    const {
+      orderId,
+      totalCost,
+      orderItems,
+      subtotal,
+      shippingCost,
+      discountAmount,
+      paymentMethod,
+    } = req.session.orderDetails;
+
+    // Populate product details
+    const populatedOrderItems = await Promise.all(
+      orderItems.map(async (item) => {
+        const product = await Product.findById(item.productId);
+        return {
+          ...item,
+          productId: product,
+        };
+      })
+    );
+
+    res.render('orderSuccess', {
+      title: 'Order Success',
+      orderId,
+      totalCost,
+      orderItems: populatedOrderItems,
+      subtotal,
+      shippingCost,
+      discountAmount,
+      paymentMethod,
+    });
+
+    req.session.discountAmount = null;
+  } catch (error) {
+    console.error(error);
+    res.redirect('/errorPage');
+  }
 };
 
 module.exports = {

@@ -17,20 +17,16 @@ const getOrders = async (req, res) => {
 
     const userId = req.user._id;
 
-    // Fetch user addresses
     const addresses = await Address.find({ userId }).lean();
-    //console.log('Fetched Addresses:', addresses);
+
     let userAddresses = addresses.length > 0 ? addresses[0].address : [];
 
-    // Fetch orders with pagination
     const orders = await Order.find({ userId })
       .populate('items.productId', 'name productImage price')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
-
-   // console.log('Fetched Orders:', orders);
 
     const totalOrders = await Order.find({ userId }).countDocuments();
     const totalPages = Math.ceil(totalOrders / limit);
@@ -48,38 +44,87 @@ const getOrders = async (req, res) => {
     res.status(500).send('Server Error');
   }
 };
-
-const requestReturn = async (req, res) => {
+const getOrderDetails = async (req, res) => {
   try {
-    const orderId = req.params.id;
+    let page = parseInt(req.query.page) || 1;
+    const userId = req.user._id;
+    const limit = 4;
+    const skip = (page - 1) * limit;
 
-    const order = await Order.findById(orderId);
+    const orderId = req.params.orderId;
+    const order = await Order.findById(orderId)
+      .populate('userId')
+      .populate('items.productId')
+      .lean();
 
-    if (order.status === 'Delivered') {
-      order.status = 'Return Requested';
-      await order.save();
-      res.json({
-        success: true,
-        message: 'Return request submitted successfully.',
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: 'Return is only available for delivered orders.',
-      });
+    if (!order) {
+      return res.redirect('/myOrder');
     }
+
+    const addresses = await Address.find({ userId }).lean();
+
+    let userAddresses = addresses.length > 0 ? addresses[0].address : [];
+
+    const totalItems = order.items.length;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    order.items = order.items.slice(skip, skip + limit);
+
+    res.render('orderDetails', {
+      order,
+      user: order.userId,
+      addresses: userAddresses,
+      title: `Order #${order.orderID}`,
+      currentPage: page,
+      totalPages: totalPages,
+    });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ success: false, message: 'Error processing return request.' });
+    res.redirect('/myOrder');
+  }
+};
+const handleReturnRequest = async (req, res) => {
+  try {
+    const { itemId, status } = req.body;
+
+    if (!itemId || !status) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Item ID and status are required.' });
+    }
+
+    const order = await Order.findOne({ orderID: req.params.id });
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Order not found.' });
+    }
+
+    const item = order.items.find((item) => item._id.toString() === itemId);
+
+    item.status = status;
+
+    await order.save();
+
+    if (!item) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Item not found in order.' });
+    }
+
+    // More processing...
+    res.json({ success: true, message: 'Return processed successfully.' });
+  } catch (error) {
+    console.error('Server Error:', error);
+    res.status(500).json({ success: false, message: 'Server error occurred.' });
   }
 };
 
 const getInvoicePdf = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
-      .populate('items.productId') // Populate product details for items
+      .populate('items.productId')
       .exec();
 
     if (!order) {
@@ -87,22 +132,17 @@ const getInvoicePdf = async (req, res) => {
     }
 
     const address = order.address;
-
     if (!address) {
       return res.status(404).send('No address found for this order');
     }
 
     // Create a new PDF document
     const doc = new PDFDocument();
-
-    // Set the response headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
       `attachment; filename="invoice-${order.orderID}.pdf"`
     );
-
-    // Pipe the PDF document to the response
     doc.pipe(res);
 
     // Title
@@ -125,24 +165,20 @@ const getInvoicePdf = async (req, res) => {
 
     // Line separator
     doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown();
-    doc.moveDown();
-    doc.moveDown();
+    doc.moveDown(3);
 
-    // Seller Address (Left Side)
-    // Seller Address (Left Side)
+    // Addresses
     doc.fontSize(10).font('Helvetica-Bold');
-    doc.text('Seller Address:', 50, 190); // X=50 for left alignment
+    doc.text('Seller Address:', 50, 190);
     doc.font('Helvetica');
     doc.text('34/8, East Hukupara, Gifirtok, Sadan', 50, 210);
     doc.text('support@fruitkha.com', 50, 220);
     doc.text('+00 111 222 3333', 50, 230);
 
-    // Shipping Address (Right Side)
     doc.font('Helvetica-Bold');
-    doc.text('Shipping Address:', 420, 190); // X=350 for right alignment
+    doc.text('Shipping Address:', 420, 190);
     doc.font('Helvetica');
-    doc.text(`Name: ${order.address.name || 'N/A'}`, 420, 210); // Fallback to 'N/A' if undefined
+    doc.text(`Name: ${order.address.name || 'N/A'}`, 420, 210);
     doc.text(`House Name: ${order.address.houseName || 'N/A'}`, 420, 220);
     doc.text(`City: ${order.address.city || 'N/A'}`, 420, 230);
     doc.text(`State: ${order.address.state || 'N/A'}`, 420, 240);
@@ -150,23 +186,19 @@ const getInvoicePdf = async (req, res) => {
 
     // Horizontal Separator
     doc.moveTo(50, 260).lineTo(550, 260).stroke();
-
-    // Product Table
     doc.moveDown();
 
-    const columnWidths = [150, 70, 70, 70, 70, 70]; // Define consistent column widths
-    const startX = 50; // Starting X position for the table
-    const rowHeight = 20; // Fixed row height
-    let tableY = doc.y + 20; // Initial Y position for the table, with spacing after headers
+    const columnWidths = [150, 70, 70, 70, 70];
+    const startX = 50;
+    const rowHeight = 20;
+    let tableY = doc.y + 20;
 
-    // Table Headers
     const tableHeaders = [
       'Product Name',
       'Quantity',
       'Price',
       'Discount',
-      'Shipping',
-      'Total',
+      'Subtotal',
     ];
 
     // Render Table Headers
@@ -175,7 +207,7 @@ const getInvoicePdf = async (req, res) => {
     tableHeaders.forEach((header, index) => {
       doc.text(header, currentX - 40, tableY, {
         width: columnWidths[index],
-        align: 'center', // Center-align headers
+        align: 'center',
       });
       currentX += columnWidths[index];
     });
@@ -189,32 +221,59 @@ const getInvoicePdf = async (req, res) => {
       )
       .stroke();
 
-    // Move to the next row
     tableY += rowHeight;
+
+    let subtotal = 0;
 
     // Render Table Rows
     order.items.forEach((item) => {
+      if (item.status === 'return' || item.status === 'Return Requested') {
+        return;
+      }
+
+      const itemSubtotal = (item.productId?.salePrice || 0) * item.quantity;
+      subtotal += itemSubtotal;
+
       const row = [
         item.productId?.name || 'Unknown Product',
         item.quantity || 0,
-        `₹${(item.productId?.salePrice || 0).toFixed(2)}`, // Price
-        `₹${((item.productId?.price || 0) - (item.productId?.salePrice || 0)).toFixed(2)}`, // Discount
-        `₹${order.shippingCost.toFixed(2)}`, // Shipping
-        `₹${((item.productId?.salePrice || 0) * item.quantity + order.shippingCost).toFixed(2)}`, // Total
+        `₹${item.productId?.salePrice || 0}`,
+        `₹${(item.productId?.price || 0) - (item.productId?.salePrice || 0)}`,
+        `₹${itemSubtotal.toFixed(2)}`,
       ];
 
-      currentX = startX - 40; // Reset X position for each row
+      currentX = startX - 40;
       row.forEach((value, index) => {
-        doc.fontSize(10).font('Helvetica'); // Set font for row data
+        doc.fontSize(10).font('Helvetica');
         doc.text(value, currentX, tableY, {
           width: columnWidths[index],
-          align: 'center', // Center-align cell data
+          align: 'center',
         });
-        currentX += columnWidths[index]; // Move to next column
+        currentX += columnWidths[index];
       });
 
-      tableY += rowHeight; // Move to the next row
+      tableY += rowHeight;
     });
+
+    // Draw line before totals
+    tableY += 10;
+    doc.moveTo(50, tableY).lineTo(550, tableY).stroke();
+    tableY += 20;
+
+    // Display totals
+    doc.fontSize(10).font('Helvetica-Bold');
+    doc.text('Subtotal:', 350, tableY);
+    doc.text(`₹${subtotal.toFixed(2)}`, 450, tableY);
+
+    tableY += 20;
+    doc.text('Shipping:', 350, tableY);
+    doc.text(`₹${order.shippingCost.toFixed(2)}`, 450, tableY);
+
+    tableY += 20;
+    const total = subtotal + order.shippingCost;
+    doc.fontSize(12).font('Helvetica-Bold');
+    doc.text('Total:', 350, tableY);
+    doc.text(`₹${total.toFixed(2)}`, 450, tableY);
 
     // Finalize the PDF
     doc.end();
@@ -223,9 +282,9 @@ const getInvoicePdf = async (req, res) => {
     res.status(500).send('Error generating invoice');
   }
 };
-
 module.exports = {
   getOrders,
-  requestReturn,
+  handleReturnRequest,
   getInvoicePdf,
+  getOrderDetails,
 };

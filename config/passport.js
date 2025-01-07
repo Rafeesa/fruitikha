@@ -23,7 +23,9 @@ passport.use(
           return done(null, user);
         } else {
           // Check if email already exists (signed up manually)
-          let existingUser = await User.findOne({ email: profile.emails[0].value });
+          let existingUser = await User.findOne({
+            email: profile.emails[0].value,
+          });
 
           if (existingUser) {
             // Update existing user's googleId
@@ -47,7 +49,6 @@ passport.use(
     }
   )
 );
-
 
 // Local Strategy
 passport.use(

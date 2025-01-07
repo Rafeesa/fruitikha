@@ -12,8 +12,8 @@
                 <th>User</th>
                 <th>Items</th>
                 <th>Total Amount</th>
-                <th>Status</th> 
-                <th>Actions</th>
+                
+               
                 <th></th>
             </tr>
         </thead>
@@ -21,62 +21,57 @@
             <% orders.forEach(order => { %>
                 <tr>
                     <td><%= order.orderID %></td>
-                    <td><%= order.userId?.name || "Unknown User" %></td> 
+                    <td><%= order.userId?.name || "Unknown User" %></td>
                     <td>
                         <ul>
-                            <% if (order.items && order.items.length > 0) { %>
-                                <% order.items.forEach(item => { %>
-                                    <li><%= item.productId?.name || "Unknown Product" %> (x<%= item.quantity %>)</li>
-                                <% }) %>
-                            <% } else { %>
-                                <li>No items</li>
-                            <% } %>
+                            <% order.items.forEach(item => { %>
+                                <li>
+                                    <%= item.productId?.name || "Unknown Product" %> (x<%= item.quantity %>)
+                                    <!-- Status dropdown for each item -->
+                                    <form action="/admin/orders/<%= order._id %>/item/status?_method=PUT" method="POST" style="display:inline;">
+                                        <input type="hidden" name="itemId" value="<%= item._id %>">
+        
+                                        <select name="status" class="form-select" onchange="this.form.submit()"
+                                            <% if (item.status === 'Return') { %> disabled <% } %>> <!-- Disable if returned -->
+        
+                                            <% if (item.status === 'Return') { %>
+                                                <!-- Only 'Return' is visible when disabled -->
+                                                <option value="Return" selected>Return</option>
+                                            <% } else if (item.status === 'Return Requested') { %>
+                                                <!-- Allow 'Return' if requested -->
+                                                <option value="Return Requested" <%= item.status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
+                                                <option value="Return" <%= item.status === 'Return' ? 'selected' : '' %>>Return</option>
+                                            <% } else if (item.status === 'Delivered') { %>
+                                                <!-- Allow 'Return' if requested -->
+                                                <option value="Delivered" <%= item.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                                <option value="Return Requested" <%= item.status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
+                                                <option value="Return" <%= item.status === 'Return' ? 'selected' : '' %>>Return</option>
+                                            <% }else { %>
+                                                <!-- Show all other status options -->
+                                                <option value="Pending" <%= item.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                                <option value="Processing" <%= item.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                                                <option value="Shipped" <%= item.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                                                <option value="Delivered" <%= item.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                                                <option value="Cancelled" <%= item.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                                <option value="Return Requested" <%= item.status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
+                                            <% } %>
+                                        </select>
+                                    </form>
+                                </li>
+                            <% }) %>
                         </ul>
                     </td>
                     <td>$<%= order.totalCost.toFixed(2) %></td>
-
-                    
-                    
-                        <td>
-                            <form action="/admin/orders/<%= order._id %>/status?_method=PUT" method="POST">
-                                <select name="status" class="form-select" onchange="this.form.submit()" 
-                                    <% if (order.status === 'Return') { %> disabled <% } %>>
-                                    <% if (order.status === 'Return') { %>
-                                        <!-- If order status is 'Return', show only 'Return' and disable the dropdown -->
-                                        <option value="Return" selected>Return</option>
-                                    <% } else if (order.status === 'Return Requested') { %>
-                                        <!-- If the status is 'Return Requested', allow 'Return' option -->
-                                        <option value="Return Requested" <%= order.status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
-                                        <option value="Return" <%= order.status === 'Return' ? 'selected' : '' %>>Return</option>
-                                    <% }else if (order.status === 'Delivered') { %>
-                                        
-                                        <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                                        <option value="Return Requested" <%= order.status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
-                                        <option value="Return" <%= order.status === 'Return' ? 'selected' : '' %>>Return</option>
-                                    <% } else { %>
-                                        <!-- Otherwise, show all options -->
-                                        <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                                        <option value="Processing" <%= order.status === 'Processing' ? 'selected' : '' %>>Processing</option>
-                                        <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
-                                        <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
-                                        <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                        <option value="Return Requested" <%= order.status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
-                                    <% } %>
-                                </select>
-                            </form>
-                        </td>
-                        
-                                        
-                    <td>
+                   <!--- <td>
                         <form action="/admin/orders/<%= order._id %>/delete?_method=DELETE" method="POST" style="display: inline;">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
-                    </td>
-                    
+                    </td>-->
                 </tr>
             <% }) %>
         </tbody>
-    </table>
+    </table>   
+
 </div>
 
 

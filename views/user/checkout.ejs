@@ -404,153 +404,196 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle Razorpay payment
-    document.getElementById('razorpayBtn').addEventListener('click', async function () {
-        const selectedAddressId = document.getElementById('selectedAddressId').value;
-        if (!selectedAddressId) {
-            alert('Please select a shipping address.');
-            return;
-        }
-        const finalTotal = parseFloat(document.getElementById('finalTotalHidden').value);
-    const orderAmount = finalTotal * 100; // Convert to paise for Razorpay
-
-         
-        // AJAX request to create a Razorpay order on the server-side
-        try {
-            const response = await fetch('/create-razorpay-order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    amount: orderAmount,
-                    addressId: selectedAddressId,
-                })
-            });
-
-            const data = await response.json();
-           
-
-            const { orderId, key_id } = data;
-            
-
-            // Razorpay options setup
-            const options = {
-                key: key_id, 
-                amount: orderAmount,
-                currency: "INR",
-                name: "Fruitikha",
-                description: "Order Payment",
-                order_id: orderId,
-                handler: async function (response) {
-                    // On successful payment
-                    try {
-                        const paymentResponse = await fetch('/verify-payment', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                paymentId: response.razorpay_payment_id,
-                                orderId: response.razorpay_order_id,
-                                signature: response.razorpay_signature,
-                                addressId: selectedAddressId,
-                            })
-                        });
-
-                        const paymentData = await paymentResponse.json();
-                        if (paymentData.success) {
-                            alert('Payment successful!');
-                            window.location.href = '/orderSuccess';
-                        } else {
-                            alert('Payment failed. Please try again.');
-                        }
-                    } catch (error) {
-                        console.error('Error completing Razorpay payment:', error);
-                        alert('An error occurred while completing your payment. Please try again.');
-                    }
-                },
-                prefill: {
-                    name: "<%= user.name %>",
-                    email: "<%= user.email %>",
-                    contact: "<%= user.phone %>"
-                },
-                theme: {
-                    color: "#3399cc"
-                }
-            };
-
-            const rzp1 = new Razorpay(options);
-            rzp1.open();
-            //failiure payment
-            rzp1.on('payment.failed', function (response) {
-    console.error('Payment failed:', response.error);
- 
-    // Show SweetAlert for payment failure
-    Swal.fire({
-        icon: 'error',
-        title: 'Payment Failed',
-        text: 'Your payment could not be processed. Please try again.',
-        confirmButtonText: 'Go to My Orders',
-    }).then(() => {
-        console.log('Redirecting to My Orders...');
-        window.location.href = '/myOrder'; 
-    });
-
-    // Log failure details
-    fetch('/payment-failure', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            error: response.error,
-            orderId: response.error.metadata?.order_id || 'unknown_order', 
-        }),
-    })
-    .then(res => res.json())
-    .then(data => console.log('Payment failure logged:', data))
-    .catch(error => console.error('Error logging payment failure:', error));
-});
-
-
-        // Open Razorpay checkout
-       rzp1.open();
-    } catch (error) {
-        console.error('Error creating Razorpay order:', error);
-        alert('An error occurred while processing your payment. Please try again.');
+    document.getElementById('razorpayBtn').addEventListener('click', async function() {
+    const selectedAddressId = document.getElementById('selectedAddressId').value;
+    if (!selectedAddressId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Address Required',
+            text: 'Please select a shipping address'
+        });
+        return;
     }
-});
-    
 
-    
-async function verifyPayment(response) {
+    const finalTotal = parseFloat(document.getElementById('finalTotalHidden').value);
+    const orderAmount = finalTotal * 100; // Convert to paise
+
     try {
-        const paymentResponse = await fetch('/verify-payment', {
+        const response = await fetch('/create-razorpay-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                paymentId: response.razorpay_payment_id,
-                orderId: response.razorpay_order_id,
-                signature: response.razorpay_signature,
-                addressId: selectedAddressId, 
+                amount: orderAmount,
+                addressId: selectedAddressId,
             })
         });
 
-        const paymentData = await paymentResponse.json(); // Avoid redeclaring paymentData
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+
+        const options = {
+            key: data.key_id,
+            amount: orderAmount,
+            currency: "INR",
+            name: "Fruitikha",
+            description: "Order Payment",
+            order_id: data.orderId,
+            handler: async function(response) {
+                try {
+                    const paymentResponse = await fetch('/verify-payment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            paymentId: response.razorpay_payment_id,
+                            orderId: response.razorpay_order_id,
+                            signature: response.razorpay_signature,
+                            addressId: selectedAddressId,
+                        })
+                    });
+
+                    const paymentData = await paymentResponse.json();
+                    if (paymentData.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Payment Successful!',
+                            text: 'Your order has been placed successfully.',
+                        }).then(() => {
+                            window.location.href = '/orderSuccess';
+                        });
+                    } else {
+                        throw new Error('Payment verification failed');
+                    }
+                } catch (error) {
+                    console.error('Error completing payment:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Payment Failed',
+                        text: 'An error occurred while completing your payment. Please try again.'
+                    });
+                }
+            },
+            prefill: {
+                name: "<%= user.name %>",
+                email: "<%= user.email %>",
+                contact: "<%= user.phone %>"
+            },
+            theme: {
+                color: "#3399cc"
+            }
+        };
+
+        const rzp1 = new Razorpay(options);
+
+        // Handle payment failure
+        rzp1.on('payment.failed', function(response) {
+            console.error('Payment failed:', response.error);
+
+            // Log payment failure to server
+            fetch('/payment-failure', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    error: response.error,
+                    orderId: response.error.metadata?.order_id || 'unknown_order',
+                }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log('Payment failure logged:', data);
+                // Show error message to user
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Failed',
+                    text: 'Your payment could not be processed. Please try again.',
+                    confirmButtonText: 'Go to My Orders'
+                }).then(() => {
+                    window.location.href = '/myOrder';
+                });
+            })
+            .catch(error => {
+                console.error('Error logging payment failure:', error);
+                // Still show error message to user even if logging fails
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Failed',
+                    text: 'Your payment could not be processed. Please try again.',
+                    confirmButtonText: 'Go to My Orders'
+                }).then(() => {
+                    window.location.href = '/myOrder';
+                });
+            });
+        });
+
+        // Open Razorpay checkout
+        rzp1.open();
+
+    } catch (error) {
+        console.error('Error creating Razorpay order:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while processing your payment. Please try again.'
+        });
+    }
+});
+
+    
+async function verifyPayment(response) {
+    try {
+       
+        
+        const requestData = {
+            paymentId: response.razorpay_payment_id,
+            orderId: response.razorpay_order_id,
+            signature: response.razorpay_signature,
+            addressId: selectedAddressId,
+            paymentMethod: 'Razorpay'
+        };
+       
+        const paymentResponse = await fetch('/verify-payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        });
+
+      
+        const paymentData = await paymentResponse.json();
+      
+
+        if (!paymentResponse.ok) {
+            throw new Error(paymentData.message || 'Payment verification failed');
+        }
+
         if (paymentData.success) {
-            alert('Payment successful!');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Payment Successful!',
+                text: 'Your order has been placed successfully.'
+            });
             window.location.href = '/orderSuccess';
-        } else {
-            alert('Payment failed. Please try again.');
         }
     } catch (error) {
-        console.error('Error completing Razorpay payment:', error);
-        alert('An error occurred while completing your payment. Please try again.');
+        console.error('Detailed Error:', {
+            message: error.message,
+            stack: error.stack
+        });
+        await Swal.fire({
+            icon: 'error',
+            title: 'Payment Failed',
+            text: error.message
+        });
     }
 }
-
 
 document.getElementById('walletPayBtn').addEventListener('click', async function () {
     const selectedAddressId = document.getElementById('selectedAddressId').value;

@@ -160,7 +160,6 @@ const getProfile = async (req, res) => {
 
     const userAddress = await Address.findOne({ userId: userId }).exec();
     const orders = await Order.find({ userId: userId }).exec();
-   // console.log('Fetched Orders:', orders);
 
     const addresses = userAddress ? userAddress.address : [];
 
@@ -188,7 +187,7 @@ const addNewAddress = async (req, res) => {
   try {
     const { address = {} } = req.body;
 
-   // console.log('Incoming data:', req.body);
+    // console.log('Incoming data:', req.body);
 
     const requiredFields = [
       'name',
@@ -208,8 +207,6 @@ const addNewAddress = async (req, res) => {
     }
 
     const newAddress = { ...address };
-
-   // console.log('New address:', newAddress);
 
     let userAddress = await Address.findOne({ userId: req.user._id });
 
@@ -301,67 +298,65 @@ const deleteAddress = async (req, res) => {
 };
 const cancelOrder = async (req, res) => {
   try {
-    const orderId = req.params.id;
+    const orderId = req.body.orderId;
+    const itemId = req.body.itemId;
     const userId = req.session.passport?.user;
 
-    // Find the order by ID and ensure it belongs to the user
-    const order = await Order.findOne({ _id: orderId, userId });
-
-    if (!order) {
-      return res.status(404).send('Order not found or does not belong to you.');
-    }
-
-    if (order.status !== 'order placed') {
-      return res
-        .status(400)
-        .send('Only orders in "order placed" status can be canceled.');
-    }
-
-    const refundAmount = order.totalCost; // Fetch correct refund amount
-    console.log(refundAmount);
-
-    // Update order status to 'Cancelled'
-    order.status = 'Cancelled';
-    await order.save();
-
-    // Manage stock for each product in the order
-    for (const item of order.items) {
-      const product = await Product.findById(item.productId);
-      if (product) {
-        product.stock += item.quantity;
-        await product.save();
-      }
-    }
-
-    // Find the user and update their wallet balance
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).send('User not found.');
-    }
-
-    user.walletBalance += refundAmount; // Add refund to wallet balance
-
-    // Log the transaction in walletTransactions
-    user.walletTransactions.push({
-      amount: refundAmount,
-      date: new Date(),
-      description: `Refund for canceled order #${order.orderID}`,
+    const order = await Order.findOne({
+      _id: orderId,
+      userId: userId,
     });
 
-    await user.save(); // Save updated user details
+    if (!order) {
+      req.flash('error_msg', 'Order not found');
+      return res.redirect('/profile');
+    }
+
+    const itemToCancel = order.items.find(
+      (item) => item._id.toString() === itemId
+    );
+
+    if (!itemToCancel) {
+      req.flash('error_msg', 'Item not found');
+      return res.redirect('/profile');
+    }
+
+    itemToCancel.status = 'Cancelled';
+
+    const refundAmount = itemToCancel.quantity * itemToCancel.salePrice;
+
+    const product = await Product.findById(itemToCancel.productId);
+    if (product) {
+      product.stock += itemToCancel.quantity;
+      await product.save();
+    }
+
+    const user = await User.findById(userId);
+    if (user) {
+      user.walletBalance += refundAmount;
+
+      user.walletTransactions.push({
+        amount: refundAmount,
+        date: new Date(),
+        description: `Refund for canceled item in order #${order.orderID}`,
+      });
+
+      await user.save();
+    }
+
+    await order.save();
 
     req.flash(
       'success_msg',
-      `Order canceled successfully. ₹${refundAmount} has been credited to your wallet.`
+      `Item cancelled. ₹${refundAmount} added to your wallet.`
     );
-    res.redirect('/profile');
+    return res.redirect('/profile');
   } catch (error) {
-    console.error('Error canceling order:', error);
-    res.status(500).send('Internal Server Error');
+    console.error('Error:', error);
+    req.flash('error_msg', 'Something went wrong');
+    return res.redirect('/profile');
   }
 };
-
 const changePassword = async (req, res) => {
   try {
     const userId = req.session.passport?.user;
@@ -403,7 +398,6 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPass1, 10);
 
     // Update password in the database
@@ -427,34 +421,30 @@ const changePassword = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name, email, phone } = req.body;
-    const userId = req.session.passport?.user; // Passport stores the user's ID here
+    const userId = req.session.passport?.user;
 
-    // Ensure userId is available
     if (!userId) {
       return res.status(401).send('User not authenticated.');
     }
 
-    // Update the user in the database
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: { name, email, phone } },
-      { new: true } // Return the updated user
+      { new: true }
     );
 
-    // Check if the update was successful
     if (!updatedUser) {
       return res.status(404).send('User not found.');
     }
 
-    // Update session with new data (if using sessions to track user data)
     req.session.user = {
-      ...req.session.user, // Retain existing session properties
+      ...req.session.user,
       name: updatedUser.name,
       email: updatedUser.email,
       phone: updatedUser.phone,
     };
 
-    res.redirect('/profile'); // Redirect back to the profile page
+    res.redirect('/profile');
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).send('An error occurred. Please try again.');

@@ -7,8 +7,8 @@
     <div class="col-12 d-flex justify-content-between align-items-center">
         
         <div>
-            <a href="/admin/download-sales-report-pdf?startDate=2024-01-01&endDate=2024-12-31" class="btn btn-primary">Download PDF</a>
-            <a href="/admin/download-sales-report-excel?startDate=2024-01-01&endDate=2024-12-31" class="btn btn-secondary">Download Excel</a>
+            <a href="/admin/download-sales-report-pdf" class="btn btn-primary">Download PDF</a>
+            <a href="/admin/download-sales-report-excel" class="btn btn-secondary">Download Excel</a>
             
         </div>
 
@@ -35,50 +35,53 @@
 </div>
 
 
-
 <div class="table-responsive">
     <table class="table table-bordered table-hover table-striped text-center">
         <thead class="table-dark">
             <tr>
-                <th>Sl No</th>
                 <th>Products</th>
-                <th>Order Status</th>
-                <th>Price</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
                 <th>Discount Price</th>
                 <th>Total Discount</th>
+                <th>Item Total</th>
+                <th>Order Status</th>
                 <th>Payment Method</th>
                 <th>Payment Status</th>
             </tr>
         </thead>
         <tbody>
-            <% orders.forEach((order, index) => { %>
+            <% orders.forEach((order) => { %>
                 <% order.products.forEach((product) => { %>
                     <tr>
-                        <td><%= index + 1 %></td>
                         <td><%= product.name %></td>
-                        <td><%= order.orderStatus %></td>
-                        <td>₹<%= product.price %></td>
-                        <td>₹<%= product.discountPrice %></td>
-                        <td>₹<%= product.totalDiscount %></td>
+                        <td><%= product.quantity %></td>
+                        <td>₹<%= product.price.toFixed(2) %></td>
+                        <td>₹<%= product.salePrice.toFixed(2) %></td>
+                        <td>₹<%= product.totalDiscount.toFixed(2) %></td>
+                        <td>₹<%= product.itemTotal.toFixed(2) %></td>
+                        <td><%= product.status %></td>
                         <td><%= order.paymentMethod %></td>
                         <td><%= order.paymentStatus %></td>
                     </tr>
                 <% }) %>
+                <tr class="table-secondary">
+                    <td colspan="5" class="text-end"><strong>Order Total:</strong></td>
+                    <td colspan="4"><strong>₹<%= order.total.toFixed(2) %></strong></td>
+                </tr>
             <% }) %>
         </tbody>
+        
     </table>
 </div>
 
-
 <!-- Report Summary Section -->
-<h3>Report Summary</h3>
-<div class="report-section">
-    <p>Total Sales Count: <%= reportData.totalSalesCount || 0 %></p>
-    <p>Total Order Amount: ₹<%= reportData.totalOrderAmount || 0 %></p>
-    <p>Total Discount: ₹<%= reportData.totalDiscount || 0 %></p>
+<div class="report-section mt-4">
+    <h3>Report Summary</h3>
+    <p>Total Sales Count: <%= reportData.totalSalesCount %></p>
+    <p>Total Order Amount: ₹<%= typeof reportData.totalOrderAmount === 'string' ? reportData.totalOrderAmount : parseFloat(reportData.totalOrderAmount).toFixed(2) %></p>
+    <p>Total Discount: ₹<%= typeof reportData.totalDiscount === 'string' ? reportData.totalDiscount : parseFloat(reportData.totalDiscount).toFixed(2) %></p>
 </div>
-
-
 
 
 <script>

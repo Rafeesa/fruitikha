@@ -265,8 +265,8 @@
                                   </td>
                                   <td class="stock"><%= item.productId.stock %> in stock</td>
                                   <td class="subtotal" data-price="<%= item.productId.salePrice %>">
-                                   <!--₹<%= (item.productId.salePrice * item.quantity).toFixed(2) %>--> 
-                                   ₹<%= subtotal.toFixed(2) %>
+                                   ₹<%= (item.productId.salePrice * item.quantity).toFixed(2) %>
+                            
                                   </td>
                                   <td>
                                     <form action="/cart/remove" method="POST" style="display:inline;">

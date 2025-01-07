@@ -48,60 +48,73 @@ const getAllOrders = async (req, res) => {
     res.redirect('/admin');
   }
 };
-
-const updateOrderStatus = async (req, res) => {
+const updateItemStatus = async (req, res) => {
   try {
-    const { status } = req.body;
-    console.log(status)
-    const order = await Order.findById(req.params.id)
-    if (order) {
-      if (status === 'Return') {
-        if (order.status === 'Return Requested') {
-          const user = await User.findById(order.userId);
-          if (user) {
-            const refundAmount = order.totalCost;
-            user.walletBalance += refundAmount;
-            user.walletTransactions.push({
-              amount: refundAmount,
-              date: new Date(),
-              description: `Refund for returned order #${order._id}`,
-            });
+    const { status, itemId } = req.body;
 
-            await user.save();
-          } else {
-            return res.status(404).json({ error: 'User not found for refund' });
-          }
+    const order = await Order.findById(req.params.id);
 
-          for (const item of order.items) {
-            const product = await Product.findById(item.productId);
-            if (product) {
-              product.stock += item.quantity;
-              await product.save();
-            } else {
-              console.error(`Product with ID ${item.productId} not found`);
-            }
-          }
-        } else {
-          return res.status(400).json({
-            error:
-              "Return can only be processed for orders with 'Return Requested' status.",
-          });
-        }
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const item = order.items.find((item) => item._id.toString() === itemId);
+    console.log(item);
+
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found in order' });
+    }
+
+    item.status = status;
+
+    if (status === 'Return') {
+      const user = await User.findById(order.userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found for refund' });
       }
 
-      order.status = status;
-      await order.save();
-      req.flash(
-        'success_msg',
-        `Order #${order._id} status updated to ${status}.`
-      );
-      res.redirect('/admin/orders');
-    } else {
-      res.status(404).json({ error: 'Order not found' });
+      // Calculate refund amount with proper number handling
+      const itemPrice = parseFloat(item.salePrice) || 0;
+      const itemQuantity = parseInt(item.quantity) || 0;
+      const refundAmount = itemPrice * itemQuantity;
+
+      // Ensure we have valid numbers
+      if (isNaN(refundAmount)) {
+        throw new Error('Invalid refund amount calculated');
+      }
+
+      // Update wallet balance with proper number handling
+      const currentBalance = parseFloat(user.walletBalance) || 0;
+      user.walletBalance = currentBalance + refundAmount;
+
+      // Add transaction with validated amount
+      user.walletTransactions.push({
+        amount: refundAmount,
+        date: new Date(),
+        description: `Refund for item #${item.productId}`,
+      });
+
+      await user.save();
+
+      // Restock the product
+      const product = await Product.findById(item.productId);
+      if (product) {
+        product.stock = (parseInt(product.stock) || 0) + itemQuantity;
+        await product.save();
+      } else {
+        console.error(`Product with ID ${item.productId} not found`);
+      }
     }
+
+    // Save updated order
+    await order.save();
+
+    req.flash('success_msg', `Item status updated to ${status}.`);
+    return res.redirect('/admin/orders');
   } catch (err) {
-    console.error('Error updating order status:', err);
-    res.redirect('/admin/orders');
+    console.error('Error updating item status:', err);
+    req.flash('error_msg', 'Error updating item status');
+    return res.redirect('/admin/orders');
   }
 };
 
@@ -118,6 +131,6 @@ const deleteOrder = async (req, res) => {
 
 module.exports = {
   getAllOrders,
-  updateOrderStatus,
+  updateItemStatus,
   deleteOrder,
 };

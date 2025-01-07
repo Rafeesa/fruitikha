@@ -5,150 +5,268 @@ const ExcelJS = require('exceljs');
 const moment = require('moment');
 const PDFDocument = require('pdfkit');
 
+// Controller: getSalesReport
 const getSalesReport = async (req, res) => {
   try {
     const { filterType: period, startDate, endDate, page = 1 } = req.query;
-
-    const limit = 4; // Items per page
+    const limit = 4;
     const skip = (page - 1) * limit;
 
-    const filter = { status: 'Delivered' }; // Only include delivered orders
+    let matchFilter = {
+      'items.status': 'Delivered',
+    };
 
-    // Date filters
     if (period === 'daily') {
       const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
-      filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
+      matchFilter.createdAt = {
+        $gte: new Date(today.setHours(0, 0, 0, 0)),
+        $lte: new Date(today.setHours(23, 59, 59, 999)),
+      };
     } else if (period === 'weekly') {
-      const startOfWeek = moment().startOf('week').toDate();
-      const endOfWeek = moment().endOf('week').toDate();
-      filter.createdAt = { $gte: startOfWeek, $lte: endOfWeek };
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      matchFilter.createdAt = {
+        $gte: lastWeek,
+        $lte: today,
+      };
     } else if (period === 'monthly') {
-      const startOfMonth = moment().startOf('month').toDate();
-      const endOfMonth = moment().endOf('month').toDate();
-      filter.createdAt = { $gte: startOfMonth, $lte: endOfMonth };
+      const today = new Date();
+      const lastMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() - 1,
+        today.getDate()
+      );
+      matchFilter.createdAt = {
+        $gte: lastMonth,
+        $lte: today,
+      };
     } else if (period === 'yearly') {
-      const startOfYear = new Date(new Date().getFullYear(), 0, 1);
-      const endOfYear = new Date(new Date().getFullYear(), 11, 31);
-      filter.createdAt = { $gte: startOfYear, $lte: endOfYear };
+      const today = new Date();
+      const lastYear = new Date(
+        today.getFullYear() - 1,
+        today.getMonth(),
+        today.getDate()
+      );
+      matchFilter.createdAt = {
+        $gte: lastYear,
+        $lte: today,
+      };
     } else if (period === 'custom' && startDate && endDate) {
-      // Important change: Adjust dates to end of day for more inclusive filtering
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-
-      // Set start date to beginning of day
-      start.setHours(0, 0, 0, 0);
-
-      // Set end date to end of day
-      end.setHours(23, 59, 59, 999);
-
-      filter.createdAt = {
-        $gte: start,
-        $lte: end,
+      matchFilter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
       };
     }
 
-    // Fetch paginated orders
-    let orders = await Order.find(filter)
-      .populate({
-        path: 'items.productId',
-        model: 'Product',
-        select: 'name price salePrice productOffer',
-      })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const orderPipeline = [
+      {
+        $match: matchFilter,
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.productId',
+          foreignField: '_id',
+          as: 'productsInfo',
+        },
+      },
+      {
+        $addFields: {
+          items: {
+            $filter: {
+              input: '$items',
+              as: 'item',
+              cond: { $eq: ['$$item.status', 'Delivered'] },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          'items.0': { $exists: true },
+        },
+      },
+      {
+        $project: {
+          orderID: 1,
+          createdAt: 1,
+          status: 1,
+          paymentMethod: 1,
+          paymentStatus: 1,
+          items: 1,
+          productsInfo: 1,
+          totalCost: 1,
+          products: {
+            $map: {
+              input: '$items',
+              as: 'item',
+              in: {
+                name: {
+                  $let: {
+                    vars: {
+                      product: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: '$productsInfo',
+                              cond: { $eq: ['$$this._id', '$$item.productId'] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    in: '$$product.name',
+                  },
+                },
+                quantity: '$$item.quantity',
+                price: { $ifNull: ['$$item.price', 0] },
+                salePrice: { $ifNull: ['$$item.salePrice', 0] },
+                status: '$$item.status',
+                totalDiscount: {
+                  $multiply: [
+                    {
+                      $subtract: [
+                        { $ifNull: ['$$item.price', 0] },
+                        { $ifNull: ['$$item.salePrice', 0] },
+                      ],
+                    },
+                    '$$item.quantity',
+                  ],
+                },
+                itemTotal: {
+                  $multiply: [
+                    { $ifNull: ['$$item.salePrice', 0] },
+                    '$$item.quantity',
+                  ],
+                },
+              },
+            },
+          },
+          total: {
+            $reduce: {
+              input: '$items',
+              initialValue: 0,
+              in: {
+                $add: [
+                  '$$value',
+                  {
+                    $multiply: [
+                      { $ifNull: ['$$this.salePrice', 0] },
+                      '$$this.quantity',
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+    ];
 
-    // Calculate overall metrics
-    const allOrders = await Order.find(filter);
-    const totalSalesCount = allOrders.length;
+    const summaryPipeline = [
+      {
+        $match: matchFilter,
+      },
+      {
+        $unwind: '$items',
+      },
+      {
+        $match: {
+          'items.status': 'Delivered',
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSalesCount: { $addToSet: '$_id' },
+          totalAmount: {
+            $sum: {
+              $multiply: [
+                { $ifNull: ['$items.salePrice', 0] },
+                '$items.quantity',
+              ],
+            },
+          },
+          totalDiscount: {
+            $sum: {
+              $multiply: [
+                {
+                  $subtract: [
+                    { $ifNull: ['$items.price', 0] },
+                    { $ifNull: ['$items.salePrice', 0] },
+                  ],
+                },
+                '$items.quantity',
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalSalesCount: { $size: '$totalSalesCount' },
+          totalOrderAmount: { $round: ['$totalAmount', 2] },
+          totalDiscount: { $round: ['$totalDiscount', 2] },
+          avgOrderValue: {
+            $round: [
+              { $divide: ['$totalAmount', { $size: '$totalSalesCount' }] },
+              2,
+            ],
+          },
+        },
+      },
+    ];
 
-    const totalOrderAmount = allOrders.reduce((sum, order) => {
-      const orderAmount =
-        order.totalCost ||
-        order.items.reduce((itemSum, item) => {
-          const salePrice =
-            item.productId?.salePrice || item.productId?.price || 0;
-          return itemSum + salePrice * item.quantity;
-        }, 0);
-      return sum + orderAmount;
-    }, 0);
+    const [orders, [summary = {}]] = await Promise.all([
+      Order.aggregate(orderPipeline),
+      Order.aggregate(summaryPipeline),
+    ]);
 
-    const calculateDiscount = (orders) => {
-      let totalDiscount = 0;
-
-      orders.forEach((order) => {
-        order.items.forEach((item) => {
-          if (item.productId) {
-            const originalPrice = item.productId.price || 0;
-            const salePrice = item.productId.salePrice || originalPrice;
-            const discount = (originalPrice - salePrice) * item.quantity;
-
-            totalDiscount += discount;
-          }
-        });
-      });
-
-      return totalDiscount;
-    };
-
-    const totalDiscount = calculateDiscount(orders);
-
-    // Map formatted orders
-    const formattedOrders = orders.map((order, index) => ({
-      slNo: skip + index + 1,
-      products: order.items.map((item) => {
-        const originalPrice = item.productId?.price || 0;
-        const salePrice = item.productId?.salePrice || originalPrice;
-        const discountAmount = originalPrice - salePrice;
-
-        return {
-          name: item.productId?.name || 'Unknown Product',
-          price: originalPrice,
-          discountPrice: salePrice,
-          totalDiscount: discountAmount > 0 ? discountAmount : 0,
-        };
-      }),
-      orderStatus: order.status,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: 'Paid',
-      createdAt: order.createdAt,
-    }));
-
-    // Pagination details
-    const totalOrders = await Order.countDocuments(filter);
+    const totalOrders = await Order.countDocuments(matchFilter);
     const totalPages = Math.ceil(totalOrders / limit);
 
-    // Render view
     res.render('salesReport', {
-      orders: formattedOrders,
+      orders,
       currentPage: parseInt(page),
       totalPages,
       totalOrders,
-      period,
+      period: period || 'all',
       startDate,
       endDate,
       reportData: {
-        totalSalesCount,
-        totalOrderAmount,
-        totalDiscount,
+        totalSalesCount: summary?.totalSalesCount || 0,
+        totalOrderAmount: summary?.totalOrderAmount || 0,
+        totalDiscount: summary?.totalDiscount || 0,
+        avgOrderValue: summary?.avgOrderValue || 0,
       },
     });
   } catch (error) {
     console.error('Error fetching sales report:', error.message);
-    res
-      .status(500)
-      .json({ success: false, message: 'Error fetching sales report' });
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching sales report',
+    });
   }
 };
-//Download pdf
 
+//download pdf
 const downloadSalesReportPDF = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const filter = { status: 'Delivered' };
+    let filter = {};
 
+    // Only apply date filter if both dates are provided
     if (startDate && endDate) {
       filter.createdAt = {
         $gte: new Date(startDate),
@@ -156,44 +274,66 @@ const downloadSalesReportPDF = async (req, res) => {
       };
     }
 
-    const orders = await Order.find(filter).populate({
-      path: 'items.productId',
-      model: 'Product',
-      select: 'name price salePrice productOffer',
-    });
+    // Fetch all orders if no date range specified
+    const orders = await Order.find(filter)
+      .populate({
+        path: 'items.productId',
+        model: 'Product',
+        select: 'name price salePrice productOffer',
+      })
+      .sort({ createdAt: -1 });
 
-    // Total Sales Calculations
-    const totalSalesCount = orders.length;
+    let totalSalesCount = 0;
     let totalOrderAmount = 0;
     let totalDiscount = 0;
 
-    const formattedOrders = orders.map((order, index) => ({
-      slNo: index + 1,
-      products: order.items.map((item) => {
-        const originalPrice = item.productId?.price || 0;
-        const salePrice = item.productId?.salePrice || 0;
-        const quantity = item.quantity || 1;
-        const discountAmount = (originalPrice - salePrice) * quantity;
+    // Process orders and calculate correct values - only for delivered items
+    const formattedOrders = orders
+      .flatMap((order) => {
+        // Filter for delivered items only
+        const deliveredItems = order.items.filter(
+          (item) => item.status === 'Delivered'
+        );
 
-        // Calculate totals
-        totalOrderAmount += salePrice * quantity;
-        totalDiscount += discountAmount > 0 ? discountAmount : 0;
+        return deliveredItems.map((item) => {
+          // Get prices from the order items, fallback to product prices if needed
+          const originalPrice = item.price || item.productId?.price || 0;
+          const salePrice =
+            item.salePrice || item.productId?.salePrice || originalPrice;
+          const quantity = item.quantity || 0;
+          const discountAmount = Math.max(
+            0,
+            (originalPrice - salePrice) * quantity
+          );
+          const itemTotal = salePrice * quantity;
 
-        return {
-          name: item.productId?.name || 'Unknown Product',
-          price: originalPrice.toFixed(2),
-          discountPrice: salePrice.toFixed(2),
-          totalDiscount:
-            discountAmount > 0 ? discountAmount.toFixed(2) : '0.00',
-        };
-      }),
-      orderStatus: order.status,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: 'Paid',
-      createdAt: order.createdAt,
-    }));
+          // Update totals
+          totalSalesCount++;
+          totalOrderAmount += itemTotal;
+          totalDiscount += discountAmount;
 
-    const doc = new PDFDocument({ margin: 5 });
+          return {
+            orderID: order.orderID || 'N/A',
+            name: item.productId?.name || 'Unknown Product',
+            quantity: quantity,
+            price: originalPrice,
+            discountPrice: salePrice,
+            totalDiscount: discountAmount,
+            itemTotal: itemTotal,
+            orderStatus: item.status || 'Unknown',
+            paymentMethod: order.paymentMethod || 'N/A',
+            createdAt: order.createdAt,
+            slNo: totalSalesCount,
+          };
+        });
+      })
+      .filter(Boolean);
+
+    const doc = new PDFDocument({
+      margin: 50,
+      size: 'A4',
+    });
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
@@ -201,134 +341,160 @@ const downloadSalesReportPDF = async (req, res) => {
     );
     doc.pipe(res);
 
-    // Title
-    doc.fontSize(18).text('Sales Report', { align: 'center' }).moveDown(1.5);
+    // Header
+    doc
+      .fontSize(20)
+      .font('Helvetica-Bold')
+      .text('Sales Report', { align: 'center' });
+    if (startDate && endDate) {
+      doc
+        .fontSize(12)
+        .font('Helvetica')
+        .text(
+          `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`,
+          { align: 'center' }
+        );
+    }
+    doc.moveDown(1.5);
 
-    // Table Headers (updated to match Excel)
     const tableHeaders = [
-      'Order No',
-      'Product Name',
+      'Sl No',
+      'Order ID',
+      'Product',
       'Date',
-      'Order Status',
+      'Status',
       'Price',
-      'Discount Price',
-      'Total Discount',
-      'Payment Method',
+      'Qty',
+      'Discount',
+      'Total',
+      'Payment',
     ];
-    const columnWidths = [50, 80, 70, 70, 60, 60, 60, 90];
-    const startX = 30;
-    let tableY = doc.y;
 
-    // Render the Table Headers
+    const columnWidths = [40, 70, 120, 70, 70, 60, 40, 60, 60, 90];
+    const startX = 50;
+    let currentY = doc.y;
+
+    // Header with background
     doc.fontSize(10).font('Helvetica-Bold');
-    tableHeaders.forEach((header, index) => {
+    doc
+      .fillColor('#f0f0f0')
+      .rect(
+        startX,
+        currentY,
+        columnWidths.reduce((a, b) => a + b, 0),
+        20
+      )
+      .fill();
+
+    doc.fillColor('#000000');
+    tableHeaders.forEach((header, i) => {
       doc.text(
         header,
-        startX + columnWidths.slice(0, index).reduce((a, b) => a + b, 0),
-        tableY,
+        startX + columnWidths.slice(0, i).reduce((a, b) => a + b, 0),
+        currentY + 5,
         {
-          width: columnWidths[index],
+          width: columnWidths[i],
           align: 'center',
         }
       );
     });
 
-    // Add the line below the headers
-    doc
-      .moveTo(startX, tableY + 20)
-      .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), tableY + 20)
-      .stroke();
+    currentY += 20;
 
-    // Adjust the Y position after headers
-    doc.y = tableY + 25;
+    // Draw rows
+    doc.font('Helvetica').fontSize(9);
 
-    // Function to render a single row
-    const renderRow = (row, startX, columnWidths, doc) => {
-      let rowY = doc.y; // Save current Y position for consistent alignment
+    formattedOrders.forEach((order, rowIndex) => {
+      if (currentY > doc.page.height - 150) {
+        doc.addPage();
+        currentY = 50;
+      }
 
-      row.forEach((value, index) => {
+      const row = [
+        order.slNo,
+        order.orderID,
+        order.name,
+        new Date(order.createdAt).toLocaleDateString(),
+        order.orderStatus,
+        `₹${order.price.toFixed(2)}`,
+        order.quantity,
+        `₹${order.totalDiscount.toFixed(2)}`,
+        `₹${order.itemTotal.toFixed(2)}`,
+        order.paymentMethod,
+      ];
+
+      // Alternate row colors
+      if (rowIndex % 2 === 1) {
+        doc
+          .fillColor('#f9f9f9')
+          .rect(
+            startX,
+            currentY,
+            columnWidths.reduce((a, b) => a + b, 0),
+            20
+          )
+          .fill();
+      }
+
+      doc.fillColor('#000000');
+      row.forEach((text, i) => {
         doc.text(
-          value,
-          startX + columnWidths.slice(0, index).reduce((a, b) => a + b, 0),
-          rowY,
+          String(text),
+          startX + columnWidths.slice(0, i).reduce((a, b) => a + b, 0),
+          currentY + 5,
           {
-            width: columnWidths[index],
+            width: columnWidths[i],
             align: 'center',
           }
         );
       });
 
-      // Draw a line below the row
-      doc
-        .moveTo(startX, rowY + 15)
-        .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), rowY + 15)
-        .stroke();
+      currentY += 20;
+    });
 
-      // Update Y position for the next row
-      doc.y = rowY + 20;
+    // Summary section
+    doc.moveDown(2);
+    doc
+      .fontSize(14)
+      .font('Helvetica-Bold')
+      .text('Summary', { continued: false });
+    doc.moveDown(1);
+
+    const summaryBox = {
+      x: startX,
+      y: doc.y,
+      width: 250,
+      padding: 10,
     };
 
-    // Render data rows
-    formattedOrders.forEach((order) => {
-      order.products.forEach((product) => {
-        const row = [
-          order.slNo,
-          product.name,
-          new Date(order.createdAt).toLocaleDateString(),
-          order.orderStatus,
-          product.price,
-          product.discountPrice,
-          product.totalDiscount,
-          order.paymentMethod,
-        ];
-
-        // Render the row
-        renderRow(row, startX, columnWidths, doc);
-      });
-    });
-
-    // Move down
-    doc.moveDown(1);
-    doc.x = doc.page.margins.left;
-    // Add header
-    doc.fontSize(12).font('Helvetica-Bold').text('Summary', {
-      align: 'left',
-      continued: false, // Ensure it's not continuing from previous text
-    });
-
-    // Move down a bit
-    doc.moveDown(0.5);
-
-    // Set font back to normal
     doc.font('Helvetica').fontSize(10);
 
-    // Explicitly set x to left margin if needed
-    doc.x = doc.page.margins.left;
+    [
+      [`Total Sales Count:`, totalSalesCount],
+      [`Total Order Amount:`, `₹${totalOrderAmount.toFixed(2)}`],
+      [`Total Discount:`, `₹${totalDiscount.toFixed(2)}`],
+    ].forEach(([label, value]) => {
+      doc
+        .text(label, summaryBox.x, doc.y, { continued: true })
+        .font('Helvetica-Bold')
+        .text(`  ${value}`, { continued: false })
+        .font('Helvetica');
+    });
 
-    // Render Summary Items
-    doc.text(`Total Sales Count: ${totalSalesCount}`, {
-      align: 'left',
-      continued: false,
-    });
-    doc.text(`Total Order Amount: ₹${totalOrderAmount.toFixed(2)}`, {
-      align: 'left',
-      continued: false,
-    });
-    doc.text(`Total Discount: ₹${totalDiscount.toFixed(2)}`, {
-      align: 'left',
-      continued: false,
-    });
     doc.end();
   } catch (error) {
     console.error('Error generating PDF:', error);
-    res.status(500).json({ success: false, message: 'Error generating PDF' });
+    res.status(500).json({
+      success: false,
+      message: 'Error generating PDF',
+      error: error.message,
+    });
   }
 };
-
 const downloadSalesReportExcel = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const filter = { status: 'Delivered' };
+    let filter = {};
 
     if (startDate && endDate) {
       filter.createdAt = {
@@ -337,117 +503,120 @@ const downloadSalesReportExcel = async (req, res) => {
       };
     }
 
-    const orders = await Order.find(filter).populate({
-      path: 'items.productId',
-      model: 'Product',
-      select: 'name price salePrice productOffer',
-    });
+    const orders = await Order.find(filter)
+      .populate({
+        path: 'items.productId',
+        model: 'Product',
+        select: 'name',
+      })
+      .sort({ createdAt: -1 });
 
-    // Total Sales Count
-    const totalSalesCount = orders.length;
-
-    // Total Order Amount & Total Discount Calculation
+    let totalSalesCount = 0;
     let totalOrderAmount = 0;
     let totalDiscount = 0;
 
-    orders.forEach((order) => {
-      order.items.forEach((item) => {
-        const originalPrice = item.productId?.price || 0;
-        const salePrice = item.productId?.salePrice || originalPrice;
-        const quantity = item.quantity || 1;
+    // Process orders and calculate values - only for delivered items
+    const formattedOrders = orders
+      .flatMap((order) => {
+        // Filter for delivered items only
+        const deliveredItems = order.items.filter(
+          (item) => item.status === 'Delivered'
+        );
 
-        totalOrderAmount += salePrice * quantity;
-        totalDiscount += (originalPrice - salePrice) * quantity;
-      });
-    });
+        return deliveredItems.map((item) => {
+          const originalPrice = item.price || 0;
+          const salePrice = item.salePrice || originalPrice;
+          const quantity = item.quantity || 0;
+          const discountAmount = Math.max(
+            0,
+            (originalPrice - salePrice) * quantity
+          );
+          const itemTotal = salePrice * quantity;
 
-    // Formatting orders for Excel
-    const formattedOrders = orders.map((order, index) => ({
-      slNo: index + 1,
-      products: order.items.map((item) => {
-        const originalPrice = item.productId?.price || 0;
-        const salePrice = item.productId?.salePrice || originalPrice;
-        const quantity = item.quantity || 1;
-        const discountAmount = (originalPrice - salePrice) * quantity;
+          // Update totals
+          totalSalesCount++;
+          totalOrderAmount += itemTotal;
+          totalDiscount += discountAmount;
 
-        return {
-          name: item.productId?.name || 'Unknown Product',
-          price: originalPrice,
-          discountPrice: salePrice,
-          quantity,
-          totalDiscount: discountAmount > 0 ? discountAmount : 0,
-        };
-      }),
-      orderStatus: order.status,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: 'Paid',
-      createdAt: order.createdAt,
-    }));
+          return {
+            slNo: totalSalesCount,
+            orderID: order.orderID || 'N/A',
+            name: item.productId?.name || 'Unknown Product',
+            price: originalPrice,
+            discountPrice: salePrice,
+            quantity: quantity,
+            totalDiscount: discountAmount,
+            itemTotal: itemTotal,
+            orderStatus: item.status,
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus,
+            createdAt: order.createdAt,
+          };
+        });
+      })
+      .filter(Boolean);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sales Report');
 
+    // Updated columns to match new data structure
     worksheet.columns = [
-      { header: 'S.No', key: 'slNo', width: 5 },
-      { header: 'Product Name', key: 'productName', width: 20 },
+      { header: 'Sl.No', key: 'slNo', width: 5 },
+      { header: 'Order ID', key: 'orderID', width: 10 },
+      { header: 'Product Name', key: 'name', width: 20 },
       { header: 'Price', key: 'price', width: 10 },
       { header: 'Discount Price', key: 'discountPrice', width: 15 },
       { header: 'Quantity', key: 'quantity', width: 10 },
       { header: 'Total Discount', key: 'totalDiscount', width: 15 },
+      { header: 'Item Total', key: 'itemTotal', width: 15 },
       { header: 'Order Status', key: 'orderStatus', width: 15 },
-      { header: 'Payment Method', key: 'paymentMethod', width: 20 },
+      { header: 'Payment Method', key: 'paymentMethod', width: 15 },
       { header: 'Payment Status', key: 'paymentStatus', width: 15 },
       { header: 'Date', key: 'createdAt', width: 15 },
     ];
 
-    formattedOrders.forEach((order) => {
-      order.products.forEach((product) => {
-        worksheet.addRow({
-          slNo: order.slNo,
-          productName: product.name,
-          price: product.price,
-          discountPrice: product.discountPrice,
-          quantity: product.quantity,
-          totalDiscount: product.totalDiscount,
-          createdAt: new Date(order.createdAt).toLocaleDateString(),
-          orderStatus: order.orderStatus,
-          paymentMethod: order.paymentMethod,
-          paymentStatus: order.paymentStatus,
-        });
+    // Add formatted rows
+    formattedOrders.forEach((item) => {
+      worksheet.addRow({
+        slNo: item.slNo,
+        orderID: item.orderID,
+        name: item.name,
+        price: `₹${item.price.toFixed(2)}`,
+        discountPrice: `₹${item.discountPrice.toFixed(2)}`,
+        quantity: item.quantity,
+        totalDiscount: `₹${item.totalDiscount.toFixed(2)}`,
+        itemTotal: `₹${item.itemTotal.toFixed(2)}`,
+        orderStatus: item.orderStatus,
+        paymentMethod: item.paymentMethod,
+        paymentStatus: item.paymentStatus,
+        createdAt: new Date(item.createdAt).toLocaleDateString(),
       });
     });
 
-    // Add a blank row before the summary
+    // Add a blank row before summary
     worksheet.addRow({});
 
     // Summary section
     worksheet.addRow({
-      productName: 'Summary',
-      price: '',
-      discountPrice: '',
-      totalDiscount: '',
+      name: 'Summary',
     }).font = { bold: true };
+
     worksheet.addRow({
-      productName: 'Total Sales Count',
+      name: 'Total Sales Count',
       price: totalSalesCount,
-      discountPrice: '',
-      totalDiscount: '',
     }).font = { bold: true };
 
     worksheet.addRow({
-      productName: 'Total Order Amount',
+      name: 'Total Order Amount',
       price: `₹${totalOrderAmount.toFixed(2)}`,
-      discountPrice: '',
-      totalDiscount: '',
     }).font = { bold: true };
 
     worksheet.addRow({
-      productName: 'Total Discount',
-      price: '',
-      discountPrice: '',
+      name: 'Total Discount',
       totalDiscount: `₹${totalDiscount.toFixed(2)}`,
     }).font = { bold: true };
 
+    // Set headers and send response
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -461,10 +630,13 @@ const downloadSalesReportExcel = async (req, res) => {
     res.end();
   } catch (error) {
     console.error('Error generating Excel:', error);
-    res.status(500).json({ success: false, message: 'Error generating Excel' });
+    res.status(500).json({
+      success: false,
+      message: 'Error generating Excel',
+      error: error.message,
+    });
   }
 };
-
 module.exports = {
   getSalesReport,
   downloadSalesReportPDF,

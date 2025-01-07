@@ -36,9 +36,9 @@ router.get(
 router.get(
   '/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/signup' }),
-  (req, res) => { 
+  (req, res) => {
     res.redirect('/');
-    }
+  }
 );
 
 router.get('/login', userController.loadLogin);
@@ -77,8 +77,9 @@ router.delete('/removeWishlist/:productId', wishlistController.removeWishlist);
 
 //myOrder
 router.get('/myOrder', orderController.getOrders);
-router.post('/order/return/:id', orderController.requestReturn);
-router.post('/order/cancel/:id', profileController.cancelOrder);
+router.post('/order/return/:id', orderController.handleReturnRequest);
+router.post('/order/cancel', profileController.cancelOrder);
+router.get('/order/details/:orderId', orderController.getOrderDetails);
 
 //coupon management
 router.post('/couponapply', couponController.applyCoupon);
