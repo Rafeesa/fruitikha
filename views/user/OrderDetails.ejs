@@ -214,13 +214,7 @@
                 Repay
               </button>
             <% } %>
-            <% order.items.forEach(item => { %>
-            <% if (item.status === 'Delivered') { %>
-              <form action="/order/invoice/<%= order._id %>" method="GET" style="display:inline;">
-                <button type="submit" class="btn btn-primary btn-sm">Download Invoice</button>
-              </form>
-            <% } %>
-            <% }) %>
+           
           </div>
         </div>
       </article>
@@ -277,7 +271,11 @@
                 <form id="returnForm-<%= order._id %>" style="display:inline;" onsubmit="handleReturnRequest(event, '<%= order.orderID %>', '<%= item._id %>');">
                   <button type="submit" class="btn btn-warning">Return</button>
                 </form>
+                <form action="/order/invoice/<%= order._id %>" method="GET" style="display:inline;">
+                  <button type="submit" class="btn btn-primary btn-sm">Download Invoice</button>
+                </form>
               <% } %>
+              
             </td>
           </tr>
         <% }) %>
