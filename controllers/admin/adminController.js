@@ -49,6 +49,7 @@ const loadDashboard = async (req, res) => {
           $group: {
             _id: '$items.productId',
             totalQuantitySold: { $sum: '$items.quantity' },
+            totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.salePrice'] }}
           },
         },
         { $sort: { totalQuantitySold: -1 } },
@@ -61,7 +62,7 @@ const loadDashboard = async (req, res) => {
             as: 'productDetails',
           },
         },
-        { $unwind: '$productDetails' },
+        { $unwind: '$productDetails' }
       ]);
 
       // Top 10 Categories by Sales
@@ -167,23 +168,12 @@ const getChartData = async (req, res) => {
       { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
       { $unwind: '$items' },
       {
-        $lookup: {
-          from: 'products',
-          localField: 'items.productId',
-          foreignField: '_id',
-          as: 'productDetails',
-        },
-      },
-      { $unwind: '$productDetails' },
-      {
         $group: {
           _id: '$productDetails.category',
           totalRevenue: {
-            $sum: {
-              $multiply: ['$items.quantity', '$productDetails.salePrice'],
-            },
+            $sum: { $multiply: ['$items.quantity', '$items.salePrice'] }
           },
-          totalOrders: { $sum: 1 },
+          totalOrders: { $sum: 1 }
         },
       },
       {
