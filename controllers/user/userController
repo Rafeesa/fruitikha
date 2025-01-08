@@ -133,7 +133,7 @@ const calculateSalePrice = (product) => {
 const getProductDetails = async (req, res) => {
     try {
         const productId = req.params.id;
-        const userId = req.session._id;
+        const userId = req.session._id||req.session.passport?.user;;
 
         const product = await Product.findById(productId).populate('category').exec();
         product.salePrice = calculateSalePrice(product);
