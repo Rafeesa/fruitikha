@@ -67,7 +67,7 @@ router.post('/verify-repayment', razorpayController.verifyRepayment);
 
 //wallet
 router.get('/wallet', walletController.getWallet);
-router.post('/pay-with-wallet', walletController.payWithWallet);
+router.post('/wallet-payment', walletController.payWithWallet);
 
 //wishlist
 router.get('/wishlist', wishlistController.getWishlist);

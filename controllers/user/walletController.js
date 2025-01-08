@@ -35,55 +35,113 @@ const getWallet = async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 };
+const calculateSalePrice = (product) => {
+  const categoryOffer = product.category?.categoryOffer || 0;
+  const productOffer = product.productOffer || 0;
+
+  const categoryDiscount = (product.price * categoryOffer) / 100;
+  const productDiscount = (product.price * productOffer) / 100;
+
+  const maxDiscount = Math.max(categoryDiscount, productDiscount);
+
+  // Return the rounded sale price
+  return Math.round(product.price - maxDiscount);
+};
 
 const payWithWallet = async (req, res) => {
-  const { addressId, amount } = req.body;
-  const userId = req.user._id;
-
-  // Validate inputs
-  if (!userId) {
-    return res.json({ success: false, message: 'User not authenticated' });
-  }
-
-  if (!amount || amount <= 0) {
-    return res.json({ success: false, message: 'Invalid payment amount' });
-  }
-
   try {
-    // Use findOneAndUpdate with atomic operation for better concurrency handling
-    const user = await User.findOneAndUpdate(
-      {
-        _id: userId,
-        walletBalance: { $gte: amount },
-      },
-      {
-        $inc: { walletBalance: -amount },
-        $push: {
-          walletTransactions: {
-            amount: -amount,
-            date: new Date(),
-            description: 'Order Payment',
-          },
-        },
-      },
-      {
-        new: true, // Return the updated document
-        runValidators: true,
-      }
-    );
+    const userId = req.user._id;
+    const cart = await Cart.findOne({ userId }).populate('items.productId');
+    const user = await User.findById(userId);
 
-    if (!user) {
-      // This means either user not found or insufficient balance
-      return res.json({
-        success: false,
-        message: 'Insufficient wallet balance',
-      });
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).send('Your cart is empty');
     }
 
-    res.json({ success: true, message: 'Payment successful' });
-  } catch (error) {
-    console.error('Error processing wallet payment:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    const address = await Address.findOne({ userId });
+    if (!address || address.address.length === 0) {
+      return res.status(400).send('No address found');
+    }
+
+    let subtotal = 0;
+    const orderItems = cart.items.map(item => {
+      if (!item.productId) return null;
+      
+      const salePrice = calculateSalePrice(item.productId);
+      subtotal += salePrice * item.quantity;
+      
+      return {
+        productId: item.productId._id,
+        quantity: item.quantity,
+        price: item.productId.price,
+        salePrice: salePrice,
+        status: 'OrderPlaced'
+      };
+    }).filter(item => item !== null);
+
+    const shippingCost = 45;
+    const discountAmount = req.session.discountAmount || 0;
+    const totalCost = subtotal + shippingCost - discountAmount;
+
+    // Check wallet balance
+    if (user.walletBalance < totalCost) {
+      return res.status(400).send('Insufficient wallet balance');
+    }
+
+    const orderID = Math.floor(100000 + Math.random() * 900000);
+
+    const newOrder = new Order({
+      userId,
+      orderID,
+      items: orderItems,
+      address: address.address[0],
+      subtotal,
+      shippingCost,
+      discountAmount, 
+      totalCost,
+      paymentMethod: 'Wallet',
+      paymentStatus: 'success'
+    });
+
+    const savedOrder = await newOrder.save();
+
+    // Update product stock
+    for (let item of orderItems) {
+      await Product.updateOne(
+        { _id: item.productId, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } }
+      );
+    }
+
+    // Update wallet balance
+    await User.findByIdAndUpdate(userId, {
+      $inc: { walletBalance: -totalCost },
+      $push: {
+        walletTransactions: {
+          amount: -totalCost,
+          date: new Date(),
+          description: `Order Payment #${orderID}`
+        }
+      }
+    });
+
+    await Cart.deleteOne({ userId });
+
+    req.session.orderDetails = {
+      orderId: savedOrder.orderID,
+      totalCost,
+      orderItems,
+      shippingCost,
+      subtotal,
+      discountAmount,
+      paymentMethod: 'Wallet'
+    };
+
+    delete req.session.discountAmount;
+    res.redirect('/orderSuccess');
+  } catch (err) {
+    console.error(err);
+    res.redirect('/errorPage');
   }
 };
 

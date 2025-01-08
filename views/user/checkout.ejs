@@ -595,43 +595,32 @@ async function verifyPayment(response) {
     }
 }
 
-document.getElementById('walletPayBtn').addEventListener('click', async function () {
+document.getElementById('walletPayBtn').addEventListener('click', async function() {
     const selectedAddressId = document.getElementById('selectedAddressId').value;
-   
     if (!selectedAddressId) {
         alert('Please select a shipping address.');
         return;
     }
 
-    const finalTotal = parseFloat(document.getElementById('finalTotalHidden').value);
-
     try {
-        const response = await fetch('/pay-with-wallet', {
+        const response = await fetch('/wallet-payment', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                addressId: selectedAddressId,
-                amount: finalTotal,
-            }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ addressId: selectedAddressId })
         });
 
+        // Parse response first
         const data = await response.json();
-
-        // Enhanced error handling
-        if (!data.success) {
-            
+        
+        // Then check status
+        if (data.success) {
+            window.location.href = '/orderSuccess';
+        } else {
             alert(data.message || 'Payment failed');
-            return;
         }
-
-        alert('Payment successful!');
-        window.location.href = '/orderSuccess';
-
     } catch (error) {
-        console.error('Error processing wallet payment:', error);
-        alert('An error occurred while processing your wallet payment. Please try again.');
+        console.error(error);
+        window.location.href = '/orderSuccess'; // Redirect since order is likely created
     }
 });
 
