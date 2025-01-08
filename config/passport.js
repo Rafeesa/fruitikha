@@ -21,7 +21,7 @@ passport.use(
         if (user) {
           // User found, return the user
           return done(null, user);
-        } else {
+        } /*else {
           // Check if email already exists (signed up manually)
           let existingUser = await User.findOne({
             email: profile.emails[0].value,
@@ -32,7 +32,7 @@ passport.use(
             existingUser.googleId = profile.id;
             await existingUser.save();
             return done(null, existingUser);
-          } else {
+          }*/ else {
             // Create a new user if no match found
             user = new User({
               name: profile.displayName,
@@ -43,7 +43,7 @@ passport.use(
             return done(null, user);
           }
         }
-      } catch (error) {
+       catch (error) {
         return done(error, null);
       }
     }
