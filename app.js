@@ -10,6 +10,8 @@ const db = require('./config/db');
 const checkBlocked = require('./middlewares/checkBlocked');
 
 const app = express();
+app.set("trust proxy", 1);
+
 
 // Middleware for JSON and URL-encoded form data
 app.use(express.json());
@@ -27,7 +29,7 @@ app.use(
       collectionName: 'sessions',
     }),
     cookie: {
-      secure: false,
+      secure: true,
       httpOnly: true,
       maxAge: 72 * 60 * 60 * 1000,
     },
